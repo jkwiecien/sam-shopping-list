@@ -3,18 +3,22 @@ package pl.techbrewery.sam.kmp.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
+import pl.techbrewery.sam.kmp.database.dao.ItemBundleDao
 import pl.techbrewery.sam.kmp.database.dao.SingleItemDao
+import pl.techbrewery.sam.kmp.database.dao.StoreDao
+import pl.techbrewery.sam.kmp.database.entity.ItemBundle
+import pl.techbrewery.sam.kmp.database.entity.ItemBundleJoin
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
 
 @Database(
-//    entities = [Store::class, SingleItem::class, ItemBundle::class, ItemBundleCrossRef::class],
-    entities = [Store::class, SingleItem::class],
+    entities = [Store::class, SingleItem::class, ItemBundle::class, ItemBundleJoin::class],
     version = 1
 )
 abstract class KmpDatabase : RoomDatabase() {
     abstract fun singleItemDao(): SingleItemDao
-//    abstract fun itemBundleDao(): ItemBundleDao
+    abstract fun itemBundleDao(): ItemBundleDao
+    abstract fun storeDao(): StoreDao
 }
 
 // Room compiler generates the 'actual' implementations for this constructor

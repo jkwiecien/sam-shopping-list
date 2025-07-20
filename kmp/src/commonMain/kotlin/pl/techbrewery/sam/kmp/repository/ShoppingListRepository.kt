@@ -8,7 +8,7 @@ class ShoppingListRepository(
     private val db: KmpDatabase
 ) {
     suspend fun insertItem(itemName: String) {
-        val item = SingleItem(itemName)
+        val item = SingleItem(itemName.lowercase())
         db.singleItemDao().insertSingleItem(item)
     }
 
@@ -19,6 +19,6 @@ class ShoppingListRepository(
     }
 
     fun getLastShoppingList(): Flow<List<SingleItem>> {
-        return db.singleItemDao().getAllSingleItems()
+        return db.singleItemDao().getUncheckedSingleItems()
     }
 }

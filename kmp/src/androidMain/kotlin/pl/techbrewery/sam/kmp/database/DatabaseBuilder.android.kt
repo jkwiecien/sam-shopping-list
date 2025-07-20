@@ -13,7 +13,9 @@ actual fun getDatabaseBuilder(): RoomDatabase.Builder<KmpDatabase> {
     return Room.databaseBuilder<KmpDatabase>(
         context = appContext,
         name = dbFile.absolutePath
-    ).setDriver(BundledSQLiteDriver())
+    )
+        .setDriver(BundledSQLiteDriver())
+        .fallbackToDestructiveMigration(true)
 }
 
 fun initKmpModule(context: Context) {

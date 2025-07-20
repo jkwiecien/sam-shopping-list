@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SAM">
         <activity
-            android:name=".ShoppingListActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.SAM">
             <intent-filter>

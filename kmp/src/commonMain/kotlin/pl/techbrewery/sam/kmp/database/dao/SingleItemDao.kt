@@ -1,5 +1,6 @@
 package pl.techbrewery.sam.kmp.database.dao
 
+import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -8,6 +9,7 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 
+@Dao
 interface SingleItemDao {
     // --- Insert Operations ---
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -18,6 +20,9 @@ interface SingleItemDao {
     // Get all single items
     @Query("SELECT * FROM single_items ORDER BY item_name ASC") // Order by name for consistency
     fun getAllSingleItems(): Flow<List<SingleItem>>
+
+    @Query("SELECT * FROM single_items WHERE checked_off = false ORDER BY item_name ASC") // Order by name for consistency
+    fun getUncheckedSingleItems(): Flow<List<SingleItem>>
 
     // Get a single item by its ID
     @Query("SELECT * FROM single_items WHERE item_name = :name")

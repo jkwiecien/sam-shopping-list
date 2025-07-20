@@ -21,6 +21,7 @@ private val databaseModule = module {
 
     single { get<KmpDatabase>().singleItemDao() }
     single { get<KmpDatabase>().itemBundleDao() }
+    single { get<KmpDatabase>().storeDao() }
 }
 
 private val repositoryModule = module {
