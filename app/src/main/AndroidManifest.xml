@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SAM">
         <activity
-            android:name=".MainActivity"
+            android:name=".features.navigation.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.SAM">
             <intent-filter>
@@ -21,6 +21,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

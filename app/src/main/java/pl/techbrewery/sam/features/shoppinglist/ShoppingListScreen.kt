@@ -1,6 +1,9 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package pl.techbrewery.sam.features.shoppinglist
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,7 +24,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -32,12 +37,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.features.shoppinglist.state.ShoppingListItemsState
+import pl.techbrewery.sam.features.stores.CreateStoreSheetContent
+import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
+import pl.techbrewery.sam.shared.BottomPageContentState
 import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
+import pl.techbrewery.sam.ui.shared.SharedModalBottomSheet
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListScreen(
     viewModel: ShoppingListViewModel,
@@ -45,12 +53,52 @@ fun ShoppingListScreen(
 ) {
     val itemsState by viewModel.itemsState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQueryFLow.collectAsStateWithLifecycle()
-    ShoppingList(
+    val onAction: (Any) -> Unit = { viewModel.onAction(it) }
+
+    BottomSheetAwareContent(
         itemsState = itemsState,
         searchQuery = searchQuery,
-        modifier = Modifier.padding(paddingValues),
-        onAction = { viewModel.onAction(it) }
+        bottomSheetContentState = viewModel.bottomSheetContentState,
+        onAction = onAction,
+        modifier = Modifier.padding(paddingValues)
     )
+}
+
+@Composable
+private fun BottomSheetAwareContent(
+    itemsState: ShoppingListItemsState,
+    searchQuery: String,
+    bottomSheetContentState: BottomPageContentState?,
+    modifier: Modifier = Modifier,
+    onAction: (Any) -> Unit = {}
+) {
+    val modalBottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+    Box {
+        ShoppingList(
+            itemsState = itemsState,
+            searchQuery = searchQuery,
+            modifier = modifier,
+            onAction = onAction
+        )
+        when (bottomSheetContentState) {
+            is CreateStoreBottomSheetState -> CreateStoreModalBottomSheet(modalBottomSheetState, onAction)
+        }
+    }
+}
+
+@Composable
+private fun CreateStoreModalBottomSheet(
+    sheetState: SheetState,
+    onAction: (Any) -> Unit = {}
+) {
+    SharedModalBottomSheet(
+        sheetState = sheetState,
+        onAction = onAction
+    ) {
+        CreateStoreSheetContent()
+    }
 }
 
 @Composable
@@ -129,6 +177,22 @@ private fun ShoppingListItem(
 @Preview(showBackground = true)
 @Composable
 private fun ShoppingListScreenLightPreview() {
+    SAMTheme {
+        ShoppingList(
+            itemsState = ShoppingListItemsState(
+                listOf(
+                    "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
+                    "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
+                    "Coffee", "Tea", "Juice", "Soda", "Water"
+                ).map { SingleItem(it) }
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ShoppingListScreenCreateStorePreview() {
     SAMTheme {
         ShoppingList(
             itemsState = ShoppingListItemsState(

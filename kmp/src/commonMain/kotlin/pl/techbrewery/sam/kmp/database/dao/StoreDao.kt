@@ -35,4 +35,8 @@ interface StoreDao {
 
     @Query("DELETE FROM Store")
     suspend fun clearAll()
+
+    @Query("SELECT EXISTS(SELECT 1 FROM Store LIMIT 1)")
+    suspend fun hasAnyStores(): Boolean
+
 }

@@ -1,9 +1,11 @@
 package pl.techbrewery.sam.di
 
-import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import pl.techbrewery.sam.features.navigation.NavigationViewModel
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
+import pl.techbrewery.sam.features.stores.StoresViewModel
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 
 val appModules: List<Module>
@@ -17,5 +19,7 @@ private val repositoryModule = module {
 }
 
 private val viewModelModule = module {
-    viewModel { ShoppingListViewModel(get()) }
+    viewModel { NavigationViewModel(get()) }
+    viewModel { ShoppingListViewModel(get(), get()) }
+    viewModel { StoresViewModel(get()) }
 }

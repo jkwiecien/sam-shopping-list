@@ -1,4 +1,4 @@
-package pl.techbrewery.sam
+package pl.techbrewery.sam.features.navigation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,14 +18,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
+import pl.techbrewery.sam.R
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListScreen
+import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
+import pl.techbrewery.sam.features.stores.StoresViewModel
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
+    private val navigationViewModel by viewModel<NavigationViewModel>()
     private val shoppingListViewModel by viewModel<ShoppingListViewModel>()
+    private val storesViewModel by viewModel<StoresViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,31 +52,54 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     bottomBar = {
-                        ShoppingBottomNavigation() // Assuming you have this composable
+                        ShoppingBottomNavigation(
+                            selectedTab = navigationViewModel.selectedTab,
+                            onAction = { navigationViewModel.onAction(it) }
+                        ) // Assuming you have this composable
                     }
                 ) { paddingValues ->
-                    ShoppingListScreen(
-                        viewModel = shoppingListViewModel,
-                        paddingValues = paddingValues
-                    )
+                    when (navigationViewModel.selectedTab) {
+                        NavigationTab.SHOPPING_LIST -> ShoppingListScreen(
+                            viewModel = shoppingListViewModel,
+                            paddingValues = paddingValues
+                        )
+
+                        NavigationTab.RECIPES -> {}
+
+                        NavigationTab.STORES -> {}
+                        NavigationTab.SETTINGS -> {}
+                    }
                 }
+            }
+        }
+    }
+
+    private fun runActionsObserver() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                storesViewModel.actionsFlow.collect { action ->
+//                    when (action) {
+//                        is CreateStoreBottomSheetState ->
+//                    }
+//                }
             }
         }
     }
 }
 
 
-
-
 // Dummy Bottom Navigation - Replace with your actual implementation
 @Composable
-fun ShoppingBottomNavigation() {
+fun ShoppingBottomNavigation(
+    selectedTab: NavigationTab,
+    onAction: (Any) -> Unit = {}
+) {
     NavigationBar {
         NavigationBarItem(
             icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "List") },
             label = { Text("List") },
-            selected = true, // Set based on current screen
-            onClick = { /* Handle List navigation */ }
+            selected = selectedTab.index() == 0,
+            onClick = { onAction(NavigationTabPressed(NavigationTab.SHOPPING_LIST)) }
         )
         NavigationBarItem(
             icon = {
@@ -78,8 +109,8 @@ fun ShoppingBottomNavigation() {
                 )
             }, // Example icon
             label = { Text("Recipes") },
-            selected = false,
-            onClick = { /* Handle Recipes navigation */ }
+            selected = selectedTab.index() == 1,
+            onClick = { onAction(NavigationTabPressed(NavigationTab.RECIPES)) }
         )
         NavigationBarItem(
             icon = {
@@ -89,14 +120,14 @@ fun ShoppingBottomNavigation() {
                 )
             }, // Example icon
             label = { Text("Shops") },
-            selected = false,
-            onClick = { /* Handle Shops navigation */ }
+            selected = selectedTab.index() == 2,
+            onClick = { onAction(NavigationTabPressed(NavigationTab.STORES)) }
         )
         NavigationBarItem(
             icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
             label = { Text("Settings") },
-            selected = false,
-            onClick = { /* Handle Settings navigation */ }
+            selected = selectedTab.index() == 3,
+            onClick = { onAction(NavigationTabPressed(NavigationTab.SETTINGS)) }
         )
     }
 }

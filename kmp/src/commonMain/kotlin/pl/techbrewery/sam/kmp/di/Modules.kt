@@ -6,6 +6,7 @@ import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.getDatabaseBuilder
 import pl.techbrewery.sam.kmp.database.getRoomDatabase
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
+import pl.techbrewery.sam.kmp.repository.StoreRepository
 
 val kmpModules: List<Module>
     get() = listOf(
@@ -26,4 +27,5 @@ private val databaseModule = module {
 
 private val repositoryModule = module {
     single { ShoppingListRepository(get<KmpDatabase>()) }
+    single { StoreRepository(get<KmpDatabase>()) }
 }
