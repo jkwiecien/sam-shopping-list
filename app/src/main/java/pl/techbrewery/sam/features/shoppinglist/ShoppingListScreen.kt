@@ -67,9 +67,9 @@ fun ShoppingListScreen(
 @Composable
 private fun BottomSheetAwareContent(
     itemsState: ShoppingListItemsState,
-    searchQuery: String,
-    bottomSheetContentState: BottomPageContentState?,
     modifier: Modifier = Modifier,
+    searchQuery: String = "",
+    bottomSheetContentState: BottomPageContentState? = null,
     onAction: (Any) -> Unit = {}
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(
@@ -176,7 +176,7 @@ private fun ShoppingListItem(
 
 @Preview(showBackground = true)
 @Composable
-private fun ShoppingListScreenLightPreview() {
+private fun ShoppingListScreenPreview() {
     SAMTheme {
         ShoppingList(
             itemsState = ShoppingListItemsState(
@@ -194,14 +194,15 @@ private fun ShoppingListScreenLightPreview() {
 @Composable
 private fun ShoppingListScreenCreateStorePreview() {
     SAMTheme {
-        ShoppingList(
+        BottomSheetAwareContent(
             itemsState = ShoppingListItemsState(
                 listOf(
                     "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
                     "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
                     "Coffee", "Tea", "Juice", "Soda", "Water"
                 ).map { SingleItem(it) }
-            )
+            ),
+            bottomSheetContentState = CreateStoreBottomSheetState
         )
     }
 }

@@ -1,5 +1,6 @@
 package pl.techbrewery.sam.features.navigation
 
+import android.R.attr.text
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,8 +18,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
@@ -39,11 +42,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val selectedTab by navigationViewModel.selectedTabFlow.collectAsStateWithLifecycle()
             SAMTheme {
                 Scaffold(
                     topBar = {
                         TopAppBar(
-                            title = { Text("Shopping List") },
+                            title = { Text(text = selectedTab.screenTitle) },
                             actions = {
                                 IconButton(onClick = { /* Handle add item to top bar action */ }) {
                                     Icon(Icons.Filled.Add, contentDescription = "Add Item")
@@ -53,12 +57,12 @@ class MainActivity : ComponentActivity() {
                     },
                     bottomBar = {
                         ShoppingBottomNavigation(
-                            selectedTab = navigationViewModel.selectedTab,
+                            selectedTab = selectedTab,
                             onAction = { navigationViewModel.onAction(it) }
                         ) // Assuming you have this composable
                     }
                 ) { paddingValues ->
-                    when (navigationViewModel.selectedTab) {
+                    when (selectedTab) {
                         NavigationTab.SHOPPING_LIST -> ShoppingListScreen(
                             viewModel = shoppingListViewModel,
                             paddingValues = paddingValues
@@ -97,7 +101,7 @@ fun ShoppingBottomNavigation(
     NavigationBar {
         NavigationBarItem(
             icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "List") },
-            label = { Text("List") },
+            label = { Text(text = NavigationTab.SHOPPING_LIST.tabTitle) },
             selected = selectedTab.index() == 0,
             onClick = { onAction(NavigationTabPressed(NavigationTab.SHOPPING_LIST)) }
         )
@@ -108,7 +112,7 @@ fun ShoppingBottomNavigation(
                     contentDescription = "Recipes"
                 )
             }, // Example icon
-            label = { Text("Recipes") },
+            label = { Text(text = NavigationTab.RECIPES.tabTitle) },
             selected = selectedTab.index() == 1,
             onClick = { onAction(NavigationTabPressed(NavigationTab.RECIPES)) }
         )
@@ -119,13 +123,13 @@ fun ShoppingBottomNavigation(
                     contentDescription = "Shops"
                 )
             }, // Example icon
-            label = { Text("Shops") },
+            label = { Text(text = NavigationTab.STORES.tabTitle) },
             selected = selectedTab.index() == 2,
             onClick = { onAction(NavigationTabPressed(NavigationTab.STORES)) }
         )
         NavigationBarItem(
             icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-            label = { Text("Settings") },
+            label = { Text(text = NavigationTab.SETTINGS.tabTitle) },
             selected = selectedTab.index() == 3,
             onClick = { onAction(NavigationTabPressed(NavigationTab.SETTINGS)) }
         )
