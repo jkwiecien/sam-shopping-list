@@ -3,9 +3,7 @@
 package pl.techbrewery.sam.features.shoppinglist
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,13 +41,14 @@ import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.shared.BottomPageContentState
 import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
+import pl.techbrewery.sam.ui.shared.ItemDragHandle
 import pl.techbrewery.sam.ui.shared.SharedModalBottomSheet
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @Composable
 fun ShoppingListScreen(
     viewModel: ShoppingListViewModel,
-    paddingValues: PaddingValues = PaddingValues()
+    modifier: Modifier = Modifier
 ) {
     val itemsState by viewModel.itemsState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQueryFLow.collectAsStateWithLifecycle()
@@ -60,7 +59,7 @@ fun ShoppingListScreen(
         searchQuery = searchQuery,
         bottomSheetContentState = viewModel.bottomSheetContentState,
         onAction = onAction,
-        modifier = Modifier.padding(paddingValues)
+        modifier = modifier
     )
 }
 
@@ -75,16 +74,17 @@ private fun BottomSheetAwareContent(
     val modalBottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
-    Box {
-        ShoppingList(
-            itemsState = itemsState,
-            searchQuery = searchQuery,
-            modifier = modifier,
-            onAction = onAction
+    ShoppingList(
+        itemsState = itemsState,
+        searchQuery = searchQuery,
+        modifier = modifier,
+        onAction = onAction
+    )
+    when (bottomSheetContentState) {
+        is CreateStoreBottomSheetState -> CreateStoreModalBottomSheet(
+            modalBottomSheetState,
+            onAction
         )
-        when (bottomSheetContentState) {
-            is CreateStoreBottomSheetState -> CreateStoreModalBottomSheet(modalBottomSheetState, onAction)
-        }
     }
 }
 
@@ -160,6 +160,7 @@ private fun ShoppingListItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start // Align items to the start
     ) {
+        ItemDragHandle()
         Checkbox(
             checked = false,
             onCheckedChange = { checked ->

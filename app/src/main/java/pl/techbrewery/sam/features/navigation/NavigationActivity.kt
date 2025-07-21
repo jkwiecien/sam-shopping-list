@@ -1,35 +1,38 @@
 package pl.techbrewery.sam.features.navigation
 
-import android.R.attr.text
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.res.painterResource
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.createGraph
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import pl.techbrewery.sam.R
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListScreen
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
+import pl.techbrewery.sam.features.stores.StoresScreen
 import pl.techbrewery.sam.features.stores.StoresViewModel
+import pl.techbrewery.sam.shared.HeterogeneousIcon
+import pl.techbrewery.sam.ui.shared.AppBar
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,97 +45,85 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val selectedTab by navigationViewModel.selectedTabFlow.collectAsStateWithLifecycle()
             SAMTheme {
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = { Text(text = selectedTab.screenTitle) },
-                            actions = {
-                                IconButton(onClick = { /* Handle add item to top bar action */ }) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Add Item")
-                                }
-                            }
-                        )
-                    },
-                    bottomBar = {
-                        ShoppingBottomNavigation(
-                            selectedTab = selectedTab,
-                            onAction = { navigationViewModel.onAction(it) }
-                        ) // Assuming you have this composable
-                    }
-                ) { paddingValues ->
-                    when (selectedTab) {
-                        NavigationTab.SHOPPING_LIST -> ShoppingListScreen(
-                            viewModel = shoppingListViewModel,
-                            paddingValues = paddingValues
-                        )
-
-                        NavigationTab.RECIPES -> {}
-
-                        NavigationTab.STORES -> {}
-                        NavigationTab.SETTINGS -> {}
+                val navController = rememberNavController()
+                val navGraph = remember(navController) { // remember the graph itself
+                    navController.createGraph(startDestination = TopLevelScreen.ShoppingList.route) {
+                        composable(route = TopLevelScreen.ShoppingList.route) {
+                            ShoppingListScreen(shoppingListViewModel)
+                        }
+                        composable(route = TopLevelScreen.Stores.route) {
+                            StoresScreen(storesViewModel)
+                        }
+                        // Add other composable destinations here
                     }
                 }
-            }
-        }
-    }
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+                val title = navigationTopLevelRoutes.find { it.route == currentRoute }?.title ?: ""
 
-    private fun runActionsObserver() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                storesViewModel.actionsFlow.collect { action ->
-//                    when (action) {
-//                        is CreateStoreBottomSheetState ->
-//                    }
-//                }
+                Scaffold(
+                    topBar = {
+                        AppBar(title = title)
+                    },
+                    bottomBar = {
+                        BottomNavigationBar(navController, Modifier.navigationBarsPadding())
+                    }
+                ) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        graph = navGraph,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
             }
         }
     }
 }
 
 
-// Dummy Bottom Navigation - Replace with your actual implementation
+@SuppressLint("RestrictedApi")
 @Composable
-fun ShoppingBottomNavigation(
-    selectedTab: NavigationTab,
-    onAction: (Any) -> Unit = {}
+private fun BottomNavigationBar(
+    navController: NavHostController,
+    modifier: Modifier = Modifier
 ) {
-    NavigationBar {
-        NavigationBarItem(
-            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "List") },
-            label = { Text(text = NavigationTab.SHOPPING_LIST.tabTitle) },
-            selected = selectedTab.index() == 0,
-            onClick = { onAction(NavigationTabPressed(NavigationTab.SHOPPING_LIST)) }
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    painterResource(R.drawable.ic_recipe_book_24dp),
-                    contentDescription = "Recipes"
-                )
-            }, // Example icon
-            label = { Text(text = NavigationTab.RECIPES.tabTitle) },
-            selected = selectedTab.index() == 1,
-            onClick = { onAction(NavigationTabPressed(NavigationTab.RECIPES)) }
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    painterResource(R.drawable.ic_store_24dp),
-                    contentDescription = "Shops"
-                )
-            }, // Example icon
-            label = { Text(text = NavigationTab.STORES.tabTitle) },
-            selected = selectedTab.index() == 2,
-            onClick = { onAction(NavigationTabPressed(NavigationTab.STORES)) }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-            label = { Text(text = NavigationTab.SETTINGS.tabTitle) },
-            selected = selectedTab.index() == 3,
-            onClick = { onAction(NavigationTabPressed(NavigationTab.SETTINGS)) }
-        )
+    NavigationBar(
+        modifier = modifier
+    ) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentDestination = navBackStackEntry?.destination
+        navigationTopLevelRoutes.forEach { topLevelRoute ->
+            NavigationBarItem(
+                icon = {
+                    HeterogeneousIcon(
+                        topLevelRoute.icon,
+                        contentDescription = topLevelRoute.title,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = { Text(topLevelRoute.title) },
+                selected = currentDestination?.hierarchy?.any { it.hasRoute(
+                    topLevelRoute.route,
+                    arguments = null
+                ) } == true,
+                onClick = {
+                    navController.navigate(topLevelRoute.route) {
+                        // Pop up to the start destination of the graph to
+                        // avoid building up a large stack of destinations
+                        // on the back stack as users select items
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        // Avoid multiple copies of the same destination when
+                        // reselecting the same item
+                        launchSingleTop = true
+                        // Restore state when reselecting a previously selected item
+                        restoreState = true
+                    }
+                }
+            )
+        }
     }
 }
 

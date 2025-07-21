@@ -2,15 +2,15 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "3300cfc320fc2840ee4d10d916a1198f",
+    "identityHash": "25397f769792b281e4aa75894305d679",
     "entities": [
       {
-        "tableName": "Store",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` INTEGER NOT NULL, `name` TEXT NOT NULL, `address` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "tableName": "stores",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`store_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `address` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL)",
         "fields": [
           {
-            "fieldPath": "uid",
-            "columnName": "uid",
+            "fieldPath": "storeId",
+            "columnName": "store_id",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -39,9 +39,9 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
-            "uid"
+            "store_id"
           ]
         }
       },
@@ -164,11 +164,95 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "store_departments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`department_name` TEXT NOT NULL, `created_at` TEXT NOT NULL, PRIMARY KEY(`department_name`))",
+        "fields": [
+          {
+            "fieldPath": "departmentName",
+            "columnName": "department_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "department_name"
+          ]
+        }
+      },
+      {
+        "tableName": "store_department_join",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`department_id_join` TEXT NOT NULL, `store_id_join` INTEGER NOT NULL, PRIMARY KEY(`department_id_join`, `store_id_join`), FOREIGN KEY(`store_id_join`) REFERENCES `stores`(`store_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`department_id_join`) REFERENCES `store_departments`(`department_name`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "departmentKey",
+            "columnName": "department_id_join",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "storeKey",
+            "columnName": "store_id_join",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "department_id_join",
+            "store_id_join"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_store_department_join_store_id_join",
+            "unique": false,
+            "columnNames": [
+              "store_id_join"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_store_department_join_store_id_join` ON `${TABLE_NAME}` (`store_id_join`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "stores",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "store_id_join"
+            ],
+            "referencedColumns": [
+              "store_id"
+            ]
+          },
+          {
+            "table": "store_departments",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "department_id_join"
+            ],
+            "referencedColumns": [
+              "department_name"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3300cfc320fc2840ee4d10d916a1198f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '25397f769792b281e4aa75894305d679')"
     ]
   }
 }

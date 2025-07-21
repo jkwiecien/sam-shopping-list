@@ -1,9 +1,9 @@
 package pl.techbrewery.sam.features.shoppinglist.state
 
 import androidx.compose.runtime.Stable
-import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import pl.techbrewery.sam.kmp.database.entity.SingleItem
 
 @Stable
 internal data class ShoppingListItemsState(

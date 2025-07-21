@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pl.techbrewery.sam.features.navigation.NavigationViewModel
 import pl.techbrewery.sam.features.shoppinglist.state.ShoppingListItemsState
-import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.shared.BaseViewModel
@@ -23,6 +23,7 @@ import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
 
 class ShoppingListViewModel(
+    private val navigation: NavigationViewModel,
     private val shoppingList: ShoppingListRepository,
     private val stores: StoreRepository
 ) : BaseViewModel() {
@@ -49,12 +50,12 @@ class ShoppingListViewModel(
                 initialValue = ShoppingListItemsState()
             )
 
-    init {
-        viewModelScope.launch(Dispatchers.Default) {
-            val hasAnyStores = withContext(Dispatchers.Default) { stores.hasAnyStores() }
-            if (!hasAnyStores) bottomSheetContentState = CreateStoreBottomSheetState
-        }
-    }
+//    init {
+//        viewModelScope.launch(Dispatchers.Default) {
+//            val hasAnyStores = withContext(Dispatchers.Default) { stores.hasAnyStores() }
+//            if (!hasAnyStores) bottomSheetContentState = CreateStoreBottomSheetState
+//        }
+//    }
 
     override fun onAction(action: Any) {
         when (action) {

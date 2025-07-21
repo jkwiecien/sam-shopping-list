@@ -6,6 +6,7 @@ import org.koin.dsl.module
 import pl.techbrewery.sam.features.navigation.NavigationViewModel
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
 import pl.techbrewery.sam.features.stores.StoresViewModel
+import pl.techbrewery.sam.features.stores.editor.StoreEditorViewModel
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 
 val appModules: List<Module>
@@ -20,6 +21,7 @@ private val repositoryModule = module {
 
 private val viewModelModule = module {
     viewModel { NavigationViewModel(get()) }
-    viewModel { ShoppingListViewModel(get(), get()) }
-    viewModel { StoresViewModel(get()) }
+    viewModel { ShoppingListViewModel(get(), get(), get()) }
+    viewModel { StoresViewModel(get(), get()) }
+    viewModel { StoreEditorViewModel(get()) }
 }
