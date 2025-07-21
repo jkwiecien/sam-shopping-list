@@ -2,7 +2,7 @@ package pl.techbrewery.sam.features.stores.editor
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,38 +11,43 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import pl.techbrewery.sam.features.stores.CategoryItem
-import pl.techbrewery.sam.features.stores.StoresViewModel
+import org.jetbrains.compose.resources.stringResource
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
-import pl.techbrewery.sam.ui.shared.AppBar
+import pl.techbrewery.sam.resources.Res
+import pl.techbrewery.sam.resources.action_save
+import pl.techbrewery.sam.ui.shared.ItemDragHandle
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @Composable
 fun StoreEditorScreen(
     viewModel: StoreEditorViewModel,
 ) {
-    StoreEditorScreeContent(
-        departments = emptyList<StoreDepartment>().toImmutableList()
+    StoreEditorScreenContent(
+        storeName = viewModel.storeName
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StoreEditorScreeContent(
-    departments: ImmutableList<StoreDepartment> = emptyList<StoreDepartment>().toImmutableList()
+fun StoreEditorScreenContent(
+    storeName: String,
+    modifier: Modifier = Modifier,
+    departments: ImmutableList<StoreDepartment> = emptyList<StoreDepartment>().toImmutableList(),
+    onAction: (Any) -> Unit = {}
 ) {
+    // val uiState by viewModel.uiState.collectAsState() // Example of collecting state from ViewModel
     var layoutName by remember { mutableStateOf("") }
     // Replace with actual categories from your ViewModel or data source
     val categories = remember {
@@ -53,15 +58,18 @@ private fun StoreEditorScreeContent(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         OutlinedTextField(
             value = layoutName,
-            onValueChange = { layoutName = it },
-            label = { Text("Store name") }, // Create this string resource
+            onValueChange = { onAction(StoreNameChanged(it)) },
+            label = {
+                Text(
+                    text = storeName
+                )
+            }, // Create this string resource
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -83,6 +91,28 @@ private fun StoreEditorScreeContent(
                 CategoryItem(categoryName = category)
             }
         }
+        Button(
+            onClick = { onAction(SaveStorePressed) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(stringResource(Res.string.action_save))
+        }
+    }
+}
+
+@Composable
+fun CategoryItem(categoryName: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        ItemDragHandle()
+        Text(text = categoryName, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
@@ -90,7 +120,8 @@ private fun StoreEditorScreeContent(
 @Composable
 fun StoresScreenPreview() {
     SAMTheme { // Wrap with your app's theme if you have one
-        StoreEditorScreeContent(
+        StoreEditorScreenContent(
+            storeName = "Lidl"
         )
     }
 }

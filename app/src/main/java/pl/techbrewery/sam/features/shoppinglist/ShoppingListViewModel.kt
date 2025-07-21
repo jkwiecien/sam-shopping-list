@@ -24,7 +24,6 @@ import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
 
 class ShoppingListViewModel(
-    private val navigation: NavigationViewModel,
     private val shoppingList: ShoppingListRepository,
     private val stores: StoreRepository
 ) : BaseViewModel() {

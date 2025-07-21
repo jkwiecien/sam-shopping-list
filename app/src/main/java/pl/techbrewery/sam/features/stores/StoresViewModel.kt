@@ -1,16 +1,29 @@
 package pl.techbrewery.sam.features.stores
 
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import pl.techbrewery.sam.features.navigation.NavigationViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.shared.BaseViewModel
 
 class StoresViewModel(
-    private val navigation: NavigationViewModel,
-    private val stores: StoreRepository
+    private val storesRepository: StoreRepository
 ) : BaseViewModel() {
 
+    internal val stores: StateFlow<ImmutableList<Store>> =
+        storesRepository.getAllStores()
+            .map { items ->
+                items.toImmutableList()
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList<Store>().toImmutableList()
+            )
 
 }

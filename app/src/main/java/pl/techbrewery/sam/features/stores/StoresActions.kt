@@ -1,3 +1,6 @@
 package pl.techbrewery.sam.features.stores
 
-object SaveStoreLayoutPressed
+import pl.techbrewery.sam.kmp.database.entity.Store
+
+internal class StorePressed(val store: Store)
+internal class CreateStorePressed()

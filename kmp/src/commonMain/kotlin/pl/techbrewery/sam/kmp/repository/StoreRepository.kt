@@ -32,7 +32,11 @@ class StoreRepository(
         kmpDatabase.storeDao().insert(store)
     }
 
-    suspend fun getStoreWithDepartments(storeId: Long): Flow<StoreWithDepartments?> {
+    suspend fun getStoreWithDepartments(storeId: Int): StoreWithDepartments? {
         return kmpDatabase.storeDao().getStoreWithDepartments(storeId)
+    }
+
+    fun getAllStores(): Flow<List<Store>> {
+        return kmpDatabase.storeDao().getAllStores()
     }
 }

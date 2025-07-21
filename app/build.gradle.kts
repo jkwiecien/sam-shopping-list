@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.timber)
     implementation(libs.gson)
+    implementation(libs.compose.resources)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

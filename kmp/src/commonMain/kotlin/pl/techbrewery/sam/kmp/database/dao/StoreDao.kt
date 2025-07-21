@@ -48,6 +48,6 @@ interface StoreDao {
 
     @Transaction
     @Query("SELECT * FROM stores WHERE store_id = :storeId")
-    fun getStoreWithDepartments(storeId: Long): Flow<StoreWithDepartments?>
+    fun getStoreWithDepartments(storeId: Int): StoreWithDepartments?
 
 }

@@ -21,7 +21,7 @@ private val repositoryModule = module {
 
 private val viewModelModule = module {
     viewModel { NavigationViewModel(get()) }
-    viewModel { ShoppingListViewModel(get(), get(), get()) }
-    viewModel { StoresViewModel(get(), get()) }
+    viewModel { ShoppingListViewModel(get(), get()) }
+    viewModel { StoresViewModel(get()) }
     viewModel { StoreEditorViewModel(get()) }
 }

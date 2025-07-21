@@ -5,10 +5,10 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
 import kotlinx.serialization.Serializable
 import pl.techbrewery.sam.R
+import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.routes.ScreenRoute
 import pl.techbrewery.sam.shared.HeterogeneousVectorIcon
 
-//data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: HeterogeneousVectorIcon)
 @Serializable
 sealed class Screen(val route: String) {
     @Serializable
@@ -19,8 +19,6 @@ sealed class Screen(val route: String) {
     object Stores: Screen(ScreenRoute.Stores)
     @Serializable
     object Settings: Screen(ScreenRoute.Settings)
-
-    @Serializable
     object StoreEditor: Screen(ScreenRoute.StoreEditor)
 }
 
