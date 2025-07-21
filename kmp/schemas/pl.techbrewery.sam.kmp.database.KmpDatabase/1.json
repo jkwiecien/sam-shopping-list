@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "25397f769792b281e4aa75894305d679",
+    "identityHash": "ed6774c15aed1d1cc4e7da36f88a97ce",
     "entities": [
       {
         "tableName": "stores",
@@ -167,12 +167,18 @@
       },
       {
         "tableName": "store_departments",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`department_name` TEXT NOT NULL, `created_at` TEXT NOT NULL, PRIMARY KEY(`department_name`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`department_name` TEXT NOT NULL, `position` INTEGER NOT NULL, `created_at` TEXT NOT NULL, PRIMARY KEY(`department_name`))",
         "fields": [
           {
             "fieldPath": "departmentName",
             "columnName": "department_name",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -252,7 +258,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '25397f769792b281e4aa75894305d679')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ed6774c15aed1d1cc4e7da36f88a97ce')"
     ]
   }
 }

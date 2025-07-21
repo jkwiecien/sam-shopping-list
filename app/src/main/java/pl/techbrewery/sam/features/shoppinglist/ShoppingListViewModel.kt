@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.techbrewery.sam.features.navigation.NavigationViewModel
-import pl.techbrewery.sam.features.shoppinglist.state.ShoppingListItemsState
+import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.shared.BaseViewModel
@@ -34,12 +35,10 @@ class ShoppingListViewModel(
     var bottomSheetContentState: BottomPageContentState? by mutableStateOf(null)
         private set
 
-    internal val itemsState: StateFlow<ShoppingListItemsState> =
+    internal val items: StateFlow<ImmutableList<SingleItem>> =
         shoppingList.getLastShoppingList()
             .map { items ->
-                ShoppingListItemsState(
-                    items = items.toImmutableList()
-                )
+                items.toImmutableList()
             }
             .stateIn(
                 scope = viewModelScope,
@@ -47,7 +46,7 @@ class ShoppingListViewModel(
                 // SharingStarted.WhileSubscribed(5000) means the flow will stay active
                 // for 5 seconds after the last subscriber disappears.
                 started = SharingStarted.WhileSubscribed(5000),
-                initialValue = ShoppingListItemsState()
+                initialValue = emptyList<SingleItem>().toImmutableList()
             )
 
 //    init {

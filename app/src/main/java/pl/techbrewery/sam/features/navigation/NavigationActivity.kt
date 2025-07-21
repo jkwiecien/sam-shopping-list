@@ -31,15 +31,18 @@ import pl.techbrewery.sam.features.shoppinglist.ShoppingListScreen
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
 import pl.techbrewery.sam.features.stores.StoresScreen
 import pl.techbrewery.sam.features.stores.StoresViewModel
+import pl.techbrewery.sam.features.stores.editor.StoreEditorScreen
+import pl.techbrewery.sam.features.stores.editor.StoreEditorViewModel
 import pl.techbrewery.sam.shared.HeterogeneousIcon
 import pl.techbrewery.sam.ui.shared.AppBar
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
-class MainActivity : ComponentActivity() {
+class NavigationActivity : ComponentActivity() {
     private val navigationViewModel by viewModel<NavigationViewModel>()
     private val shoppingListViewModel by viewModel<ShoppingListViewModel>()
     private val storesViewModel by viewModel<StoresViewModel>()
+    private val storeEditorViewModel by viewModel<StoreEditorViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,19 +51,28 @@ class MainActivity : ComponentActivity() {
             SAMTheme {
                 val navController = rememberNavController()
                 val navGraph = remember(navController) { // remember the graph itself
-                    navController.createGraph(startDestination = TopLevelScreen.ShoppingList.route) {
-                        composable(route = TopLevelScreen.ShoppingList.route) {
+                    navController.createGraph(startDestination = Screen.ShoppingList.route) {
+                        composable(route = Screen.ShoppingList.route) {
                             ShoppingListScreen(shoppingListViewModel)
                         }
-                        composable(route = TopLevelScreen.Stores.route) {
+                        composable(route = Screen.Stores.route) {
                             StoresScreen(storesViewModel)
+                        }
+                        composable(route = Screen.StoreEditor.route) {
+                            StoreEditorScreen(storeEditorViewModel)
                         }
                         // Add other composable destinations here
                     }
                 }
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
-                val title = navigationTopLevelRoutes.find { it.route == currentRoute }?.title ?: ""
+
+                val title = when (currentRoute) {
+                    Screen.ShoppingList.route -> navigationTopLevelRoutes.find { it.route == currentRoute }?.title
+                    Screen.Stores.route -> navigationTopLevelRoutes.find { it.route == currentRoute }?.title
+                    Screen.StoreEditor.route -> "Edit Store" // Or get from a ViewModel or resource
+                    else -> ""
+                } ?: ""
 
                 Scaffold(
                     topBar = {

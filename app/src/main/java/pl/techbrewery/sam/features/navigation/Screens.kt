@@ -9,15 +9,18 @@ import pl.techbrewery.sam.shared.HeterogeneousVectorIcon
 
 //data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: HeterogeneousVectorIcon)
 @Serializable
-sealed class TopLevelScreen(val route: String) {
+sealed class Screen(val route: String) {
     @Serializable
-    object ShoppingList: TopLevelScreen("shopping_list")
+    object ShoppingList: Screen("shopping_list")
     @Serializable
-    object Recipes: TopLevelScreen("recipes")
+    object Recipes: Screen("recipes")
     @Serializable
-    object Stores: TopLevelScreen("stores")
+    object Stores: Screen("stores")
     @Serializable
-    object Settings: TopLevelScreen("settings")
+    object Settings: Screen("settings")
+
+    @Serializable
+    object StoreEditor: Screen("store_editor")
 }
 
 data class TopLevelRoute(
@@ -31,21 +34,21 @@ val navigationTopLevelRoutes: List<TopLevelRoute>
         TopLevelRoute(
             "List",
             HeterogeneousVectorIcon.VectorIcon(Icons.AutoMirrored.Filled.List),
-            TopLevelScreen.ShoppingList.route
+            Screen.ShoppingList.route
         ),
         TopLevelRoute(
             "Recipes",
             HeterogeneousVectorIcon.PainterIcon(R.drawable.ic_recipe_book_24dp),
-            TopLevelScreen.Recipes.route
+            Screen.Recipes.route
         ),
         TopLevelRoute(
-            "Recipes",
+            "Stores",
             HeterogeneousVectorIcon.PainterIcon(R.drawable.ic_store_24dp),
-            TopLevelScreen.Stores.route
+            Screen.Stores.route
         ),
         TopLevelRoute(
-            "Recipes",
+            "Settings",
             HeterogeneousVectorIcon.VectorIcon(Icons.Filled.Settings),
-            TopLevelScreen.Settings.route
+            Screen.Settings.route
         ),
     )

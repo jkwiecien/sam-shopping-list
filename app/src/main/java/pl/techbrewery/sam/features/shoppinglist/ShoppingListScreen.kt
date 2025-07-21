@@ -33,8 +33,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import pl.techbrewery.sam.extensions.capitalize
-import pl.techbrewery.sam.features.shoppinglist.state.ShoppingListItemsState
 import pl.techbrewery.sam.features.stores.CreateStoreSheetContent
 import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
@@ -50,12 +51,12 @@ fun ShoppingListScreen(
     viewModel: ShoppingListViewModel,
     modifier: Modifier = Modifier
 ) {
-    val itemsState by viewModel.itemsState.collectAsStateWithLifecycle()
+    val items by viewModel.items.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQueryFLow.collectAsStateWithLifecycle()
     val onAction: (Any) -> Unit = { viewModel.onAction(it) }
 
     BottomSheetAwareContent(
-        itemsState = itemsState,
+        items = items,
         searchQuery = searchQuery,
         bottomSheetContentState = viewModel.bottomSheetContentState,
         onAction = onAction,
@@ -65,7 +66,7 @@ fun ShoppingListScreen(
 
 @Composable
 private fun BottomSheetAwareContent(
-    itemsState: ShoppingListItemsState,
+    items: ImmutableList<SingleItem>,
     modifier: Modifier = Modifier,
     searchQuery: String = "",
     bottomSheetContentState: BottomPageContentState? = null,
@@ -75,7 +76,7 @@ private fun BottomSheetAwareContent(
         skipPartiallyExpanded = true
     )
     ShoppingList(
-        itemsState = itemsState,
+        items = items,
         searchQuery = searchQuery,
         modifier = modifier,
         onAction = onAction
@@ -104,7 +105,7 @@ private fun CreateStoreModalBottomSheet(
 @Composable
 private fun ShoppingList(
     modifier: Modifier = Modifier,
-    itemsState: ShoppingListItemsState,
+    items: ImmutableList<SingleItem>,
     searchQuery: String = "",
     onAction: (Any) -> Unit = {}
 ) {
@@ -114,7 +115,6 @@ private fun ShoppingList(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        // Search/Add Item TextField
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { onAction(SearchQueryChanged(it)) },
@@ -126,7 +126,7 @@ private fun ShoppingList(
             keyboardActions = KeyboardActions(
                 onDone = { onAction(KeyboardDonePressed) }
             ),
-            leadingIcon = { // Optional: if you want a search icon
+            leadingIcon = {
                 Icon(Icons.Filled.Search, contentDescription = "Search or Add Item")
             }
         )
@@ -134,7 +134,7 @@ private fun ShoppingList(
         Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn {
-            items(itemsState.items, key = { it.itemName }) { item ->
+            items(items, key = { it.itemName }) { item ->
                 ShoppingListItem(
                     itemName = item.itemName,
                     onCheckboxChecked = { onAction(ItemChecked(it)) },
@@ -180,13 +180,11 @@ private fun ShoppingListItem(
 private fun ShoppingListScreenPreview() {
     SAMTheme {
         ShoppingList(
-            itemsState = ShoppingListItemsState(
-                listOf(
-                    "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
-                    "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
-                    "Coffee", "Tea", "Juice", "Soda", "Water"
-                ).map { SingleItem(it) }
-            )
+            items = listOf(
+                "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
+                "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
+                "Coffee", "Tea", "Juice", "Soda", "Water"
+            ).map { SingleItem(it) }.toImmutableList()
         )
     }
 }
@@ -196,13 +194,11 @@ private fun ShoppingListScreenPreview() {
 private fun ShoppingListScreenCreateStorePreview() {
     SAMTheme {
         BottomSheetAwareContent(
-            itemsState = ShoppingListItemsState(
-                listOf(
-                    "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
-                    "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
-                    "Coffee", "Tea", "Juice", "Soda", "Water"
-                ).map { SingleItem(it) }
-            ),
+            items = listOf(
+                "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
+                "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
+                "Coffee", "Tea", "Juice", "Soda", "Water"
+            ).map { SingleItem(it) }.toImmutableList(),
             bottomSheetContentState = CreateStoreBottomSheetState
         )
     }
