@@ -26,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListScreen
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
@@ -33,12 +34,16 @@ import pl.techbrewery.sam.features.stores.StoresScreen
 import pl.techbrewery.sam.features.stores.StoresViewModel
 import pl.techbrewery.sam.features.stores.editor.StoreEditorScreen
 import pl.techbrewery.sam.features.stores.editor.StoreEditorViewModel
+import pl.techbrewery.sam.kmp.repository.LocalizedResources
+import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.shared.HeterogeneousIcon
 import pl.techbrewery.sam.ui.shared.AppBar
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 class NavigationActivity : ComponentActivity() {
+    private val locRes by inject<LocalizedResources>()
+
     private val navigationViewModel by viewModel<NavigationViewModel>()
     private val shoppingListViewModel by viewModel<ShoppingListViewModel>()
     private val storesViewModel by viewModel<StoresViewModel>()
@@ -66,17 +71,11 @@ class NavigationActivity : ComponentActivity() {
                 }
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
-
-                val title = when (currentRoute) {
-                    Screen.ShoppingList.route -> navigationTopLevelRoutes.find { it.route == currentRoute }?.title
-                    Screen.Stores.route -> navigationTopLevelRoutes.find { it.route == currentRoute }?.title
-                    Screen.StoreEditor.route -> "Edit Store" // Or get from a ViewModel or resource
-                    else -> ""
-                } ?: ""
+                val screenTitle = locRes.getScreenTitle(currentRoute)
 
                 Scaffold(
                     topBar = {
-                        AppBar(title = title)
+                        AppBar(title = screenTitle)
                     },
                     bottomBar = {
                         BottomNavigationBar(navController, Modifier.navigationBarsPadding())

@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.android.lint)
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.jetbrains.compose)
 }
 
 kotlin {
@@ -15,6 +17,7 @@ kotlin {
         namespace = "pl.techbrewery.sam.kmp"
         compileSdk = 36
         minSdk = 26
+        androidResources.enable = true
 
         withHostTestBuilder {
         }
@@ -65,7 +68,9 @@ kotlin {
             dependencies {
                 implementation(libs.androidx.sqlite.bundled)
                 implementation(libs.androidx.room.runtime)
+                implementation(libs.androidx.runtime)
                 implementation(libs.koin.core)
+                implementation(libs.compose.resources)
                 // Add KMP dependencies here
             }
         }
@@ -102,11 +107,16 @@ kotlin {
             }
         }
     }
-
 }
 
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "pl.techbrewery.sam.resources"
+    generateResClass = auto
 }
 
 dependencies {

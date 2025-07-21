@@ -5,22 +5,23 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
 import kotlinx.serialization.Serializable
 import pl.techbrewery.sam.R
+import pl.techbrewery.sam.kmp.routes.ScreenRoute
 import pl.techbrewery.sam.shared.HeterogeneousVectorIcon
 
 //data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: HeterogeneousVectorIcon)
 @Serializable
 sealed class Screen(val route: String) {
     @Serializable
-    object ShoppingList: Screen("shopping_list")
+    object ShoppingList: Screen(ScreenRoute.ShoppingList)
     @Serializable
-    object Recipes: Screen("recipes")
+    object Recipes: Screen(ScreenRoute.Recipes)
     @Serializable
-    object Stores: Screen("stores")
+    object Stores: Screen(ScreenRoute.Stores)
     @Serializable
-    object Settings: Screen("settings")
+    object Settings: Screen(ScreenRoute.Settings)
 
     @Serializable
-    object StoreEditor: Screen("store_editor")
+    object StoreEditor: Screen(ScreenRoute.StoreEditor)
 }
 
 data class TopLevelRoute(

@@ -68,6 +68,5 @@ dependencies {
 }
 
 dependencies {
-
     implementation(libs.androidx.runtime)
 }
