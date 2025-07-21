@@ -23,8 +23,7 @@ import pl.techbrewery.sam.ui.theme.SAMTheme
 fun StoresScreen(
     viewModel: StoresViewModel,
     modifier: Modifier = Modifier,
-    onStorePressed: (Store) -> Unit = {},
-    onCreateStorePressed: () -> Unit = {},
+    onNavigationAction: (Any) -> Unit = {},
 ) {
     val stores by viewModel.stores.collectAsStateWithLifecycle()
     StoresScreenContent(
@@ -32,8 +31,8 @@ fun StoresScreen(
         modifier = modifier,
         onAction = { action ->
             when (action) {
-                is StorePressed -> onStorePressed(action.store)
-                is CreateStorePressed -> onCreateStorePressed()
+                is StorePressed, CreateStorePressed -> onNavigationAction(action)
+                else -> viewModel.onAction(action)
             }
         }
     )
@@ -58,6 +57,15 @@ private fun StoresScreenContent(
                     }
             )
         }
+        item { Text(
+            text = "Create store",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .clickable {
+                    onAction(CreateStorePressed)
+                }
+        ) }
     }
 }
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="action_save">Save</string>
+    <string name="action_up">Up</string>
     <string name="tab_title_shopping_list">List</string>
     <string name="tab_title_recipes">Recipes</string>
     <string name="tab_title_stores">Stores</string>
