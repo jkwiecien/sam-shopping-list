@@ -1,7 +1,6 @@
 package pl.techbrewery.sam.features.navigation.ui
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -43,12 +42,10 @@ internal fun BottomNavigationBar(
 
 
         NavigationTopLevelRoutes.routes.forEach { topLevelRoute ->
-            val selected = currentDestination?.hierarchy?.any {
-                it.hasRoute(
-                    topLevelRoute.route,
-                    arguments = null
-                )
+            val selected = currentDestination?.hierarchy?.any { destination ->
+                destination.route?.startsWith(topLevelRoute.route) == true
             } == true
+
             val tabTitle = stringResource(topLevelRoute.titleResource)
             val iconTint = if (selected) {
                 itemColors.selectedIconColor

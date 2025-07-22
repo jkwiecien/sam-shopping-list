@@ -5,5 +5,5 @@ object ScreenRoute {
     const val Recipes = "recipes"
     const val Stores = "stores"
     const val Settings = "settings"
-    const val StoreEditor = "store_editor"
+    const val StoreEditor = "$Stores/store_editor"
 }
