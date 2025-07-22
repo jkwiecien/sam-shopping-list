@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -53,7 +54,7 @@ fun ShoppingListScreen(
     val searchQuery by viewModel.searchQueryFLow.collectAsStateWithLifecycle()
     val onAction: (Any) -> Unit = { viewModel.onAction(it) }
 
-    BottomSheetAwareContent(
+    ShoppingListScreenContent(
         items = items,
         searchQuery = searchQuery,
         bottomSheetContentState = viewModel.bottomSheetContentState,
@@ -63,27 +64,31 @@ fun ShoppingListScreen(
 }
 
 @Composable
-private fun BottomSheetAwareContent(
+private fun ShoppingListScreenContent(
     items: ImmutableList<SingleItem>,
     modifier: Modifier = Modifier,
     searchQuery: String = "",
     bottomSheetContentState: BottomPageContentState? = null,
     onAction: (Any) -> Unit = {}
 ) {
-    val modalBottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-    ShoppingList(
-        items = items,
-        searchQuery = searchQuery,
-        modifier = modifier,
-        onAction = onAction
-    )
-    when (bottomSheetContentState) {
-        is CreateStoreBottomSheetState -> CreateStoreModalBottomSheet(
-            modalBottomSheetState,
-            onAction
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        val modalBottomSheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true
         )
+        ShoppingList(
+            items = items,
+            searchQuery = searchQuery,
+            modifier = modifier,
+            onAction = onAction
+        )
+        when (bottomSheetContentState) {
+            is CreateStoreBottomSheetState -> CreateStoreModalBottomSheet(
+                modalBottomSheetState,
+                onAction
+            )
+        }
     }
 }
 
@@ -172,27 +177,12 @@ private fun ShoppingListItem(
 @Composable
 private fun ShoppingListScreenPreview() {
     SAMTheme {
-        ShoppingList(
-            items = listOf(
-                "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
-                "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
-                "Coffee", "Tea", "Juice", "Soda", "Water"
-            ).map { SingleItem(it) }.toImmutableList()
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ShoppingListScreenCreateStorePreview() {
-    SAMTheme {
-        BottomSheetAwareContent(
+        ShoppingListScreenContent(
             items = listOf(
                 "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
                 "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
                 "Coffee", "Tea", "Juice", "Soda", "Water"
             ).map { SingleItem(it) }.toImmutableList(),
-            bottomSheetContentState = CreateStoreBottomSheetState
         )
     }
 }

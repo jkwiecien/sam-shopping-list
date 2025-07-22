@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -23,11 +22,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import org.jetbrains.compose.resources.stringResource
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.action_save
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
+import pl.techbrewery.sam.ui.shared.PrimaryFilledButton
 import pl.techbrewery.sam.ui.shared.stringResourceCompat
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
@@ -92,12 +91,11 @@ fun StoreEditorScreenContent(
                 CategoryItem(categoryName = category)
             }
         }
-        Button(
-            onClick = { onAction(SaveStorePressed) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResourceCompat(Res.string.action_save, "Save"))
-        }
+        PrimaryFilledButton(
+            modifier = Modifier.fillMaxWidth(),
+            title = stringResourceCompat(Res.string.action_save, "Save"),
+            onPressed = { onAction(SaveStorePressed) }
+        )
     }
 }
 

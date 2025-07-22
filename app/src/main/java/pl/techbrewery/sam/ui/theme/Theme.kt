@@ -10,23 +10,23 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
 private val DarkColorScheme = darkColorScheme(
+    background = GreenDark2,
     primary = Green,
     secondary = GreenDark1,
-    primaryContainer = GreenDark,
+    primaryContainer = GreenDark2,
     secondaryContainer = GreenDark1,
     tertiaryContainer = Color(0xFFA3BF9E),
     tertiary = GreenLight1,
-    background = GreenDark,
     outline = GreenLight1,
-
-
+    onSurface = White,
+    surface = GreenDark2,
 )
 
 // no support yet

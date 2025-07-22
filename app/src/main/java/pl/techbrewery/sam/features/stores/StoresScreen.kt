@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Surface
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -25,17 +26,17 @@ fun StoresScreen(
     modifier: Modifier = Modifier,
     onNavigationAction: (Any) -> Unit = {},
 ) {
-    val stores by viewModel.stores.collectAsStateWithLifecycle()
-    StoresScreenContent(
-        stores = stores,
-        modifier = modifier,
-        onAction = { action ->
-            when (action) {
-                is StorePressed, CreateStorePressed -> onNavigationAction(action)
-                else -> viewModel.onAction(action)
+        val stores by viewModel.stores.collectAsStateWithLifecycle()
+        StoresScreenContent(
+            stores = stores,
+            modifier = modifier,
+            onAction = { action ->
+                when (action) {
+                    is StorePressed, CreateStorePressed -> onNavigationAction(action)
+                    else -> viewModel.onAction(action)
+                }
             }
-        }
-    )
+        )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,27 +46,33 @@ private fun StoresScreenContent(
     modifier: Modifier = Modifier,
     onAction: (Any) -> Unit = {}
 ) {
-    LazyColumn(modifier = modifier.padding(horizontal = 16.dp)) {
-        items(stores) { store ->
-            Text(
-                text = store.name,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .clickable {
-                        onAction(StorePressed(store))
-                    }
-            )
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LazyColumn(modifier = modifier.padding(horizontal = 16.dp)) {
+            items(stores) { store ->
+                Text(
+                    text = store.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            onAction(StorePressed(store))
+                        }
+                )
+            }
+            item {
+                Text(
+                    text = "Create store",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            onAction(CreateStorePressed)
+                        }
+                )
+            }
         }
-        item { Text(
-            text = "Create store",
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .clickable {
-                    onAction(CreateStorePressed)
-                }
-        ) }
     }
 }
 
