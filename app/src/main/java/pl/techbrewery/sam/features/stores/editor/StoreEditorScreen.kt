@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,14 +40,15 @@ import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.action_save
-import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.rememberDragAndDropListState
+import pl.techbrewery.sam.ui.shared.DragHandleSize
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
 import pl.techbrewery.sam.ui.shared.PrimaryFilledButton
 import pl.techbrewery.sam.ui.shared.PrimaryTextField
 import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.shared.stringResourceCompat
 import pl.techbrewery.sam.ui.theme.SAMTheme
+import timber.log.Timber
 
 @Composable
 fun StoreEditorScreen(
@@ -141,7 +141,11 @@ fun StoreEditorScreenContent(
                                     } ?: kotlin.run { overscrollJob?.cancel() }
                             },
                             onDragStart = { offset ->
-                                dragAndDropListState.onDragStart(offset)
+                                val x = offset.x
+                                val maxX = (DragHandleSize + Spacing.Small).toPx().toInt()
+                                if (x >= 0 && x <= maxX) {
+                                    dragAndDropListState.onDragStart(offset)
+                                }
                             },
                             onDragEnd = {
                                 dragAndDropListState.onDragInterrupted()
