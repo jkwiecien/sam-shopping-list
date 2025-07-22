@@ -33,8 +33,8 @@ internal fun BottomNavigationBar(
         val currentDestination = navBackStackEntry?.destination
         val itemColors = NavigationBarItemDefaults.colors(
             indicatorColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f), // Example: Use surfaceVariant
-            selectedIconColor = MaterialTheme.colorScheme.outline,
-            selectedTextColor = MaterialTheme.colorScheme.outline,
+            selectedIconColor = MaterialTheme.colorScheme.onSurface,
+            selectedTextColor = MaterialTheme.colorScheme.onSurface,
             unselectedIconColor = MaterialTheme.colorScheme.tertiaryContainer,
             unselectedTextColor = MaterialTheme.colorScheme.tertiaryContainer
         )
