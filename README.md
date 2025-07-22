@@ -34,6 +34,6 @@ Compose navigation with bottom navigation bar. Proper compose, not some ulgy por
 ### Room 
 Room layer lies in the KMP module. For lists I use flows that take care of the data updates between database and UI.
 ### AI generated design
-I used Stitch to create designs for this app and I'm really happy about it
+I used [Stitch](https://stitch.withgoogle.com/) to create designs for this app and I'm really happy about it
 ### Gemini
 Not gonna lie, I've generated a good portion of the code which I later groomed to fit the quality I'm used to. I even used `Design png -> Compose UI ` generation from Android Studio Canary. What a time to be alive! I got a lot of help with setting up KMP as well, as this was my first time doing it.
