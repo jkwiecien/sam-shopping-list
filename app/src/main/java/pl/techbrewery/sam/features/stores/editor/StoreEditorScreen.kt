@@ -28,6 +28,7 @@ import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.action_save
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
+import pl.techbrewery.sam.ui.shared.stringResourceCompat
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @Composable
@@ -93,11 +94,9 @@ fun StoreEditorScreenContent(
         }
         Button(
             onClick = { onAction(SaveStorePressed) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(stringResource(Res.string.action_save))
+            Text(stringResourceCompat(Res.string.action_save, "Save"))
         }
     }
 }

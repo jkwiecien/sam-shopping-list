@@ -17,14 +17,15 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF8CD178),
-    secondary = Color(0xFF2E402B),
-    primaryContainer = Color(0xFF171F14),
-    secondaryContainer = Color(0xFF2E402B),
+    primary = Green,
+    secondary = GreenDark1,
+    primaryContainer = GreenDark,
+    secondaryContainer = GreenDark1,
     tertiaryContainer = Color(0xFFA3BF9E),
-    tertiary = Color(0xFFA3BF9E),
-    background = Color(0xFF171F14),
-    outline = Color(0xFFFFFFFF),
+    tertiary = GreenLight1,
+    background = GreenDark,
+    outline = GreenLight1,
+
 
 )
 
