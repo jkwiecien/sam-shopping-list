@@ -108,7 +108,6 @@ fun EmptyStoresScreenContent(
         Column(
             modifier = Modifier.padding(Spacing.Large),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
             Image(
                 painter = painterResource(R.drawable.illustration_empty_stores), // Replace with your actual drawable
@@ -139,7 +138,7 @@ fun EmptyStoresScreenContent(
             Spacer(modifier = Modifier.height(32.dp))
 
             PrimaryOutlineButton(
-                title = "Create shop",
+                title = "Create store",
                 onPressed = { onAction(CreateStorePressed) },
                 modifier = Modifier
                     .padding(horizontal = 40.dp) // Add padding to make button wider

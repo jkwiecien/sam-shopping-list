@@ -41,7 +41,7 @@ import pl.techbrewery.sam.shared.BottomPageContentState
 import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
-import pl.techbrewery.sam.ui.shared.PrimaryTextField
+import pl.techbrewery.sam.ui.shared.SearchField
 import pl.techbrewery.sam.ui.shared.SharedModalBottomSheet
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
@@ -121,12 +121,13 @@ private fun ShoppingList(
             )
             .padding(horizontal = 16.dp)
     ) {
-        PrimaryTextField(
-            value = searchQuery,
+        SearchField(
+            query = searchQuery,
             supportingText = "Add item",
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
             onValueChange = { onAction(SearchQueryChanged(it)) },
-            onDonePressed = { onAction(KeyboardDonePressed) }
+            onDonePressed = { onAction(KeyboardDonePressed) },
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(8.dp))

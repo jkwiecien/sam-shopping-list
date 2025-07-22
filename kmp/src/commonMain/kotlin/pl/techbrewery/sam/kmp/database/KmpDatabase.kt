@@ -12,7 +12,6 @@ import pl.techbrewery.sam.kmp.database.entity.ItemBundleJoin
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
-import pl.techbrewery.sam.kmp.database.entity.StoreDepartmentJoin
 
 @Database(
     entities = [
@@ -20,8 +19,7 @@ import pl.techbrewery.sam.kmp.database.entity.StoreDepartmentJoin
         SingleItem::class,
         ItemBundle::class,
         ItemBundleJoin::class,
-        StoreDepartment::class,
-        StoreDepartmentJoin::class],
+        StoreDepartment::class],
     version = 1
 )
 abstract class KmpDatabase : RoomDatabase() {

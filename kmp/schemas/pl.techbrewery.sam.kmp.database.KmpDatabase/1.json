@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ed6774c15aed1d1cc4e7da36f88a97ce",
+    "identityHash": "7eddaf8ca49a4963cb50652ffed65a5a",
     "entities": [
       {
         "tableName": "stores",
@@ -167,12 +167,24 @@
       },
       {
         "tableName": "store_departments",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`department_name` TEXT NOT NULL, `position` INTEGER NOT NULL, `created_at` TEXT NOT NULL, PRIMARY KEY(`department_name`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`department_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `department_name` TEXT NOT NULL, `store_id` INTEGER NOT NULL, `position` INTEGER NOT NULL, `created_at` TEXT NOT NULL, FOREIGN KEY(`store_id`) REFERENCES `stores`(`store_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
+          {
+            "fieldPath": "departmentId",
+            "columnName": "department_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
           {
             "fieldPath": "departmentName",
             "columnName": "department_name",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "storeId",
+            "columnName": "store_id",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -189,45 +201,20 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
-            "department_name"
-          ]
-        }
-      },
-      {
-        "tableName": "store_department_join",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`department_id_join` TEXT NOT NULL, `store_id_join` INTEGER NOT NULL, PRIMARY KEY(`department_id_join`, `store_id_join`), FOREIGN KEY(`store_id_join`) REFERENCES `stores`(`store_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`department_id_join`) REFERENCES `store_departments`(`department_name`) ON UPDATE NO ACTION ON DELETE CASCADE )",
-        "fields": [
-          {
-            "fieldPath": "departmentKey",
-            "columnName": "department_id_join",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "storeKey",
-            "columnName": "store_id_join",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "department_id_join",
-            "store_id_join"
+            "department_id"
           ]
         },
         "indices": [
           {
-            "name": "index_store_department_join_store_id_join",
+            "name": "index_store_departments_store_id",
             "unique": false,
             "columnNames": [
-              "store_id_join"
+              "store_id"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_store_department_join_store_id_join` ON `${TABLE_NAME}` (`store_id_join`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_store_departments_store_id` ON `${TABLE_NAME}` (`store_id`)"
           }
         ],
         "foreignKeys": [
@@ -236,21 +223,10 @@
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "store_id_join"
+              "store_id"
             ],
             "referencedColumns": [
               "store_id"
-            ]
-          },
-          {
-            "table": "store_departments",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "department_id_join"
-            ],
-            "referencedColumns": [
-              "department_name"
             ]
           }
         ]
@@ -258,7 +234,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ed6774c15aed1d1cc4e7da36f88a97ce')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7eddaf8ca49a4963cb50652ffed65a5a')"
     ]
   }
 }

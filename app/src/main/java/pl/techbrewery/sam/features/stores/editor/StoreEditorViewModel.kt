@@ -17,6 +17,7 @@ import kotlinx.coroutines.withContext
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.shared.BaseViewModel
+import timber.log.Timber
 
 class StoreEditorViewModel(
     private val storeRepository: StoreRepository
@@ -26,25 +27,33 @@ class StoreEditorViewModel(
         MutableStateFlow(emptyList())
     internal val departments: StateFlow<ImmutableList<StoreDepartment>> =
         storeDepartmentsMutableFlow
-            .map { items ->
-                items.toImmutableList()
-            }
+            .map { it.toImmutableList() }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
                 initialValue = emptyList<StoreDepartment>().toImmutableList()
             )
 
+    private var storeId: Long = -1
     var storeName: String by mutableStateOf("")
         private set
+    var newDepartmentName: String by mutableStateOf("")
+        private set
 
-    fun setStoreId(storeId: Int) {
+    fun setStoreId(existingStoreId: Long) {
         viewModelScope.launch(Dispatchers.Main) {
-            withContext(Dispatchers.Default) {
-                storeRepository.getStoreWithDepartments(storeId)
-            }?.let { storeWithDepartments ->
-                storeName = storeWithDepartments.store.name
-                storeDepartmentsMutableFlow.value = storeWithDepartments.departments
+            launch {
+                withContext(Dispatchers.Default) {
+                    storeRepository.getStore(existingStoreId)
+                }?.let { store ->
+                    storeId = store.storeId
+                    storeName = store.name
+                }
+            }
+            launch {
+                storeDepartmentsMutableFlow.value = withContext(Dispatchers.Default) {
+                    storeRepository.getStoreDepartments(existingStoreId)
+                }
             }
         }
     }
@@ -54,6 +63,8 @@ class StoreEditorViewModel(
             is SaveStorePressed -> saveStore()
             is StoreNameChanged -> storeName = action.name
             is StoreDepartmentMoved -> moveDepartment(action.from, action.to)
+            is DepartmentNameChanged -> newDepartmentName = action.departmentName
+            is KeyboardDonePressedOnDepartmentName -> addDepartment()
         }
     }
 
@@ -61,11 +72,26 @@ class StoreEditorViewModel(
         viewModelScope.launch(Dispatchers.Main) {
             withContext(Dispatchers.Default) {
                 storeRepository.saveStoreLayout(
+                    storeId = storeId,
                     storeName = storeName,
-                    departments = emptyList()
+                    departments = departments.value
                 )
             }
         }
+    }
+
+    private fun addDepartment() {
+        val updatedDepartments = departments.value.toMutableList().apply {
+            add(
+                StoreDepartment(
+                    storeId = storeId,
+                    departmentName = newDepartmentName,
+                    position = size
+                )
+            )
+        }
+        storeDepartmentsMutableFlow.value = updatedDepartments
+        newDepartmentName = ""
     }
 
     private fun moveDepartment(from: Int, to: Int) {

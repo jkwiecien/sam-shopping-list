@@ -11,12 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,18 +28,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.action_save
+import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.rememberDragAndDropListState
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
 import pl.techbrewery.sam.ui.shared.PrimaryFilledButton
+import pl.techbrewery.sam.ui.shared.PrimaryTextField
+import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.shared.stringResourceCompat
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
@@ -46,8 +54,12 @@ import pl.techbrewery.sam.ui.theme.SAMTheme
 fun StoreEditorScreen(
     viewModel: StoreEditorViewModel,
 ) {
+    val departments by viewModel.departments.collectAsStateWithLifecycle()
     StoreEditorScreenContent(
-        storeName = viewModel.storeName
+        storeName = viewModel.storeName,
+        newDepartmentName = viewModel.newDepartmentName,
+        departments = departments,
+        onAction = { viewModel.onAction(it) }
     )
 }
 
@@ -55,30 +67,29 @@ fun StoreEditorScreen(
 @Composable
 fun StoreEditorScreenContent(
     storeName: String,
+    newDepartmentName: String,
     modifier: Modifier = Modifier,
     departments: ImmutableList<StoreDepartment> = emptyList<StoreDepartment>().toImmutableList(),
     onAction: (Any) -> Unit = {}
 ) {
-    // val uiState by viewModel.uiState.collectAsState() // Example of collecting state from ViewModel
-    var layoutName by remember { mutableStateOf("") }
-    // Replace with actual categories from your ViewModel or data source
-
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
+        val focusManager = LocalFocusManager.current
         Column(
             modifier = modifier
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(Spacing.Large)
+                .closeKeyboardOnPress(
+                    onPressedSomething = { focusManager.clearFocus() }
+                ),
+            verticalArrangement = Arrangement.spacedBy(Spacing.Large)
         ) {
-            OutlinedTextField(
-                value = layoutName,
+            PrimaryTextField(
+                value = storeName,
+                supportingText = "Store name",
                 onValueChange = { onAction(StoreNameChanged(it)) },
-                label = {
-                    Text(
-                        text = storeName
-                    )
-                }, // Create this string resource
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                onDonePressed = { onAction(KeyboardDonePressedOnStoreName) },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -88,8 +99,16 @@ fun StoreEditorScreenContent(
             )
 
             Text(
-                text = "Category",
+                text = "Departments",
                 style = MaterialTheme.typography.titleMedium
+            )
+            PrimaryTextField(
+                value = newDepartmentName,
+                supportingText = "Add department",
+                onValueChange = { onAction(DepartmentNameChanged(it)) },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                onDonePressed = { onAction(KeyboardDonePressedOnDepartmentName) },
+                modifier = Modifier.fillMaxWidth()
             )
 
             val lazyListState = rememberLazyListState()
@@ -140,6 +159,7 @@ fun StoreEditorScreenContent(
                     CategoryItem(
                         categoryName = department.departmentName,
                         modifier = Modifier
+                            .animateItem()
                             .composed {
                                 val offsetOrNull =
                                     dragAndDropListState.elementDisplacement.takeIf {
@@ -183,7 +203,8 @@ fun CategoryItem(
 fun StoresScreenPreview() {
     SAMTheme { // Wrap with your app's theme if you have one
         StoreEditorScreenContent(
-            storeName = "Lidl"
+            storeName = "Lidl",
+            newDepartmentName = "Vegetables"
         )
     }
 }

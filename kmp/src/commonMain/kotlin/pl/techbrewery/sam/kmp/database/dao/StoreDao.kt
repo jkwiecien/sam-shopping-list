@@ -16,7 +16,7 @@ import pl.techbrewery.sam.kmp.database.pojo.StoreWithDepartments
 interface StoreDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(store: Store)
+    suspend fun insert(store: Store): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(stores: List<Store>)
@@ -28,7 +28,7 @@ interface StoreDao {
     suspend fun delete(store: Store)
 
     @Query("SELECT * FROM stores WHERE store_id = :storeId")
-    suspend fun getStoreById(storeId: Int): Store?
+    suspend fun getStoreById(storeId: Long): Store?
 
     @Query("SELECT * FROM stores ORDER BY name ASC")
     fun getAllStores(): Flow<List<Store>> // Observe changes with Flow
@@ -41,13 +41,4 @@ interface StoreDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM stores LIMIT 1)")
     suspend fun hasAnyStores(): Boolean
-
-    @Transaction
-    @Query("SELECT * FROM stores")
-    fun getItemBundlesWithSingleItems(): Flow<List<StoreWithDepartments>>
-
-    @Transaction
-    @Query("SELECT * FROM stores WHERE store_id = :storeId")
-    fun getStoreWithDepartments(storeId: Int): StoreWithDepartments?
-
 }
