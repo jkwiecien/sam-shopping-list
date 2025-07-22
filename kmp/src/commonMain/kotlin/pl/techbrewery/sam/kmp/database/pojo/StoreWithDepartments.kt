@@ -19,5 +19,5 @@ data class StoreWithDepartments(
             entityColumn = "department_id_join"    // Column in StoreDepartmentJoin that references StoreDepartment's PK
         )
     )
-    val departments: List<StoreDepartment>
+    val departments: List<StoreDepartment> = emptyList()
 )

@@ -12,11 +12,11 @@ import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.shared.BaseViewModel
 
 class StoresViewModel(
-    private val storesRepository: StoreRepository
+    private val storeRepository: StoreRepository
 ) : BaseViewModel() {
 
     internal val stores: StateFlow<ImmutableList<Store>> =
-        storesRepository.getAllStores()
+        storeRepository.getAllStores()
             .map { items ->
                 items.toImmutableList()
             }
