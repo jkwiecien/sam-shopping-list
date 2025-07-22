@@ -3,6 +3,7 @@ package pl.techbrewery.sam.features.stores.editor
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,45 +59,49 @@ fun StoreEditorScreenContent(
         )
     }
 
-    Column(
-        modifier = modifier
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Surface(
+        modifier = Modifier.fillMaxSize()
     ) {
-        OutlinedTextField(
-            value = layoutName,
-            onValueChange = { onAction(StoreNameChanged(it)) },
-            label = {
-                Text(
-                    text = storeName
-                )
-            }, // Create this string resource
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Text(
-            text = "Customize the order of categories to match your shopping path in the store. Drag and drop categories to reflect your route.",
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Text(
-            text = "Category",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        LazyColumn(
-            modifier = Modifier.weight(1f), // Allow the list to take available space
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            modifier = modifier
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(categories) { category ->
-                CategoryItem(categoryName = category)
+            OutlinedTextField(
+                value = layoutName,
+                onValueChange = { onAction(StoreNameChanged(it)) },
+                label = {
+                    Text(
+                        text = storeName
+                    )
+                }, // Create this string resource
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Text(
+                text = "Customize the order of categories to match your shopping path in the store. Drag and drop categories to reflect your route.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Category",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            LazyColumn(
+                modifier = Modifier.weight(1f), // Allow the list to take available space
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(categories) { category ->
+                    CategoryItem(categoryName = category)
+                }
             }
+            PrimaryFilledButton(
+                modifier = Modifier.fillMaxWidth(),
+                title = stringResourceCompat(Res.string.action_save, "Save"),
+                onPressed = { onAction(SaveStorePressed) }
+            )
         }
-        PrimaryFilledButton(
-            modifier = Modifier.fillMaxWidth(),
-            title = stringResourceCompat(Res.string.action_save, "Save"),
-            onPressed = { onAction(SaveStorePressed) }
-        )
     }
 }
 
