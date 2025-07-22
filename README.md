@@ -16,7 +16,7 @@ Greatest Android invention since ActionBarSherlock (I guess I'm a boomer)
 ### Kotlin multiplatform
 So far this is just an Android app but I'm trying to make some layers of the code to be shared with iOS using kotlin multiplatform.
 #### Compose resources
-I'm using Compose Resources to handle translations (icons later). I already encountered problem with Compose @Previews. It just doesn't work with it. I had to create a method that would keep previews rendering:
+I'm using Compose Resources to handle translations (icons later). I already encountered [a problem](https://issuetracker.google.com/issues/348208777) with Compose @Previews. It just doesn't work with it. I had to create a method that would keep previews rendering:
 ```
 @Composable
 fun stringResourceCompat(resource: StringResource, previewFallback: String): String {
