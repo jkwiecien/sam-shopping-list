@@ -33,6 +33,8 @@ fun stringResourceCompat(resource: StringResource, previewFallback: String): Str
 Compose navigation with bottom navigation bar. Proper compose, not some ulgy port from the early days.
 ### Room 
 Room layer lies in the KMP module. For lists I use flows that take care of the data updates between database and UI.
+### Drag & drop
+I found a [great library](https://github.com/Calvin-LL/Reorderable/?tab=readme-ov-file#lazycolumn) that does the job perfectly. I wonder why something some common still isn't available out of the box.
 ### AI generated design
 I used [Stitch](https://stitch.withgoogle.com/) to create designs for this app and I'm really happy about it
 ### Gemini
