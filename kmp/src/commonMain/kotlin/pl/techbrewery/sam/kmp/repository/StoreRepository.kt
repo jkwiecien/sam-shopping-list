@@ -80,4 +80,10 @@ class StoreRepository(
     suspend fun getStoreDepartments(storeId: Long): List<StoreDepartment> {
         return kmpDatabase.storeDepartmentDao().getStoreDepartments(storeId)
     }
+
+    fun reindexDepartments(departments: List<StoreDepartment>): List<StoreDepartment> {
+        return departments.mapIndexed { index, department ->
+            department.copy(position = index)
+        }
+    }
 }

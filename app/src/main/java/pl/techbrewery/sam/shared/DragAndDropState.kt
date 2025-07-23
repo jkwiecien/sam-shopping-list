@@ -10,7 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 
-class DragAndDropListState(
+class DragAndDropState(
     val lazyListState: LazyListState,
     private val onMove: (Int, Int) -> Unit
 ) {
@@ -101,8 +101,8 @@ class DragAndDropListState(
 fun rememberDragAndDropListState(
     lazyListState: LazyListState,
     onMove: (Int, Int) -> Unit
-): DragAndDropListState {
-    return remember { DragAndDropListState(lazyListState, onMove) }
+): DragAndDropState {
+    return remember { DragAndDropState(lazyListState, onMove) }
 }
 
 val LazyListItemInfo.offsetEnd: Int

@@ -13,10 +13,10 @@ import androidx.compose.ui.unit.dp
 val DragHandleSize = 24.dp
 
 @Composable
-fun ItemDragHandle() {
+fun ItemDragHandle(modifier: Modifier = Modifier) {
     Icon(
         imageVector = Icons.Default.Menu, // Or a drag handle icon
         contentDescription = "Category",
-        modifier = Modifier.size(DragHandleSize)
+        modifier = modifier.size(DragHandleSize)
     )
 }

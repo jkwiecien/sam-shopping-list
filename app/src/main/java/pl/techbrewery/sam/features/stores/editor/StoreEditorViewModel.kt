@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pl.techbrewery.sam.extensions.tempLog
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.shared.BaseViewModel
@@ -95,10 +96,13 @@ class StoreEditorViewModel(
     }
 
     private fun moveDepartment(from: Int, to: Int) {
-        val currentDepartments = departments.value.toMutableList()
+        val updatedDepartments = departments.value.toMutableList()
         if (from == to) return
-        val element = currentDepartments.removeAt(from)
-        currentDepartments.add(to, element)
-        storeDepartmentsMutableFlow.value = currentDepartments.toImmutableList()
+        val element = updatedDepartments.removeAt(from)
+        updatedDepartments.add(to, element)
+        val reIndexedDepartments = storeRepository.reindexDepartments(updatedDepartments)
+        tempLog(reIndexedDepartments.joinToString { "${it.departmentName}: ${it.position}" })
+        storeDepartmentsMutableFlow.value =reIndexedDepartments
+            .toImmutableList()
     }
 }
