@@ -1,7 +1,6 @@
 package pl.techbrewery.sam.ui.shared
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,7 +9,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @Composable
-fun PrimaryOutlineButton(
+fun PrimaryOutlinedButton(
     title: String,
     modifier: Modifier = Modifier,
     onPressed: () -> Unit = {},
@@ -32,7 +31,7 @@ fun PrimaryOutlineButton(
 @Composable
 fun PrimaryOutlineButtonPreview() {
     SAMTheme {
-        PrimaryOutlineButton(
+        PrimaryOutlinedButton(
             title = "Save"
         )
     }

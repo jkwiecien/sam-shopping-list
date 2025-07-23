@@ -27,6 +27,8 @@ private val DarkColorScheme = darkColorScheme(
     outline = GreenLight1,
     onSurface = White,
     surface = GreenDark2,
+    onPrimaryContainer = White,
+    onSecondary = GreenLight1
 )
 
 // no support yet

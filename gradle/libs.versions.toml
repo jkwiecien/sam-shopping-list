@@ -23,6 +23,7 @@ navVersion = "2.9.2"
 kotlinSerialization = "2.2.0"
 gson = "2.13.1"
 composeResources = "1.8.2"
+reorderable = "2.5.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -54,6 +55,7 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navVersion" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 compose-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "composeResources" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.gson)
     implementation(libs.compose.resources)
+    implementation(libs.reorderable)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

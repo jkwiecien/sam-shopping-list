@@ -1,6 +1,7 @@
 package pl.techbrewery.sam.kmp.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onStart
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
@@ -73,8 +74,21 @@ class StoreRepository(
         }
     }
 
+    private suspend fun insertDefaultStoreIfNotPresent() {
+        val store = getStore(0)
+        if (store == null) {
+            kmpDatabase.storeDao().insert(
+                Store(
+                    storeId = 0,
+                    name = "Default Store"
+                )
+            )
+        }
+    }
+
     fun getAllStores(): Flow<List<Store>> {
         return kmpDatabase.storeDao().getAllStores()
+            .onStart { insertDefaultStoreIfNotPresent() }
     }
 
     suspend fun getStoreDepartments(storeId: Long): List<StoreDepartment> {

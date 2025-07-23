@@ -14,4 +14,6 @@ data class Store(
     @ColumnInfo(name = "address") val address: String? = null,
     @ColumnInfo(name = "created_at") val createdAt: String = Clock.System.now().toString(),
     @ColumnInfo(name = "updated_at") val updatedAt: String = createdAt,
-)
+) {
+    val mainStore: Boolean get() = storeId == 0L
+}
