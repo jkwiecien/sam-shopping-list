@@ -5,12 +5,9 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import pl.techbrewery.sam.kmp.database.entity.Store
-import pl.techbrewery.sam.kmp.database.pojo.ItemBundleWithItems
-import pl.techbrewery.sam.kmp.database.pojo.StoreWithDepartments
 
 @Dao
 interface StoreDao {
@@ -29,6 +26,9 @@ interface StoreDao {
 
     @Query("SELECT * FROM stores WHERE store_id = :storeId")
     suspend fun getStoreById(storeId: Long): Store?
+
+    @Query("SELECT * FROM stores WHERE main = true")
+    suspend fun getMainStore(): Store?
 
     @Query("SELECT * FROM stores ORDER BY name ASC")
     fun getAllStores(): Flow<List<Store>> // Observe changes with Flow

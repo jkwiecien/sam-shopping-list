@@ -65,7 +65,7 @@ fun PrimaryButtonPreview() {
 fun PrimaryButtonIconPreview() {
     SAMTheme {
         PrimaryFilledButton(
-            title = "New shop",
+            title = "New store",
             leadingIcon = HeterogeneousVectorIcon.VectorIcon(Icons.Filled.Add)
         )
     }

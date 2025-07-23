@@ -43,6 +43,7 @@ import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
 import pl.techbrewery.sam.ui.shared.SearchField
 import pl.techbrewery.sam.ui.shared.SharedModalBottomSheet
+import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @Composable
@@ -119,7 +120,7 @@ private fun ShoppingList(
             .closeKeyboardOnPress(
                 onPressedSomething = { focusManager.clearFocus() }
             )
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = Spacing.Large)
     ) {
         SearchField(
             query = searchQuery,
@@ -151,11 +152,10 @@ private fun ShoppingListItem(
     onCheckboxChecked: (itemName: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp), // Increased padding for better touch target
+            .padding(vertical = Spacing.Small), // Increased padding for better touch target
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start // Align items to the start
     ) {

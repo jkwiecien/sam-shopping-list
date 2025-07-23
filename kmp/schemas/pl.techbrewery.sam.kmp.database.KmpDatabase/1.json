@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "7eddaf8ca49a4963cb50652ffed65a5a",
+    "identityHash": "ea62bfa43170da99dd3b4cc9a1dc3888",
     "entities": [
       {
         "tableName": "stores",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`store_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `address` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`store_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `address` TEXT, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `main` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "storeId",
@@ -35,6 +35,12 @@
             "fieldPath": "updatedAt",
             "columnName": "updated_at",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "main",
+            "columnName": "main",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -234,7 +240,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7eddaf8ca49a4963cb50652ffed65a5a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ea62bfa43170da99dd3b4cc9a1dc3888')"
     ]
   }
 }

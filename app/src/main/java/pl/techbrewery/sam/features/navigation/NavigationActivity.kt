@@ -141,7 +141,7 @@ private fun FloatingActionButtonForRoute(
             modifier = Modifier.fillMaxWidth()
         ) {
             PrimaryFilledButton(
-                title = "New Shop",
+                title = "New store",
                 onPressed = { onFloatingActionButtonPressed(route) },
                 leadingIcon = HeterogeneousVectorIcon.VectorIcon(Icons.Filled.Add)
             )

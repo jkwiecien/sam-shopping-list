@@ -18,6 +18,10 @@ class StoreRepository(
         return kmpDatabase.storeDao().getStoreById(storeId)
     }
 
+    suspend fun getMainStore(): Store? {
+        return kmpDatabase.storeDao().getMainStore()
+    }
+
     suspend fun saveStoreLayout(
         storeId: Long,
         storeName: String,
@@ -74,13 +78,13 @@ class StoreRepository(
         }
     }
 
-    private suspend fun insertDefaultStoreIfNotPresent() {
-        val store = getStore(0)
-        if (store == null) {
+    private suspend fun createMainStoreIfNotPresent() {
+        val mainStore = getMainStore()
+        if (mainStore == null) {
             kmpDatabase.storeDao().insert(
                 Store(
-                    storeId = 0,
-                    name = "Default Store"
+                    name = "Main Store",
+                    main = true
                 )
             )
         }
@@ -88,7 +92,9 @@ class StoreRepository(
 
     fun getAllStores(): Flow<List<Store>> {
         return kmpDatabase.storeDao().getAllStores()
-            .onStart { insertDefaultStoreIfNotPresent() }
+            .onStart {
+                createMainStoreIfNotPresent()
+            }
     }
 
     suspend fun getStoreDepartments(storeId: Long): List<StoreDepartment> {
