@@ -69,13 +69,8 @@ class StoreRepository(
                     )
                 )
             }
-
-            val store = Store(
-                name = storeName,
-                updatedAt = getCurrentTime()
-            )
-            kmpDatabase.storeDao().insert(store)
         }
+        kmpDatabase.storeDao().insert(store)
     }
 
     private suspend fun createMainStoreIfNotPresent() {

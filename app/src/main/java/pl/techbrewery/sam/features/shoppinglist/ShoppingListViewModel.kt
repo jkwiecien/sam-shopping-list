@@ -23,6 +23,9 @@ import pl.techbrewery.sam.shared.BottomPageContentState
 import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
 
+private const val DEFAULT_INDEX_GAP = 100L
+private const val MIN_INDEX_INCREMENT = 1L
+
 class ShoppingListViewModel(
     private val shoppingList: ShoppingListRepository,
     private val stores: StoreRepository
@@ -37,6 +40,7 @@ class ShoppingListViewModel(
     internal val items: StateFlow<ImmutableList<SingleItem>> =
         shoppingList.getLastShoppingList()
             .map { items ->
+                tempLog("Got items: ${items.joinToString { "${it.itemName}:${it.indexWeight}" }}")
                 items.toImmutableList()
             }
             .stateIn(
@@ -58,8 +62,9 @@ class ShoppingListViewModel(
     override fun onAction(action: Any) {
         when (action) {
             is ItemChecked -> onItemChecked(action.itemName)
-            is KeyboardDonePressed -> onDonePressed()
+            is KeyboardDonePressed -> addItem()
             is SearchQueryChanged -> onSearchQueryChanged(action.query)
+            is ItemMoved -> moveItem(action.from, action.to)
         }
     }
 
@@ -77,9 +82,19 @@ class ShoppingListViewModel(
         mutableSearchFlow.value = ""
     }
 
-    private fun onDonePressed() {
+    private fun addItem() {
         viewModelScope.launch(Dispatchers.Main) {
-            withContext(Dispatchers.Default) { shoppingList.insertItem(mutableSearchFlow.value) }
+            val currentItems = items.value
+            val maxWeight =
+                currentItems.maxOfOrNull { it.indexWeight } ?: 0L // If list is empty, start from 0
+            val newWeight = maxWeight + 100L
+            tempLog("Adding new item with weight: $newWeight")
+            withContext(Dispatchers.Default) {
+                shoppingList.insertItem(
+                    mutableSearchFlow.value,
+                    newWeight
+                )
+            }
             clearSearchField()
         }
     }
@@ -89,9 +104,12 @@ class ShoppingListViewModel(
     }
 
     private fun moveItem(from: Int, to: Int) {
-        val updatedItems = items.value.toMutableList()
         if (from == to) return
-        val element = updatedItems.removeAt(from)
-        updatedItems.add(to, element)
+
+        viewModelScope.launch(Dispatchers.Default) {
+
+        }
     }
+
+
 }

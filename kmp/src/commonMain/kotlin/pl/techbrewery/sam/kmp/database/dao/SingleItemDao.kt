@@ -21,7 +21,7 @@ interface SingleItemDao {
     @Query("SELECT * FROM single_items ORDER BY item_name ASC") // Order by name for consistency
     fun getAllSingleItems(): Flow<List<SingleItem>>
 
-    @Query("SELECT * FROM single_items WHERE checked_off = false ORDER BY item_name ASC") // Order by name for consistency
+    @Query("SELECT * FROM single_items WHERE checked_off = false ORDER BY index_weight DESC") // Order by name for consistency
     fun getUncheckedSingleItems(): Flow<List<SingleItem>>
 
     // Get a single item by its ID

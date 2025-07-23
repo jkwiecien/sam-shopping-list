@@ -84,6 +84,7 @@ class StoreEditorViewModel(
         val updatedDepartments = departments.value.toMutableList().apply {
             add(
                 StoreDepartment(
+                    departmentId = this.size.toLong(),
                     storeId = storeId,
                     departmentName = newDepartmentName,
                     position = size
@@ -95,8 +96,8 @@ class StoreEditorViewModel(
     }
 
     private fun moveDepartment(from: Int, to: Int) {
-        val updatedDepartments = departments.value.toMutableList()
         if (from == to) return
+        val updatedDepartments = departments.value.toMutableList()
         val element = updatedDepartments.removeAt(from)
         updatedDepartments.add(to, element)
         val reIndexedDepartments = storeRepository.reindexDepartments(updatedDepartments)

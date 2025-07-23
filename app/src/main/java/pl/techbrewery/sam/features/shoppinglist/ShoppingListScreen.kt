@@ -138,10 +138,10 @@ private fun ShoppingList(
             rememberReorderableLazyListState(lazyListState) { from, to ->
                 onAction(ItemMoved(from.index, to.index))
             }
-        LazyColumn {
+        LazyColumn(
+            state = lazyListState
+        ) {
             items(items, key = { it.itemName }) { item ->
-
-                Column {
                     ReorderableItem(
                         reorderableLazyListState,
                         key = item.itemName
@@ -150,19 +150,16 @@ private fun ShoppingList(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             ItemDragHandle(
-                                modifier = Modifier
-                                    .draggableHandle(),
+                                modifier = Modifier.draggableHandle(),
                             )
                             ShoppingListItem(
                                 itemName = item.itemName,
                                 onCheckboxChecked = { onAction(ItemChecked(it)) },
-                                modifier = Modifier.animateItem()
+//                                modifier = Modifier.animateItem() //fixme
                             )
                         }
                     }
                     HorizontalDivider()
-                }
-
             }
         }
     }

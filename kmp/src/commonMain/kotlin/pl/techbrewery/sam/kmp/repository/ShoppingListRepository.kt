@@ -7,8 +7,11 @@ import pl.techbrewery.sam.kmp.database.entity.SingleItem
 class ShoppingListRepository(
     private val db: KmpDatabase
 ) {
-    suspend fun insertItem(itemName: String) {
-        val item = SingleItem(itemName.lowercase())
+    suspend fun insertItem(itemName: String, indexWeight: Long) {
+        val item = SingleItem(
+            itemName = itemName.lowercase(),
+            indexWeight = indexWeight
+        )
         db.singleItemDao().insertSingleItem(item)
     }
 
@@ -20,5 +23,15 @@ class ShoppingListRepository(
 
     fun getLastShoppingList(): Flow<List<SingleItem>> {
         return db.singleItemDao().getUncheckedSingleItems()
+    }
+
+    suspend fun  updateItems(items: MutableList<SingleItem>) {
+        items.forEach { item ->
+            db.singleItemDao().updateSingleItem(item)
+        }
+    }
+
+    suspend fun updateItem(item: SingleItem) {
+        db.singleItemDao().updateSingleItem(item)
     }
 }

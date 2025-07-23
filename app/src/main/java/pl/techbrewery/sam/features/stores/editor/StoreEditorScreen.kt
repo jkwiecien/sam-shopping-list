@@ -130,8 +130,6 @@ fun StoreEditorScreenContent(
                             )
                             CategoryItem(
                                 categoryName = department.departmentName,
-                                itemIndex = index,
-                                modifier = Modifier
                             )
                         }
                     }
@@ -150,8 +148,7 @@ fun StoreEditorScreenContent(
 @Composable
 fun CategoryItem(
     categoryName: String,
-    itemIndex: Int,
-    modifier: Modifier,
+    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier

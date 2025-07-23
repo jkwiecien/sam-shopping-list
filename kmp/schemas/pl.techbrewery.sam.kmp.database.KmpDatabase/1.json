@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ea62bfa43170da99dd3b4cc9a1dc3888",
+    "identityHash": "111f026a4035e9614f692cd3c3d94113",
     "entities": [
       {
         "tableName": "stores",
@@ -53,7 +53,7 @@
       },
       {
         "tableName": "single_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`item_name` TEXT NOT NULL, `created_at` TEXT NOT NULL, `checked_off` INTEGER NOT NULL, PRIMARY KEY(`item_name`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`item_name` TEXT NOT NULL, `created_at` TEXT NOT NULL, `index_weight` INTEGER NOT NULL, `checked_off` INTEGER NOT NULL, PRIMARY KEY(`item_name`))",
         "fields": [
           {
             "fieldPath": "itemName",
@@ -65,6 +65,12 @@
             "fieldPath": "createdAt",
             "columnName": "created_at",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "indexWeight",
+            "columnName": "index_weight",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -240,7 +246,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ea62bfa43170da99dd3b4cc9a1dc3888')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '111f026a4035e9614f692cd3c3d94113')"
     ]
   }
 }
