@@ -21,7 +21,7 @@ fun SearchField(
     PrimaryTextField(
         value = query,
         modifier = modifier,
-        supportingText = supportingText,
+        label = supportingText,
         keyboardOptions = keyboardOptions,
         onValueChange = onValueChange,
         onDonePressed = onDonePressed,

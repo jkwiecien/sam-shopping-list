@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,39 +20,56 @@ import pl.techbrewery.sam.ui.theme.SAMTheme
 fun PrimaryTextField(
     value: String,
     modifier: Modifier = Modifier,
-    supportingText: String? = null,
+    label: String? = null,
+    readOnly: Boolean = false,
+    enabled: Boolean = true,
+    colors: TextFieldColors = primaryTextFieldColors(),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
     onValueChange: (String) -> Unit = {},
     onDonePressed: () -> Unit = {},
 ) {
     TextField(
         value = value,
         modifier = modifier,
+        readOnly = readOnly,
+        enabled = enabled,
         onValueChange = onValueChange,
-        label = supportingText?.let { { Text(
-            text = supportingText,
-            modifier = Modifier.fillMaxWidth()) } },
+        label = label?.let {
+            {
+                Text(
+                    text = label,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
         keyboardOptions = keyboardOptions,
         keyboardActions = KeyboardActions(
             onDone = { onDonePressed() }
         ),
         shape = RoundedCornerShape(12.dp),
-        colors = TextFieldDefaults.colors(
-            focusedIndicatorColor = Transparent,
-            disabledIndicatorColor = Transparent,
-            unfocusedIndicatorColor = Transparent,
-            focusedSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-            focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer
-        ),
-        leadingIcon = leadingIcon
+        colors = colors,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
     )
 }
 
+@Composable
+fun primaryTextFieldColors() = TextFieldDefaults.colors(
+    focusedIndicatorColor = Transparent,
+    disabledIndicatorColor = Transparent,
+    unfocusedIndicatorColor = Transparent,
+    focusedSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+    focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer
+)
+
+
+
 @Preview
 @Composable
-fun PrimaryTextFieldPreview() {
+private fun PrimaryTextFieldPreview() {
     SAMTheme {
         PrimaryTextField(value = "Some value")
     }

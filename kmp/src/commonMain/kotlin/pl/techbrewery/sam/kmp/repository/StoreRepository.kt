@@ -85,7 +85,7 @@ class StoreRepository(
         }
     }
 
-    fun getAllStores(): Flow<List<Store>> {
+    fun getAllStoresFlow(): Flow<List<Store>> {
         return kmpDatabase.storeDao().getAllStores()
             .onStart {
                 createMainStoreIfNotPresent()

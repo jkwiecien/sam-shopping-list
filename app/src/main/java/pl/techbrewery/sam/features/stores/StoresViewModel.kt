@@ -16,7 +16,7 @@ class StoresViewModel(
 ) : BaseViewModel() {
 
     internal val stores: StateFlow<ImmutableList<Store>> =
-        storeRepository.getAllStores()
+        storeRepository.getAllStoresFlow()
             .map { items ->
                 items.toImmutableList()
             }

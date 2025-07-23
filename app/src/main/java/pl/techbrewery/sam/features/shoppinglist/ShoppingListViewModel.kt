@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
+import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
@@ -25,16 +26,38 @@ import pl.techbrewery.sam.shared.BaseViewModel
 import pl.techbrewery.sam.shared.BottomPageContentState
 import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
+import pl.techbrewery.sam.ui.shared.DropdownItem
 
 
 class ShoppingListViewModel(
     private val shoppingList: ShoppingListRepository,
-    private val stores: StoreRepository
+    private val storesRepository: StoreRepository
 ) : BaseViewModel() {
 
     private val mutableSearchFlow: MutableStateFlow<String> = MutableStateFlow("")
     internal val searchQueryFLow: StateFlow<String> = mutableSearchFlow
     var bottomSheetContentState: BottomPageContentState? by mutableStateOf(null)
+        private set
+
+    internal val storeDropdownItems: StateFlow<ImmutableList<DropdownItem<Store>>> =
+        storesRepository.getAllStoresFlow()
+            .debounce { 50L }
+            .map { allStores ->
+                allStores.map { store ->
+                    DropdownItem(
+                        item = store,
+                        text = store.name,
+                        extraText = store.address
+                    )
+                }.toImmutableList()
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = emptyList<DropdownItem<Store>>().toImmutableList()
+            )
+
+    var selectedStoreDropdownItem by mutableStateOf(DropdownItem.dummyItem(Store.dummyStore()))
         private set
 
     private val itemsMutableFlow: MutableStateFlow<List<SingleItem>> =
@@ -90,6 +113,7 @@ class ShoppingListViewModel(
             is KeyboardDonePressed -> addItem()
             is SearchQueryChanged -> onSearchQueryChanged(action.query)
             is ItemMoved -> moveItemMutableFlow.value = action.from to action.to
+            is StoreDropdownItemSelected -> selectedStoreDropdownItem = action.dropdownItem
         }
     }
 
@@ -148,9 +172,4 @@ class ShoppingListViewModel(
             launch { withContext(Dispatchers.Default) { shoppingList.updateItems(updatedItems) } }
         }
     }
-
-
-    //if true, there are no duplicates
-
-
 }

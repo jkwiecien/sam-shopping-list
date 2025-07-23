@@ -35,10 +35,13 @@ import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.features.stores.CreateStoreSheetContent
 import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
+import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.shared.BottomPageContentState
 import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
+import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
+import pl.techbrewery.sam.ui.shared.PrimaryDropdown
 import pl.techbrewery.sam.ui.shared.SearchField
 import pl.techbrewery.sam.ui.shared.SharedModalBottomSheet
 import pl.techbrewery.sam.ui.shared.SmallSpacingBox
@@ -60,6 +63,8 @@ fun ShoppingListScreen(
         items = items,
         searchQuery = searchQuery,
         bottomSheetContentState = viewModel.bottomSheetContentState,
+        selectedStoreDropdownItem = viewModel.selectedStoreDropdownItem,
+        storeDropdownItems = viewModel.storeDropdownItems.collectAsStateWithLifecycle().value,
         onAction = onAction,
         modifier = modifier
     )
@@ -70,6 +75,8 @@ private fun ShoppingListScreenContent(
     items: ImmutableList<SingleItem>,
     modifier: Modifier = Modifier,
     searchQuery: String = "",
+    selectedStoreDropdownItem: DropdownItem<Store>,
+    storeDropdownItems: ImmutableList<DropdownItem<Store>>,
     bottomSheetContentState: BottomPageContentState? = null,
     onAction: (Any) -> Unit = {}
 ) {
@@ -83,6 +90,8 @@ private fun ShoppingListScreenContent(
             items = items,
             searchQuery = searchQuery,
             modifier = modifier,
+            selectedStoreDropdownItem = selectedStoreDropdownItem,
+            storeDropdownItems = storeDropdownItems,
             onAction = onAction
         )
         when (bottomSheetContentState) {
@@ -111,6 +120,8 @@ private fun CreateStoreModalBottomSheet(
 private fun ShoppingList(
     modifier: Modifier = Modifier,
     items: ImmutableList<SingleItem>,
+    selectedStoreDropdownItem: DropdownItem<Store>,
+    storeDropdownItems: ImmutableList<DropdownItem<Store>>,
     searchQuery: String = "",
     onAction: (Any) -> Unit = {}
 ) {
@@ -123,6 +134,17 @@ private fun ShoppingList(
             )
             .padding(horizontal = Spacing.Large)
     ) {
+        val lazyListState = rememberLazyListState()
+        val reorderableLazyListState =
+            rememberReorderableLazyListState(lazyListState) { from, to ->
+                onAction(ItemMoved(from.index, to.index))
+            }
+        StoresDropdown(
+            selectedItem = selectedStoreDropdownItem,
+            items = storeDropdownItems,
+            onItemSelected = { onAction(StoreDropdownItemSelected(it)) }
+        )
+        SmallSpacingBox()
         SearchField(
             query = searchQuery,
             supportingText = "Add item",
@@ -132,12 +154,6 @@ private fun ShoppingList(
             modifier = Modifier.fillMaxWidth()
         )
         SmallSpacingBox()
-
-        val lazyListState = rememberLazyListState()
-        val reorderableLazyListState =
-            rememberReorderableLazyListState(lazyListState) { from, to ->
-                onAction(ItemMoved(from.index, to.index))
-            }
         LazyColumn(
             state = lazyListState
         ) {
@@ -192,16 +208,57 @@ private fun ShoppingListItem(
     }
 }
 
+@Composable
+private fun StoresDropdown(
+    items: ImmutableList<DropdownItem<Store>>,
+    selectedItem: DropdownItem<Store>,
+    onItemSelected: (DropdownItem<Store>) -> Unit = {}
+) {
+    PrimaryDropdown(
+        selectedItem = selectedItem,
+        items = items,
+        onSelectedItemChanged = onItemSelected,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun ShoppingListScreenPreview() {
     SAMTheme {
-        ShoppingListScreenContent(
-            items = listOf(
-                "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
-                "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
-                "Coffee", "Tea", "Juice", "Soda", "Water"
-            ).map { SingleItem(it) }.toImmutableList(),
+        // 1. Create some dummy Store objects
+        val dummyStores = listOf(
+            Store(storeId = 1, name = "Main Store", main = true),
+            Store(storeId = 2, name = "Second Store"),
+            Store(storeId = 3, name = "Another Grocer")
         )
+
+        // 2. Create DropdownItem<Store> objects for the dropdown
+        val storeDropdownItems = dummyStores.map { store ->
+            DropdownItem(item = store, text = store.name)
+        }.toImmutableList()
+
+        // 3. Select one as the default selected item
+        val selectedStoreDropdownItem = storeDropdownItems.firstOrNull()
+            ?: DropdownItem(
+                item = Store.dummyStore(),
+                text = "No Store"
+            ) // Fallback if list is empty
+
+        SAMTheme {
+            ShoppingListScreenContent(
+                items = listOf(
+                    "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
+                    "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
+                    "Coffee", "Tea", "Juice", "Soda", "Water"
+                ).map { SingleItem(it) }.toImmutableList(),
+                searchQuery = "Preview Search", // Optional: Provide a preview search query
+                selectedStoreDropdownItem = selectedStoreDropdownItem,
+                storeDropdownItems = storeDropdownItems,
+                // bottomSheetContentState can be null for this preview if not testing a sheet
+                bottomSheetContentState = null,
+                onAction = {} // Provide a no-op lambda for onAction
+            )
+        }
     }
 }

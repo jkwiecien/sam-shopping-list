@@ -23,7 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
-import org.koin.android.ext.android.inject
+import org.jetbrains.compose.resources.stringResource
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pl.techbrewery.sam.features.navigation.ui.BottomNavigationBar
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListScreen
@@ -34,18 +34,19 @@ import pl.techbrewery.sam.features.stores.StoresScreen
 import pl.techbrewery.sam.features.stores.StoresViewModel
 import pl.techbrewery.sam.features.stores.editor.StoreEditorScreen
 import pl.techbrewery.sam.features.stores.editor.StoreEditorViewModel
-import pl.techbrewery.sam.kmp.repository.LocalizedResources
 import pl.techbrewery.sam.kmp.routes.ScreenRoute
-import pl.techbrewery.sam.shared.FloatingActionButtonPressed
+import pl.techbrewery.sam.resources.Res
+import pl.techbrewery.sam.resources.screen_title_recipes
+import pl.techbrewery.sam.resources.screen_title_settings
+import pl.techbrewery.sam.resources.screen_title_store_editor
+import pl.techbrewery.sam.resources.screen_title_stores
 import pl.techbrewery.sam.shared.HeterogeneousVectorIcon
 import pl.techbrewery.sam.ui.shared.AppBar
 import pl.techbrewery.sam.ui.shared.PrimaryFilledButton
-import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 class NavigationActivity : ComponentActivity() {
-    private val locRes by inject<LocalizedResources>()
 
     private val navigationViewModel by viewModel<NavigationViewModel>()
     private val shoppingListViewModel by viewModel<ShoppingListViewModel>()
@@ -85,15 +86,16 @@ class NavigationActivity : ComponentActivity() {
                 }
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
-                val screenTitle = locRes.getScreenTitle(currentRoute)
 
                 Scaffold(
                     topBar = {
-                        AppBar(
-                            title = screenTitle,
-                            canNavigateBack = navController.previousBackStackEntry != null,
-                            navigateUp = { navController.navigateUp() }
-                        )
+                        currentRoute?.let {
+                            AppBarForRoute(
+                                route = it,
+                                canNavigateBack = navController.previousBackStackEntry != null,
+                                onNavigateUp = { navController.navigateUp() }
+                            )
+                        }
                     },
                     bottomBar = {
                         BottomNavigationBar(navController, Modifier.navigationBarsPadding())
@@ -104,7 +106,7 @@ class NavigationActivity : ComponentActivity() {
                                 route = currentRoute,
                                 onFloatingActionButtonPressed = { route ->
                                     when (route) {
-                                         ScreenRoute.Stores -> navController.navigate(route = ScreenRoute.StoreEditor)
+                                        ScreenRoute.Stores -> navController.navigate(route = ScreenRoute.StoreEditor)
                                     }
                                 }
                             )
@@ -147,6 +149,29 @@ private fun FloatingActionButtonForRoute(
             )
         }
     }
+}
+
+@Composable
+private fun AppBarForRoute(
+    route: String,
+    canNavigateBack: Boolean,
+    onNavigateUp: () -> Unit = {}
+) {
+    if (route != ScreenRoute.ShoppingList) {
+        val screenTitle = when (route) {
+            ScreenRoute.Recipes -> stringResource(Res.string.screen_title_recipes)
+            ScreenRoute.Stores -> stringResource(Res.string.screen_title_stores)
+            ScreenRoute.Settings -> stringResource(Res.string.screen_title_settings)
+            ScreenRoute.StoreEditor -> stringResource(Res.string.screen_title_store_editor)
+            else -> "" // Or handle unknown routes appropriately
+        }
+        AppBar(
+            title = screenTitle,
+            canNavigateBack = canNavigateBack,
+            navigateUp = onNavigateUp
+        )
+    }
+
 }
 
 

@@ -75,7 +75,7 @@ fun StoreEditorScreenContent(
         ) {
             PrimaryTextField(
                 value = storeName,
-                supportingText = "Store name",
+                label = "Store name",
                 onValueChange = { onAction(StoreNameChanged(it)) },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 onDonePressed = { onAction(KeyboardDonePressedOnStoreName) },
@@ -93,7 +93,7 @@ fun StoreEditorScreenContent(
             )
             PrimaryTextField(
                 value = newDepartmentName,
-                supportingText = "Add department",
+                label = "Add department",
                 onValueChange = { onAction(DepartmentNameChanged(it)) },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 onDonePressed = { onAction(KeyboardDonePressedOnDepartmentName) },
