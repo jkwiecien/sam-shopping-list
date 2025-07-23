@@ -19,13 +19,14 @@ import pl.techbrewery.sam.extensions.tempLog
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 import pl.techbrewery.sam.kmp.repository.StoreRepository
+import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
+import pl.techbrewery.sam.kmp.utils.SamConfig.INDEX_INCREMENT
 import pl.techbrewery.sam.shared.BaseViewModel
 import pl.techbrewery.sam.shared.BottomPageContentState
 import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
 
-private const val DEFAULT_INDEX_GAP = 100L
-private const val INDEX_INCREMENT = 1L
+
 
 class ShoppingListViewModel(
     private val shoppingList: ShoppingListRepository,
@@ -40,10 +41,10 @@ class ShoppingListViewModel(
 
     internal val items: StateFlow<ImmutableList<SingleItem>> =
         shoppingList.getAllItems()
-            .debounce { 10L }
+            .debounce { 50L }
             .map { items ->
                 tempLog("Got items: ${items.joinToString { "${it.itemName}:${it.indexWeight}" }}")
-                items.toImmutableList()
+                items.filterNot { it.checkedOff }.toImmutableList()
             }
             .stateIn(
                 scope = viewModelScope,
@@ -108,49 +109,13 @@ class ShoppingListViewModel(
         if (from == to) return
 
         viewModelScope.launch(Dispatchers.Default) {
-            val currentItems = items.value
-            val itemMoved = currentItems[from]
-            val itemReplaced = currentItems[to]
-            val goingUp = itemMoved.indexWeight < itemReplaced.indexWeight
-            val newIndexWeight = if (goingUp) {
-                itemReplaced.indexWeight + INDEX_INCREMENT
-            } else {
-                itemReplaced.indexWeight - INDEX_INCREMENT
-            }
-            tempLog("Moving item from $from to $to: ${itemMoved.itemName} -> ${itemReplaced.itemName}. Going up: $goingUp")
-            tempLog("Changing index weight from ${itemMoved.indexWeight} to $newIndexWeight")
-
-            var updatedItems = currentItems
-                .map { item ->
-                    //Safely entering new weight after potential reindexing
-                    if (item.itemName == itemMoved.itemName) {
-                        item.copy(indexWeight = newIndexWeight)
-                    } else {
-                        item
-                    }
-                }
-            if (updatedItems.groupBy { it.indexWeight }.any { it.value.size >= 2 }) {
-                tempLog("Duplicated weight found. Re-indexing...")
-                updatedItems = reIndexWeights(updatedItems)
-                tempLog("Reindexed items: ${updatedItems.joinToString { "${it.itemName}:${it.indexWeight}" }}")
-            }
-
-            shoppingList.updateItems(updatedItems)
+            shoppingList.moveItem(from, to, items.value)
         }
     }
 
 
     //if true, there are no duplicates
-    private fun reIndexWeights(
-        items: List<SingleItem>
-    ): List<SingleItem> {
-        return items
-            .sortedBy { it.indexWeight }
-            .mapIndexed { index, item ->
-                val newWeight = (index + 1) * DEFAULT_INDEX_GAP
-                item.copy(indexWeight = newWeight)
-            }
-    }
+
 
 
 }

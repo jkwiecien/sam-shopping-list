@@ -2,6 +2,7 @@
 
 package pl.techbrewery.sam.features.shoppinglist
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,6 +33,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
+import pl.techbrewery.sam.extensions.tempLog
 import pl.techbrewery.sam.features.stores.CreateStoreSheetContent
 import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
@@ -142,24 +144,24 @@ private fun ShoppingList(
             state = lazyListState
         ) {
             items(items, key = { it.itemName }) { item ->
-                    ReorderableItem(
-                        reorderableLazyListState,
-                        key = item.itemName
-                    ) { isDragging ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            ItemDragHandle(
-                                modifier = Modifier.draggableHandle(),
-                            )
-                            ShoppingListItem(
-                                itemName = item.itemName,
-                                onCheckboxChecked = { onAction(ItemChecked(it)) },
-//                                modifier = Modifier.animateItem() //fixme
-                            )
-                        }
+                ReorderableItem(
+                    reorderableLazyListState,
+                    key = item.itemName
+                ) { isDragging ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        ItemDragHandle(
+                            modifier = Modifier.draggableHandle(),
+                        )
+                        ShoppingListItem(
+                            itemName = item.itemName,
+                            onCheckboxChecked = { onAction(ItemChecked(it)) },
+                            modifier = Modifier.animateItem()
+                        )
                     }
-                    HorizontalDivider()
+                }
+                HorizontalDivider()
             }
         }
     }
@@ -168,8 +170,8 @@ private fun ShoppingList(
 @Composable
 private fun ShoppingListItem(
     itemName: String,
-    onCheckboxChecked: (itemName: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCheckboxChecked: (itemName: String) -> Unit
 ) {
     Row(
         modifier = modifier
