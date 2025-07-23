@@ -7,7 +7,7 @@ import pl.techbrewery.sam.kmp.database.entity.SingleItem
 class ShoppingListRepository(
     private val db: KmpDatabase
 ) {
-    suspend fun insertItem(itemName: String, indexWeight: Float) {
+    suspend fun insertItem(itemName: String, indexWeight: Long) {
         val item = SingleItem(
             itemName = itemName.lowercase(),
             indexWeight = indexWeight

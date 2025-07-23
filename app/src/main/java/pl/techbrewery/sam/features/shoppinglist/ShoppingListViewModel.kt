@@ -85,12 +85,8 @@ class ShoppingListViewModel(
     private fun addItem() {
         viewModelScope.launch(Dispatchers.Main) {
             val currentItems = items.value
-            val maxWeight = currentItems.maxOfOrNull { it.indexWeight } ?: 0f
-            val newWeight = if (maxWeight > 0f) {
-                maxWeight + 1f
-            } else {
-                1f
-            }
+            val maxWeight = currentItems.maxOfOrNull { it.indexWeight } ?: 0L
+            val newWeight = maxWeight + DEFAULT_INDEX_GAP
             tempLog("Adding new item with weight: $newWeight")
             withContext(Dispatchers.Default) {
                 shoppingList.insertItem(
@@ -115,9 +111,9 @@ class ShoppingListViewModel(
             val itemReplaced = currentItems[to]
             val goingUp = itemMoved.indexWeight < itemReplaced.indexWeight
             val newIndexWeight = if (goingUp) {
-                itemReplaced.indexWeight + 0.1f
+                itemReplaced.indexWeight + 1
             } else {
-                itemReplaced.indexWeight - 0.1f
+                itemReplaced.indexWeight - 1
             }
             tempLog("Moving item from $from to $to: ${itemMoved.itemName} -> ${itemReplaced.itemName}. Going up: $goingUp")
             tempLog("Changing index weight from ${itemMoved.indexWeight} to $newIndexWeight")
@@ -137,10 +133,10 @@ class ShoppingListViewModel(
     //if true, there are no duplicates
     private fun reIndexWeights(
         items: List<SingleItem>,
-        newIndexWeight: Float,
+        newIndexWeight: Long,
         wentUp: Boolean
     ): List<SingleItem> {
-        fun hasDuplicates(checkedItems: List<SingleItem>, indexWeight: Float): Boolean {
+        fun hasDuplicates(checkedItems: List<SingleItem>, indexWeight: Long): Boolean {
             return checkedItems.any { it.indexWeight == indexWeight }
         }
 
@@ -150,9 +146,9 @@ class ShoppingListViewModel(
             tempLog("Duplicate weight discovered: $newIndexWeight, re-indexing...")
             val itemToReindex = reIndexedItems.first { it.indexWeight == newIndexWeight }
             val newWeight = if (wentUp) {
-                itemToReindex.indexWeight + 0.1f
+                itemToReindex.indexWeight + 1
             } else {
-                itemToReindex.indexWeight - 0.1f
+                itemToReindex.indexWeight - 1
             }
             tempLog("newWeight: $newWeight")
             reIndexedItems = reIndexedItems.map { item ->
