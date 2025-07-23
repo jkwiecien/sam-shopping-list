@@ -33,7 +33,6 @@ fun PrimaryFilledButton(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = Spacing.Large)
         ) {
             if (leadingIcon != null) {
                 HeterogeneousIcon(
