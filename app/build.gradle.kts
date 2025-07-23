@@ -55,10 +55,10 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.collections.immutable)
-    implementation(libs.timber)
     implementation(libs.gson)
     implementation(libs.compose.resources)
     implementation(libs.reorderable)
+    implementation(libs.napier)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

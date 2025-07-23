@@ -2,10 +2,12 @@ package pl.techbrewery.sam.kmp.repository
 
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.SamConfig.INDEX_INCREMENT
+import pl.techbrewery.sam.kmp.utils.tempLog
 
 class ShoppingListRepository(
     private val db: KmpDatabase
@@ -24,11 +26,16 @@ class ShoppingListRepository(
         }
     }
 
-    fun getAllItems(): Flow<List<SingleItem>> {
+    suspend fun getAllItems(): List<SingleItem> {
+        return db.singleItemDao().getAllSingleItems()
+    }
+
+    fun getAllItemsFlow(): Flow<List<SingleItem>> {
         return db.singleItemDao().getAllSingleItemsFlow()
     }
 
     suspend fun updateItems(items: List<SingleItem>) {
+        tempLog("Updating items with ${items.joinToString { "${it.itemName}:${it.indexWeight}" }}")
         items.forEach { item ->
             db.singleItemDao().updateSingleItem(item)
         }
@@ -58,11 +65,10 @@ class ShoppingListRepository(
                     } else {
                         item
                     }
-                }
+                }.sortedByDescending { it.indexWeight }
             if (updatedItems.groupBy { it.indexWeight }.any { it.value.size >= 2 }) {
                 updatedItems = reIndexWeights(updatedItems)
             }
-            updateItems(updatedItems)
             updatedItems
         }
 
@@ -70,9 +76,9 @@ class ShoppingListRepository(
         items: List<SingleItem>
     ): List<SingleItem> {
         return items
-            .sortedBy { it.indexWeight }
+            .sortedByDescending { it.indexWeight }
             .mapIndexed { index, item ->
-                val newWeight = (index + 1) * DEFAULT_INDEX_GAP
+                val newWeight = (items.size - index + 1) * DEFAULT_INDEX_GAP
                 item.copy(indexWeight = newWeight)
             }
     }

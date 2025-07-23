@@ -18,12 +18,12 @@ koin = "4.1.0"
 ksp = "2.2.0-2.0.2"
 runtime = "1.8.3"
 immutableCollections = "0.4.0"
-timber = "5.0.1"
 navVersion = "2.9.2"
 kotlinSerialization = "2.2.0"
 gson = "2.13.1"
 composeResources = "1.8.2"
 reorderable = "2.5.1"
+napier = "2.7.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -51,11 +51,12 @@ koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin"
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "immutableCollections" }
-timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navVersion" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 compose-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "composeResources" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
+napier = { group = "io.github.aakira", name = "napier", version.ref = "napier" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -26,8 +26,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
-import pl.techbrewery.sam.extensions.tempLog
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
+import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.action_save
 import pl.techbrewery.sam.ui.shared.ItemDragHandle

@@ -71,6 +71,7 @@ kotlin {
                 implementation(libs.androidx.runtime)
                 implementation(libs.koin.core)
                 implementation(libs.compose.resources)
+                implementation(libs.napier)
                 // Add KMP dependencies here
             }
         }

@@ -2,7 +2,6 @@
 
 package pl.techbrewery.sam.features.shoppinglist
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,7 +32,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
-import pl.techbrewery.sam.extensions.tempLog
 import pl.techbrewery.sam.features.stores.CreateStoreSheetContent
 import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.database.entity.SingleItem

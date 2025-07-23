@@ -14,9 +14,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import pl.techbrewery.sam.extensions.tempLog
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.repository.StoreRepository
+import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.BaseViewModel
 
 class StoreEditorViewModel(
