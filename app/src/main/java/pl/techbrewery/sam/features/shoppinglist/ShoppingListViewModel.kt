@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -24,7 +25,7 @@ import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
 
 private const val DEFAULT_INDEX_GAP = 100L
-private const val MIN_INDEX_INCREMENT = 1L
+private const val INDEX_INCREMENT = 1L
 
 class ShoppingListViewModel(
     private val shoppingList: ShoppingListRepository,
@@ -38,7 +39,8 @@ class ShoppingListViewModel(
         private set
 
     internal val items: StateFlow<ImmutableList<SingleItem>> =
-        shoppingList.getLastShoppingList()
+        shoppingList.getAllItems()
+            .debounce { 10L }
             .map { items ->
                 tempLog("Got items: ${items.joinToString { "${it.itemName}:${it.indexWeight}" }}")
                 items.toImmutableList()
@@ -111,13 +113,14 @@ class ShoppingListViewModel(
             val itemReplaced = currentItems[to]
             val goingUp = itemMoved.indexWeight < itemReplaced.indexWeight
             val newIndexWeight = if (goingUp) {
-                itemReplaced.indexWeight + 1
+                itemReplaced.indexWeight + INDEX_INCREMENT
             } else {
-                itemReplaced.indexWeight - 1
+                itemReplaced.indexWeight - INDEX_INCREMENT
             }
             tempLog("Moving item from $from to $to: ${itemMoved.itemName} -> ${itemReplaced.itemName}. Going up: $goingUp")
             tempLog("Changing index weight from ${itemMoved.indexWeight} to $newIndexWeight")
-            val reIndexedItems = reIndexWeights(currentItems, newIndexWeight, goingUp)
+
+            var updatedItems = currentItems
                 .map { item ->
                     //Safely entering new weight after potential reindexing
                     if (item.itemName == itemMoved.itemName) {
@@ -126,41 +129,27 @@ class ShoppingListViewModel(
                         item
                     }
                 }
-            shoppingList.updateItems(reIndexedItems)
+            if (updatedItems.groupBy { it.indexWeight }.any { it.value.size >= 2 }) {
+                tempLog("Duplicated weight found. Re-indexing...")
+                updatedItems = reIndexWeights(updatedItems)
+                tempLog("Reindexed items: ${updatedItems.joinToString { "${it.itemName}:${it.indexWeight}" }}")
+            }
+
+            shoppingList.updateItems(updatedItems)
         }
     }
 
+
     //if true, there are no duplicates
     private fun reIndexWeights(
-        items: List<SingleItem>,
-        newIndexWeight: Long,
-        wentUp: Boolean
+        items: List<SingleItem>
     ): List<SingleItem> {
-        fun hasDuplicates(checkedItems: List<SingleItem>, indexWeight: Long): Boolean {
-            return checkedItems.any { it.indexWeight == indexWeight }
-        }
-
-        var reIndexedItems = items
-        var duplicated = hasDuplicates(items, newIndexWeight)
-        while (duplicated) {
-            tempLog("Duplicate weight discovered: $newIndexWeight, re-indexing...")
-            val itemToReindex = reIndexedItems.first { it.indexWeight == newIndexWeight }
-            val newWeight = if (wentUp) {
-                itemToReindex.indexWeight + 1
-            } else {
-                itemToReindex.indexWeight - 1
+        return items
+            .sortedBy { it.indexWeight }
+            .mapIndexed { index, item ->
+                val newWeight = (index + 1) * DEFAULT_INDEX_GAP
+                item.copy(indexWeight = newWeight)
             }
-            tempLog("newWeight: $newWeight")
-            reIndexedItems = reIndexedItems.map { item ->
-                if (item.itemName == itemToReindex.itemName) {
-                    item.copy(indexWeight = newWeight)
-                } else {
-                    item
-                }
-            }
-            duplicated = hasDuplicates(items, newWeight)
-        }
-        return reIndexedItems
     }
 
 

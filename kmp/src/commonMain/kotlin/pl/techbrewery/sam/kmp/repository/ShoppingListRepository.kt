@@ -1,6 +1,7 @@
 package pl.techbrewery.sam.kmp.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onStart
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 
@@ -21,8 +22,8 @@ class ShoppingListRepository(
         }
     }
 
-    fun getLastShoppingList(): Flow<List<SingleItem>> {
-        return db.singleItemDao().getUncheckedSingleItems()
+    fun getAllItems(): Flow<List<SingleItem>> {
+        return db.singleItemDao().getAllSingleItemsFlow()
     }
 
     suspend fun  updateItems(items: List<SingleItem>) {
