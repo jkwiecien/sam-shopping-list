@@ -18,7 +18,6 @@ import pl.techbrewery.sam.extensions.tempLog
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.shared.BaseViewModel
-import timber.log.Timber
 
 class StoreEditorViewModel(
     private val storeRepository: StoreRepository

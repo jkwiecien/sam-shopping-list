@@ -5,13 +5,12 @@ package pl.techbrewery.sam.features.shoppinglist
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -43,8 +41,11 @@ import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
 import pl.techbrewery.sam.ui.shared.SearchField
 import pl.techbrewery.sam.ui.shared.SharedModalBottomSheet
+import pl.techbrewery.sam.ui.shared.SmallSpacingBox
 import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.theme.SAMTheme
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun ShoppingListScreen(
@@ -130,17 +131,38 @@ private fun ShoppingList(
             onDonePressed = { onAction(KeyboardDonePressed) },
             modifier = Modifier.fillMaxWidth()
         )
+        SmallSpacingBox()
 
-        Spacer(modifier = Modifier.height(8.dp))
-
+        val lazyListState = rememberLazyListState()
+        val reorderableLazyListState =
+            rememberReorderableLazyListState(lazyListState) { from, to ->
+                onAction(ItemMoved(from.index, to.index))
+            }
         LazyColumn {
             items(items, key = { it.itemName }) { item ->
-                ShoppingListItem(
-                    itemName = item.itemName,
-                    onCheckboxChecked = { onAction(ItemChecked(it)) },
-                    modifier = Modifier.animateItem()
-                )
-                HorizontalDivider()
+
+                Column {
+                    ReorderableItem(
+                        reorderableLazyListState,
+                        key = item.itemName
+                    ) { isDragging ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            ItemDragHandle(
+                                modifier = Modifier
+                                    .draggableHandle(),
+                            )
+                            ShoppingListItem(
+                                itemName = item.itemName,
+                                onCheckboxChecked = { onAction(ItemChecked(it)) },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+                    HorizontalDivider()
+                }
+
             }
         }
     }
@@ -159,7 +181,6 @@ private fun ShoppingListItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start // Align items to the start
     ) {
-        ItemDragHandle()
         Checkbox(
             checked = false,
             onCheckedChange = { checked ->

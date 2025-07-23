@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import pl.techbrewery.sam.features.navigation.NavigationViewModel
+import pl.techbrewery.sam.extensions.tempLog
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 import pl.techbrewery.sam.kmp.repository.StoreRepository
@@ -86,5 +86,12 @@ class ShoppingListViewModel(
 
     fun dismissBottomSheet() {
         bottomSheetContentState = null
+    }
+
+    private fun moveItem(from: Int, to: Int) {
+        val updatedItems = items.value.toMutableList()
+        if (from == to) return
+        val element = updatedItems.removeAt(from)
+        updatedItems.add(to, element)
     }
 }
