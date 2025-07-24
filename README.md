@@ -10,7 +10,7 @@ The app learns the right order when the user drags and drops the items. At some 
 If I enter the shop departments name in the order I'm visiting them, I might be able to use on device AI to put the newly entered items in the right groups, that were ordered by the user. For instance shop layout could be a lust like: "Bakery, Fruits, Vegetables, Meat,.. ".
 This gets complicated due to usage of KMP. 
 
-## Technology used
+## Technology stack
 ### Compose
 Greatest Android invention since ActionBarSherlock (I guess I'm a boomer).
 ### Coroutines & flows
