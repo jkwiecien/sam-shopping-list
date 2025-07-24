@@ -28,7 +28,8 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = White,
     surface = GreenDark2,
     onPrimaryContainer = White,
-    onSecondary = GreenLight1
+    onSecondary = GreenLight1,
+    error = Red
 )
 
 // no support yet

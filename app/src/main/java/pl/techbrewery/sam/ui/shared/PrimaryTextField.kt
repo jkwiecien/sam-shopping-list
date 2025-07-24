@@ -23,6 +23,7 @@ fun PrimaryTextField(
     label: String? = null,
     readOnly: Boolean = false,
     enabled: Boolean = true,
+    isError: Boolean = false,
     colors: TextFieldColors = primaryTextFieldColors(),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     leadingIcon: @Composable (() -> Unit)? = null,
@@ -35,6 +36,7 @@ fun PrimaryTextField(
         modifier = modifier,
         readOnly = readOnly,
         enabled = enabled,
+        isError = isError,
         onValueChange = onValueChange,
         label = label?.let {
             {
@@ -62,7 +64,10 @@ fun primaryTextFieldColors() = TextFieldDefaults.colors(
     unfocusedIndicatorColor = Transparent,
     focusedSupportingTextColor = MaterialTheme.colorScheme.tertiary,
     focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer
+    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+    errorSupportingTextColor = MaterialTheme.colorScheme.error,
+    errorContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+    errorIndicatorColor = Transparent
 )
 
 

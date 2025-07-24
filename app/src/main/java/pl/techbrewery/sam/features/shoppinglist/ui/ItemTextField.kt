@@ -30,6 +30,7 @@ fun  ItemTextField(
     suggestedItems: List<DropdownItem<SingleItem>>,
     modifier: Modifier = Modifier,
     expanded: Boolean = false,
+    itemTextFieldError: String? = null,
     onValueChange: (String) -> Unit = {},
     onSelectedItemChanged: (SingleItem) -> Unit = {},
     onDonePressed: () -> Unit = {}
@@ -41,7 +42,8 @@ fun  ItemTextField(
     ) {
         PrimaryTextField(
             value = value,
-            label = "Add item",
+            label = itemTextFieldError ?: "Add item",
+            isError = itemTextFieldError != null,
             leadingIcon =  { Icon(Icons.Filled.Search, contentDescription = "Search or Add Item") },
             onValueChange = onValueChange,
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),

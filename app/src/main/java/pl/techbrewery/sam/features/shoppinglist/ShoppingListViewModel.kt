@@ -41,6 +41,8 @@ class ShoppingListViewModel(
     internal val searchQueryFlow: StateFlow<String> = mutableSearchFlow
     var bottomSheetContentState: BottomPageContentState? by mutableStateOf(null)
         private set
+    var itemTextFieldError: String? by mutableStateOf(null)
+        private set
 
     private val selectedStoreDropdownItemMutableFlow: MutableStateFlow<DropdownItem<Store>> =
         MutableStateFlow(DropdownItem.dummyItem(Store.createDefaultMainStore()))
@@ -107,16 +109,13 @@ class ShoppingListViewModel(
             }
             .stateIn(
                 scope = viewModelScope,
-                // Determines when the upstream flow is active and producing values.
-                // SharingStarted.WhileSubscribed(5000) means the flow will stay active
-                // for 5 seconds after the last subscriber disappears.
                 started = SharingStarted.WhileSubscribed(5000),
                 initialValue = emptyList<SingleItem>().toImmutableList()
             )
 
     private val moveItemMutableFlow: MutableStateFlow<Pair<Int, Int>> = MutableStateFlow(-1 to -1)
     private val moveItemFlow = moveItemMutableFlow
-        .debounce { 50L } //this way O'm limiting glitches from library event overflow and filter out irrelevant calls
+        .debounce { 50L } //this way limiting glitches from library event overflow and filter out irrelevant calls
         .filter { it.first != it.second && it.first >= 0 && it.second >= 0 }
 
 
@@ -158,6 +157,7 @@ class ShoppingListViewModel(
             is ItemMoved -> moveItemMutableFlow.value = action.from to action.to
             is StoreDropdownItemSelected -> selectedStoreDropdownItemMutableFlow.value =
                 action.dropdownItem
+
             is SuggestedItemSelected -> addSuggestedItem(action.item)
         }
     }
@@ -176,6 +176,7 @@ class ShoppingListViewModel(
 
     private fun onSearchQueryChanged(query: String) {
         mutableSearchFlow.value = query
+        itemTextFieldError = null
     }
 
     private fun clearSearchField() {
@@ -184,9 +185,10 @@ class ShoppingListViewModel(
 
     private fun addSuggestedItem(item: SingleItem) {
         val uncheckedItem = item.copy(checkedOff = false)
-        val updatedItems = itemsMutableFlow.value.plus(uncheckedItem).sortedByDescending { it.indexWeight }
+        val updatedItems =
+            itemsMutableFlow.value.plus(uncheckedItem).sortedByDescending { it.indexWeight }
         itemsMutableFlow.value = updatedItems
-        mutableSearchFlow.value = "" 
+        mutableSearchFlow.value = ""
     }
 
     private fun addItem() {
@@ -194,7 +196,10 @@ class ShoppingListViewModel(
             val newItemName = mutableSearchFlow.value
             val currentItems = items.value.filterNot { it.checkedOff }
             //dont add duplicates. todo show error on text field in case of duplicate
-            if (currentItems.any { it.itemName.lowercase() ==  newItemName.lowercase()}) return@launch
+            if (currentItems.any { it.itemName.lowercase() == newItemName.lowercase() }) {
+                itemTextFieldError = "Already on the list"
+                return@launch
+            }
             val maxWeight = currentItems.maxOfOrNull { it.indexWeight } ?: 0L
             val newWeight = maxWeight + DEFAULT_INDEX_GAP
             tempLog("Adding new item with weight: $newWeight")

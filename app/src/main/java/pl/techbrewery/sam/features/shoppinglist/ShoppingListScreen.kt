@@ -16,10 +16,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,16 +36,11 @@ import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.features.shoppinglist.ui.ItemTextField
 import pl.techbrewery.sam.features.shoppinglist.ui.StoresDropdown
-import pl.techbrewery.sam.features.stores.CreateStoreSheetContent
-import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
-import pl.techbrewery.sam.shared.BottomPageContentState
-import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
-import pl.techbrewery.sam.ui.shared.SharedModalBottomSheet
 import pl.techbrewery.sam.ui.shared.SmallSpacingBox
 import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.theme.SAMTheme
@@ -75,139 +68,144 @@ fun ShoppingListScreen(
         suggestedItems = viewModel.suggestedItemsDropdownItems.collectAsStateWithLifecycle().value,
         selectedStoreDropdownItem = viewModel.selectedStoreDropdownItemFlow.collectAsStateWithLifecycle().value,
         searchQuery = searchQuery,
-        bottomSheetContentState = viewModel.bottomSheetContentState,
+        itemTextFieldError = viewModel.itemTextFieldError,
         onAction = onAction,
         modifier = modifier
     )
 }
 
+//fixme maybe I use this bottom sheet later
+//@Composable
+//private fun ShoppingListScreenContent(
+//    items: ImmutableList<SingleItem>,
+//    suggestedItems: ImmutableList<DropdownItem<SingleItem>>,
+//    modifier: Modifier = Modifier,
+//    searchQuery: String = "",
+//    selectedStoreDropdownItem: DropdownItem<Store>,
+//    storeDropdownItems: ImmutableList<DropdownItem<Store>>,
+//    bottomSheetContentState: BottomPageContentState? = null,
+//    onAction: (Any) -> Unit = {}
+//) {
+//    Surface(
+//        modifier = Modifier.fillMaxSize()
+//    ) {
+//        val modalBottomSheetState = rememberModalBottomSheetState(
+//            skipPartiallyExpanded = true
+//        )
+//        ShoppingListScreenContent(
+//            items = items,
+//            suggestedItems = suggestedItems,
+//            searchQuery = searchQuery,
+//            modifier = modifier,
+//            selectedStoreDropdownItem = selectedStoreDropdownItem,
+//            storeDropdownItems = storeDropdownItems,
+//            onAction = onAction
+//        )
+//        when (bottomSheetContentState) {
+//            is CreateStoreBottomSheetState -> CreateStoreModalBottomSheet(
+//                modalBottomSheetState,
+//                onAction
+//            )
+//        }
+//    }
+//}
+
+//@Composable
+//private fun CreateStoreModalBottomSheet(
+//    sheetState: SheetState,
+//    onAction: (Any) -> Unit = {}
+//) {
+//    SharedModalBottomSheet(
+//        sheetState = sheetState,
+//        onAction = onAction
+//    ) {
+//        CreateStoreSheetContent()
+//    }
+//}
+
 @Composable
 private fun ShoppingListScreenContent(
-    items: ImmutableList<SingleItem>,
-    suggestedItems: ImmutableList<DropdownItem<SingleItem>>,
-    modifier: Modifier = Modifier,
-    searchQuery: String = "",
-    selectedStoreDropdownItem: DropdownItem<Store>,
-    storeDropdownItems: ImmutableList<DropdownItem<Store>>,
-    bottomSheetContentState: BottomPageContentState? = null,
-    onAction: (Any) -> Unit = {}
-) {
-    Surface(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        val modalBottomSheetState = rememberModalBottomSheetState(
-            skipPartiallyExpanded = true
-        )
-        ShoppingList(
-            items = items,
-            suggestedItems = suggestedItems,
-            searchQuery = searchQuery,
-            modifier = modifier,
-            selectedStoreDropdownItem = selectedStoreDropdownItem,
-            storeDropdownItems = storeDropdownItems,
-            onAction = onAction
-        )
-        when (bottomSheetContentState) {
-            is CreateStoreBottomSheetState -> CreateStoreModalBottomSheet(
-                modalBottomSheetState,
-                onAction
-            )
-        }
-    }
-}
-
-@Composable
-private fun CreateStoreModalBottomSheet(
-    sheetState: SheetState,
-    onAction: (Any) -> Unit = {}
-) {
-    SharedModalBottomSheet(
-        sheetState = sheetState,
-        onAction = onAction
-    ) {
-        CreateStoreSheetContent()
-    }
-}
-
-@Composable
-private fun ShoppingList(
     modifier: Modifier = Modifier,
     items: ImmutableList<SingleItem>,
     suggestedItems: ImmutableList<DropdownItem<SingleItem>>,
     selectedStoreDropdownItem: DropdownItem<Store>,
     storeDropdownItems: ImmutableList<DropdownItem<Store>>,
     searchQuery: String = "",
+    itemTextFieldError: String? = null,
     onAction: (Any) -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .closeKeyboardOnPress(
-                onPressedSomething = { focusManager.clearFocus() }
-            )
-            .padding(horizontal = Spacing.Large)
-    ) {
-        val lazyListState = rememberLazyListState()
-        val reorderableLazyListState =
-            rememberReorderableLazyListState(lazyListState) { from, to ->
-                onAction(ItemMoved(from.index, to.index))
-            }
-        var hideDropdown by remember { mutableStateOf(false) } //fixme glitches when scrolling full screen
-
-        LaunchedEffect(lazyListState) {
-            snapshotFlow { lazyListState.firstVisibleItemIndex }
-                .collect { index ->
-                    val listScrolled = index > 0
-                    hideDropdown = listScrolled
-                    onAction(ShoppingListScrollChanged(listScrolled))
-                }
-        }
-        AnimatedVisibility(
-//            visible = !hideDropdown
-            visible = true //fixme glitches when scrolling full screen
-        ) {
-            Column {
-                StoresDropdown(
-                    selectedItem = selectedStoreDropdownItem,
-                    items = storeDropdownItems,
-                    onItemSelected = { onAction(StoreDropdownItemSelected(it)) }
+    Surface {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .closeKeyboardOnPress(
+                    onPressedSomething = { focusManager.clearFocus() }
                 )
-                SmallSpacingBox()
-            }
-        }
-        ItemTextField(
-            value = searchQuery,
-            expanded = suggestedItems.isNotEmpty(),
-            suggestedItems = suggestedItems,
-            onValueChange = { onAction(SearchQueryChanged(it)) },
-            onDonePressed = { onAction(ItemFieldKeyboardDonePressed) },
-            onSelectedItemChanged = {onAction(SuggestedItemSelected(it))},
-            modifier = Modifier.fillMaxWidth()
-        )
-        SmallSpacingBox()
-        LazyColumn(
-            state = lazyListState
+                .padding(horizontal = Spacing.Large)
         ) {
-            items(items, key = { it.itemName }) { item ->
-                ReorderableItem(
-                    reorderableLazyListState,
-                    key = item.itemName
-                ) { isDragging ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        ItemDragHandle(
-                            modifier = Modifier.draggableHandle(),
-                        )
-                        ShoppingListItem(
-                            itemName = item.itemName,
-                            onCheckboxChecked = { onAction(ItemChecked(it)) },
-                            modifier = Modifier.animateItem()
-                        )
-                    }
+            val lazyListState = rememberLazyListState()
+            val reorderableLazyListState =
+                rememberReorderableLazyListState(lazyListState) { from, to ->
+                    onAction(ItemMoved(from.index, to.index))
                 }
-                HorizontalDivider()
+            var hideDropdown by remember { mutableStateOf(false) } //fixme glitches when scrolling full screen
+
+            LaunchedEffect(lazyListState) {
+                snapshotFlow { lazyListState.firstVisibleItemIndex }
+                    .collect { index ->
+                        val listScrolled = index > 0
+                        hideDropdown = listScrolled
+                        onAction(ShoppingListScrollChanged(listScrolled))
+                    }
+            }
+            AnimatedVisibility(
+//            visible = !hideDropdown
+                visible = true //fixme glitches when scrolling full screen
+            ) {
+                Column {
+                    StoresDropdown(
+                        selectedItem = selectedStoreDropdownItem,
+                        items = storeDropdownItems,
+                        onItemSelected = { onAction(StoreDropdownItemSelected(it)) }
+                    )
+                    SmallSpacingBox()
+                }
+            }
+            ItemTextField(
+                value = searchQuery,
+                expanded = suggestedItems.isNotEmpty(),
+                suggestedItems = suggestedItems,
+                itemTextFieldError = itemTextFieldError,
+                onValueChange = { onAction(SearchQueryChanged(it)) },
+                onDonePressed = { onAction(ItemFieldKeyboardDonePressed) },
+                onSelectedItemChanged = { onAction(SuggestedItemSelected(it)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            SmallSpacingBox()
+            LazyColumn(
+                state = lazyListState
+            ) {
+                items(items, key = { it.itemName }) { item ->
+                    ReorderableItem(
+                        reorderableLazyListState,
+                        key = item.itemName
+                    ) { isDragging ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            ItemDragHandle(
+                                modifier = Modifier.draggableHandle(),
+                            )
+                            ShoppingListItem(
+                                itemName = item.itemName,
+                                onCheckboxChecked = { onAction(ItemChecked(it)) },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+                    HorizontalDivider()
+                }
             }
         }
     }
@@ -275,7 +273,6 @@ private fun ShoppingListScreenPreview() {
                 selectedStoreDropdownItem = selectedStoreDropdownItem,
                 storeDropdownItems = storeDropdownItems,
                 // bottomSheetContentState can be null for this preview if not testing a sheet
-                bottomSheetContentState = null,
                 onAction = {} // Provide a no-op lambda for onAction
             )
         }
