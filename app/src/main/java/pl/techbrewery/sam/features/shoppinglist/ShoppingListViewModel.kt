@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -49,6 +50,10 @@ class ShoppingListViewModel(
                         text = store.name,
                         extraText = store.address
                     )
+                }.also { allStores ->
+                    if (allStores.isNotEmpty()) {
+                        selectedStoreDropdownItem = allStores.first()
+                    }
                 }.toImmutableList()
             }
             .stateIn(
@@ -57,7 +62,11 @@ class ShoppingListViewModel(
                 initialValue = emptyList<DropdownItem<Store>>().toImmutableList()
             )
 
-    var selectedStoreDropdownItem by mutableStateOf(DropdownItem.dummyItem(Store.dummyStore()))
+    var selectedStoreDropdownItem: DropdownItem<Store> by mutableStateOf(
+        DropdownItem.dummyItem(
+            Store.createDefaultMainStore()
+        )
+    )
         private set
 
     private val itemsMutableFlow: MutableStateFlow<List<SingleItem>> =
@@ -97,6 +106,13 @@ class ShoppingListViewModel(
                 moveItemFlow.collect { pair ->
                     moveItem(pair.first, pair.second)
                 }
+            }
+
+            launch {
+                // Ensure that when the list of stores is loaded,
+                // the first item is selected if nothing has been selected yet.
+                // This handles the initial state or when the selected item becomes invalid.
+                storeDropdownItems.first { it.isNotEmpty() }
             }
         }
 
@@ -149,6 +165,7 @@ class ShoppingListViewModel(
                     newWeight
                 )
             }
+            itemsMutableFlow.value = withContext(Dispatchers.Default) { shoppingList.getAllItems() }
             clearSearchField()
         }
     }

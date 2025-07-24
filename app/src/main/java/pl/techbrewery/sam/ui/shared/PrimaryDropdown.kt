@@ -17,9 +17,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.tooling.preview.Preview
+import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
-data class DropdownItem<T>(val item: T, val text: String = "", val extraText: String? = null) {
+ data class DropdownItem<T>(
+     val item: T,
+     val text: String = "",
+     val selectedText: String = text,
+     val extraText: String? = null
+ ) {
+
     companion object {
         fun <T> dummyItem(item: T): DropdownItem<T> = DropdownItem(item)
     }
@@ -38,6 +45,7 @@ fun <T> PrimaryDropdown(
 
     onSelectedItemChanged: (DropdownItem<T>) -> Unit = {},
 ) {
+    tempLog("selected item: $selectedItem")
     var expanded by remember { mutableStateOf(false) }
     val trailingIcon: @Composable (() -> Unit) = {
         ExposedDropdownMenuDefaults.TrailingIcon(
@@ -52,7 +60,7 @@ fun <T> PrimaryDropdown(
         PrimaryTextField(
             readOnly = true,
             enabled = enabled,
-            value = selectedItem.text,
+            value = selectedItem.selectedText,
             label = label,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,

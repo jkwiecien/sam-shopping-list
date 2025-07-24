@@ -1,11 +1,15 @@
 package pl.techbrewery.sam.kmp.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import org.jetbrains.compose.resources.getString
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.utils.getCurrentTime
+import pl.techbrewery.sam.resources.Res
+import pl.techbrewery.sam.resources.store_main_default_name
 
 class StoreRepository(
     private val kmpDatabase: KmpDatabase
@@ -77,10 +81,7 @@ class StoreRepository(
         val mainStore = getMainStore()
         if (mainStore == null) {
             kmpDatabase.storeDao().insert(
-                Store(
-                    name = "Main Store",
-                    main = true
-                )
+                Store.createDefaultMainStore()
             )
         }
     }
@@ -89,6 +90,15 @@ class StoreRepository(
         return kmpDatabase.storeDao().getAllStores()
             .onStart {
                 createMainStoreIfNotPresent()
+            }
+            .map { stores ->
+                stores.map { store ->
+                    if (store.main && store.name.isBlank()) {
+                        store.copy(name = getString(Res.string.store_main_default_name))
+                    } else {
+                        store
+                    }
+                }
             }
     }
 

@@ -272,7 +272,7 @@ private fun ShoppingListScreenPreview() {
         // 3. Select one as the default selected item
         val selectedStoreDropdownItem = storeDropdownItems.firstOrNull()
             ?: DropdownItem(
-                item = Store.dummyStore(),
+                item = Store.createDefaultMainStore(),
                 text = "No Store"
             ) // Fallback if list is empty
 
