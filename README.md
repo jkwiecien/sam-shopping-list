@@ -37,4 +37,4 @@ Room layer lies in the KMP module. For lists I use flows that take care of the d
 I found a [great library](https://github.com/Calvin-LL/Reorderable/?tab=readme-ov-file#lazycolumn) that does the job but there are issues which I will address later.
 I used [Stitch](https://stitch.withgoogle.com/) to create designs for this app and I'm really happy about it
 ### Gemini
-Not gonna lie, I've generated a good portion of the code which I later groomed to fit the quality I'm used to. I even used `Design png -> Compose UI ` generation from Android Studio Canary. What a time to be alive! I got a lot of help with setting up KMP as well, as this was my first time doing it.
+Not gonna lie, I've generated a good portion of the code which I later groomed to fit the quality I'm used to. I even used `Design png -> Compose UI ` generation from Android Studio Canary. What a time to be alive! I got a lot of help with setting up KMP as well, as this was my first time doing it. I'm collecting meta prompts for code generation inside /gemini folder. These prompts making the code generation more suited to the project I'm working on. 
