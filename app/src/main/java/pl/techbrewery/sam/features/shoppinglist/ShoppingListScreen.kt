@@ -21,7 +21,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -36,6 +40,7 @@ import pl.techbrewery.sam.features.stores.CreateStoreSheetContent
 import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
+import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.BottomPageContentState
 import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
@@ -53,11 +58,17 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 @Composable
 fun ShoppingListScreen(
     viewModel: ShoppingListViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onListScrollChanged: (Boolean) -> Unit = {}
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQueryFLow.collectAsStateWithLifecycle()
-    val onAction: (Any) -> Unit = { viewModel.onAction(it) }
+    val onAction: (Any) -> Unit = { action ->
+        when (action) {
+            is ShoppingListScrollChanged -> onListScrollChanged(action.scrolled)
+            else -> viewModel.onAction(action)
+        }
+    }
 
     ShoppingListScreenContent(
         items = items,
@@ -139,6 +150,15 @@ private fun ShoppingList(
             rememberReorderableLazyListState(lazyListState) { from, to ->
                 onAction(ItemMoved(from.index, to.index))
             }
+
+        LaunchedEffect(lazyListState ) {
+            snapshotFlow { lazyListState.firstVisibleItemIndex  }
+                .collect { index ->
+                    val listScrolled = index > 0
+                    onAction(ShoppingListScrollChanged(listScrolled))
+                }
+        }
+
         StoresDropdown(
             selectedItem = selectedStoreDropdownItem,
             items = storeDropdownItems,
