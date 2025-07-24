@@ -9,6 +9,8 @@ The app learns the right order when the user drags and drops the items. At some 
 ### AI grouping
 If I enter the shop departments name in the order I'm visiting them, I might be able to use on device AI to put the newly entered items in the right groups, that were ordered by the user. For instance shop layout could be a lust like: "Bakery, Fruits, Vegetables, Meat,.. ".
 This gets complicated due to usage of KMP. 
+### Recipes
+Wanna cook something that requires particular set of ingredients? Create a recipe and then just pick recipe from the suggested items when typing. All the items will be added in the result :) Don't know what do you need to cook that carbonara pasta? AI can suggest items. So far this is just the idea, but I'll add it.
 
 ## Tech stack
 ### Compose
