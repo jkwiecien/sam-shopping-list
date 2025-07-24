@@ -3,9 +3,6 @@
 package pl.techbrewery.sam.features.shoppinglist
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,6 +39,7 @@ import kotlinx.collections.immutable.toImmutableList
 import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.features.stores.CreateStoreSheetContent
+import pl.techbrewery.sam.features.stores.StoreItem
 import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
@@ -247,8 +245,13 @@ private fun StoresDropdown(
 ) {
     PrimaryDropdown(
         selectedItem = selectedItem,
-        items = items,
+        dropdownItems = items,
         onSelectedItemChanged = onItemSelected,
+        createItem = { dropdownItem ->
+            StoreItem(
+                store = dropdownItem.item
+            )
+        },
         modifier = Modifier.fillMaxWidth()
     )
 }

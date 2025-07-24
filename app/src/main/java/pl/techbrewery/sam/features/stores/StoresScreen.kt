@@ -91,14 +91,20 @@ fun StoresScreenContent(
 }
 
 @Composable
-private fun StoreItem(
+fun StoreItem(
     store: Store,
-    onAction: (Any) -> Unit
+    onAction: ((Any) -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onAction(StorePressed(store)) }
+            .let {
+                if (onAction != null) {
+                    it.clickable { onAction(StorePressed(store)) }
+                } else {
+                    it
+                }
+            }
             .padding(vertical = Spacing.Small),
         verticalAlignment = Alignment.CenterVertically
     ) {
