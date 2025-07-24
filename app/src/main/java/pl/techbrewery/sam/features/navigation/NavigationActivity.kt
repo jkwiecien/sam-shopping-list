@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -42,6 +41,7 @@ import pl.techbrewery.sam.features.stores.StoresScreen
 import pl.techbrewery.sam.features.stores.StoresViewModel
 import pl.techbrewery.sam.features.stores.editor.StoreEditorScreen
 import pl.techbrewery.sam.features.stores.editor.StoreEditorViewModel
+import pl.techbrewery.sam.features.stores.editor.StoreUpdated
 import pl.techbrewery.sam.kmp.routes.ScreenRoute
 import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.resources.Res
@@ -92,11 +92,11 @@ class NavigationActivity : ComponentActivity() {
                             resetAppBarVisibility()
                             StoresScreen(
                                 storesViewModel,
-                                onNavigationAction = { action ->
+                                onExternalAction = { action ->
                                     when (action) {
                                         is StorePressed -> {
                                             storeEditorViewModel.setStoreId(action.store.storeId)
-                                            onNavigationAction(action, navController)
+                                            navController.navigate(ScreenRoute.StoreEditor)
                                         }
 
                                         is CreateStorePressed -> navController.navigate(ScreenRoute.StoreEditor)
@@ -106,7 +106,14 @@ class NavigationActivity : ComponentActivity() {
                         }
                         composable(route = ScreenRoute.StoreEditor) {
                             resetAppBarVisibility()
-                            StoreEditorScreen(storeEditorViewModel)
+                            StoreEditorScreen(
+                                storeEditorViewModel,
+                                onExternalAction = { action ->
+                                    when (action) {
+                                        is StoreUpdated -> navController.navigate(ScreenRoute.Stores)
+                                    }
+                                }
+                            )
                         }
                     }
                 }
@@ -149,13 +156,6 @@ class NavigationActivity : ComponentActivity() {
                     )
                 }
             }
-        }
-    }
-
-    private fun onNavigationAction(action: Any, navController: NavController) {
-        when (action) {
-            is StorePressed -> navController.navigate(route = ScreenRoute.StoreEditor)
-            // Handle other actions if needed
         }
     }
 }

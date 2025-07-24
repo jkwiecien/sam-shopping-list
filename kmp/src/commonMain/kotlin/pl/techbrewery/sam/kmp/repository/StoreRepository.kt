@@ -9,6 +9,7 @@ import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.utils.getCurrentTime
 import pl.techbrewery.sam.resources.Res
+import pl.techbrewery.sam.resources.store_default_name
 import pl.techbrewery.sam.resources.store_main_default_name
 
 class StoreRepository(
@@ -18,12 +19,25 @@ class StoreRepository(
         return kmpDatabase.storeDao().hasAnyStores()
     }
 
+    private suspend fun validateStore(
+        store: Store
+    ): Store {
+        val fallbackNameResource =
+            if (store.main) Res.string.store_main_default_name else Res.string.store_default_name
+        return if (store.name.isBlank()) store.copy(name = getString(fallbackNameResource))
+        else store
+    }
+
     suspend fun getStore(storeId: Long): Store? {
-        return kmpDatabase.storeDao().getStoreById(storeId)
+        return kmpDatabase.storeDao().getStoreById(storeId)?.let {
+            validateStore(it)
+        }
     }
 
     suspend fun getMainStore(): Store? {
-        return kmpDatabase.storeDao().getMainStore()
+        return kmpDatabase.storeDao().getMainStore()?.let {
+            validateStore(it)
+        }
     }
 
     suspend fun saveStoreLayout(
@@ -53,8 +67,9 @@ class StoreRepository(
                 )
             )
             store = store.copy(storeId = newlyCreatedStoreId)
+            kmpDatabase.storeDao().insert(store)
         }
-        kmpDatabase.storeDao().insert(store)
+
 
         departments.forEachIndexed { index, department ->
             val existingDepartment = kmpDatabase.storeDepartmentDao()
@@ -77,6 +92,7 @@ class StoreRepository(
         kmpDatabase.storeDao().insert(store)
     }
 
+
     private suspend fun createMainStoreIfNotPresent() {
         val mainStore = getMainStore()
         if (mainStore == null) {
@@ -92,13 +108,7 @@ class StoreRepository(
                 createMainStoreIfNotPresent()
             }
             .map { stores ->
-                stores.map { store ->
-                    if (store.main && store.name.isBlank()) {
-                        store.copy(name = getString(Res.string.store_main_default_name))
-                    } else {
-                        store
-                    }
-                }
+                stores.map { store -> validateStore(store) }
             }
     }
 

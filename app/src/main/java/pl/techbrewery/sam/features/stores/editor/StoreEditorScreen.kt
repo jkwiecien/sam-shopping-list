@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,10 +43,18 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 @Composable
 fun StoreEditorScreen(
     viewModel: StoreEditorViewModel,
+    onExternalAction: (Any) -> Unit = {}
 ) {
     val departments by viewModel.departments.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        viewModel.actionsFlow.collect { action ->
+            onExternalAction(action)
+        }
+    }
+
     StoreEditorScreenContent(
         storeName = viewModel.storeName,
+        storeAddress = viewModel.storeAddress,
         newDepartmentName = viewModel.newDepartmentName,
         departments = departments,
         onAction = { viewModel.onAction(it) }
@@ -56,8 +65,9 @@ fun StoreEditorScreen(
 @Composable
 fun StoreEditorScreenContent(
     storeName: String,
-    newDepartmentName: String,
     modifier: Modifier = Modifier,
+    storeAddress: String? = null,
+    newDepartmentName: String = "",
     departments: ImmutableList<StoreDepartment> = emptyList<StoreDepartment>().toImmutableList(),
     onAction: (Any) -> Unit = {}
 ) {
@@ -78,7 +88,15 @@ fun StoreEditorScreenContent(
                 label = "Store name",
                 onValueChange = { onAction(StoreNameChanged(it)) },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                onDonePressed = { onAction(KeyboardDonePressedOnStoreName) },
+                onDonePressed = { focusManager.clearFocus() },
+                modifier = Modifier.fillMaxWidth()
+            )
+            PrimaryTextField(
+                value = storeAddress ?: "",
+                label = "Store address (optional)",
+                onValueChange = { onAction(StoreAddressChanged(it)) },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                onDonePressed = { focusManager.clearFocus() },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -167,7 +185,6 @@ fun StoresScreenPreview() {
     SAMTheme { // Wrap with your app's theme if you have one
         StoreEditorScreenContent(
             storeName = "Lidl",
-            newDepartmentName = "Vegetables"
         )
     }
 }

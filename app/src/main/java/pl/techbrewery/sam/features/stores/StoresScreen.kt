@@ -2,6 +2,7 @@ package pl.techbrewery.sam.features.stores
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -45,12 +45,12 @@ import pl.techbrewery.sam.ui.theme.SAMTheme
 fun StoresScreen(
     viewModel: StoresViewModel,
     modifier: Modifier = Modifier,
-    onNavigationAction: (Any) -> Unit = {},
+    onExternalAction: (Any) -> Unit = {},
 ) {
     val stores by viewModel.stores.collectAsStateWithLifecycle()
     val onAction: (Any) -> Unit = { action ->
         when (action) {
-            is StorePressed, CreateStorePressed -> onNavigationAction(action)
+            is StorePressed, CreateStorePressed -> onExternalAction(action)
             else -> viewModel.onAction(action)
         }
     }
@@ -102,13 +102,27 @@ private fun StoreItem(
             .padding(vertical = Spacing.Small),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val iconShape = RoundedCornerShape(Spacing.Small)
         Icon(
             painter = painterResource(R.drawable.ic_store_24dp),
             contentDescription = store.name,
             modifier = Modifier
                 .size(48.dp)
-                .clip(RoundedCornerShape(Spacing.Small))
-                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .background(
+                    shape = iconShape,
+                    color = MaterialTheme.colorScheme.secondaryContainer
+                )
+                .let {
+                    if (store.main) {
+                        it.border(
+                            width = 2.dp,
+                            shape = RoundedCornerShape(Spacing.Small),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        it
+                    }
+                }
                 .padding(Spacing.Medium)
         )
         LargeSpacingBox()
@@ -120,9 +134,9 @@ private fun StoreItem(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            if (store.address?.isNotBlank() == true) {
+            store.address?.let { address ->
                 Text(
-                    text = store.address!!,
+                    text = address,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.tertiary
                 )
@@ -150,7 +164,7 @@ fun EmptyStoresScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .height(250.dp) // Adjust height as needed
+                    .height(250.dp)
             )
 
             Spacer(modifier = Modifier.height(Spacing.XL))
@@ -189,7 +203,7 @@ fun StoresScreenPreview() {
     SAMTheme {
         StoresScreenContent(
             stores = listOf(
-                Store(storeId = 0, name = "Biedronka"),
+                Store(storeId = 0, name = "Biedronka", main = true),
                 Store(storeId = 1, name = "Auchan", address = "ul. Puławska 123")
             ).toImmutableList(),
             modifier = Modifier.fillMaxSize()

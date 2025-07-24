@@ -18,6 +18,7 @@ import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.BaseViewModel
+import pl.techbrewery.sam.shared.KeyboardDonePressed
 
 class StoreEditorViewModel(
     private val storeRepository: StoreRepository
@@ -36,6 +37,8 @@ class StoreEditorViewModel(
 
     private var storeId: Long = -1
     var storeName: String by mutableStateOf("")
+        private set
+    var storeAddress: String by mutableStateOf("")
         private set
     var newDepartmentName: String by mutableStateOf("")
         private set
@@ -62,6 +65,7 @@ class StoreEditorViewModel(
         when (action) {
             is SaveStorePressed -> saveStore()
             is StoreNameChanged -> storeName = action.name
+            is StoreAddressChanged -> storeAddress = action.name
             is StoreDepartmentMoved -> moveDepartment(action.from, action.to)
             is DepartmentNameChanged -> newDepartmentName = action.departmentName
             is KeyboardDonePressedOnDepartmentName -> addDepartment()
@@ -74,8 +78,10 @@ class StoreEditorViewModel(
                 storeRepository.saveStoreLayout(
                     storeId = storeId,
                     storeName = storeName,
+                    storeAddress = storeAddress,
                     departments = departments.value
                 )
+                emitSingleAction(StoreUpdated)
             }
         }
     }
