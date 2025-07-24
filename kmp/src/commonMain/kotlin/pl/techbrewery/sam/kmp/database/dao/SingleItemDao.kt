@@ -21,6 +21,9 @@ interface SingleItemDao {
     @Query("SELECT * FROM single_items ORDER BY index_weight DESC")
     fun getAllSingleItemsFlow(): Flow<List<SingleItem>>
 
+    @Query("SELECT * FROM single_items WHERE item_name LIKE '%' || :query || '%' AND checked_off = true ORDER BY item_name ASC")
+    fun getSuggestedItemsFlow(query: String): Flow<List<SingleItem>>
+
     @Query("SELECT * FROM single_items ORDER BY index_weight DESC")
     suspend fun getAllSingleItems(): List<SingleItem>
 

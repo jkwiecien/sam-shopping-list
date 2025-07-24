@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -31,15 +30,15 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
+import pl.techbrewery.sam.features.shoppinglist.ui.ItemTextField
+import pl.techbrewery.sam.features.shoppinglist.ui.StoresDropdown
 import pl.techbrewery.sam.features.stores.CreateStoreSheetContent
-import pl.techbrewery.sam.features.stores.StoreItem
 import pl.techbrewery.sam.features.stores.state.CreateStoreBottomSheetState
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
@@ -48,8 +47,6 @@ import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
-import pl.techbrewery.sam.ui.shared.PrimaryDropdown
-import pl.techbrewery.sam.ui.shared.SearchField
 import pl.techbrewery.sam.ui.shared.SharedModalBottomSheet
 import pl.techbrewery.sam.ui.shared.SmallSpacingBox
 import pl.techbrewery.sam.ui.shared.Spacing
@@ -64,7 +61,7 @@ fun ShoppingListScreen(
     onListScrollChanged: (Boolean) -> Unit = {}
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQueryFLow.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQueryFlow.collectAsStateWithLifecycle()
     val onAction: (Any) -> Unit = { action ->
         when (action) {
             is ShoppingListScrollChanged -> onListScrollChanged(action.scrolled)
@@ -74,10 +71,11 @@ fun ShoppingListScreen(
 
     ShoppingListScreenContent(
         items = items,
+        storeDropdownItems = viewModel.storeDropdownItems.collectAsStateWithLifecycle().value,
+        suggestedItems = viewModel.suggestedItemsDropdownItems.collectAsStateWithLifecycle().value,
+        selectedStoreDropdownItem = viewModel.selectedStoreDropdownItemFlow.collectAsStateWithLifecycle().value,
         searchQuery = searchQuery,
         bottomSheetContentState = viewModel.bottomSheetContentState,
-        selectedStoreDropdownItem = viewModel.selectedStoreDropdownItem,
-        storeDropdownItems = viewModel.storeDropdownItems.collectAsStateWithLifecycle().value,
         onAction = onAction,
         modifier = modifier
     )
@@ -86,6 +84,7 @@ fun ShoppingListScreen(
 @Composable
 private fun ShoppingListScreenContent(
     items: ImmutableList<SingleItem>,
+    suggestedItems: ImmutableList<DropdownItem<SingleItem>>,
     modifier: Modifier = Modifier,
     searchQuery: String = "",
     selectedStoreDropdownItem: DropdownItem<Store>,
@@ -101,6 +100,7 @@ private fun ShoppingListScreenContent(
         )
         ShoppingList(
             items = items,
+            suggestedItems = suggestedItems,
             searchQuery = searchQuery,
             modifier = modifier,
             selectedStoreDropdownItem = selectedStoreDropdownItem,
@@ -133,6 +133,7 @@ private fun CreateStoreModalBottomSheet(
 private fun ShoppingList(
     modifier: Modifier = Modifier,
     items: ImmutableList<SingleItem>,
+    suggestedItems: ImmutableList<DropdownItem<SingleItem>>,
     selectedStoreDropdownItem: DropdownItem<Store>,
     storeDropdownItems: ImmutableList<DropdownItem<Store>>,
     searchQuery: String = "",
@@ -152,7 +153,7 @@ private fun ShoppingList(
             rememberReorderableLazyListState(lazyListState) { from, to ->
                 onAction(ItemMoved(from.index, to.index))
             }
-        var hideDropdown by remember { mutableStateOf(false) }
+        var hideDropdown by remember { mutableStateOf(false) } //fixme glitches when scrolling full screen
 
         LaunchedEffect(lazyListState) {
             snapshotFlow { lazyListState.firstVisibleItemIndex }
@@ -163,7 +164,8 @@ private fun ShoppingList(
                 }
         }
         AnimatedVisibility(
-            visible = !hideDropdown
+//            visible = !hideDropdown
+            visible = true //fixme glitches when scrolling full screen
         ) {
             Column {
                 StoresDropdown(
@@ -174,12 +176,13 @@ private fun ShoppingList(
                 SmallSpacingBox()
             }
         }
-        SearchField(
-            query = searchQuery,
-            supportingText = "Add item",
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+        ItemTextField(
+            value = searchQuery,
+            expanded = suggestedItems.isNotEmpty(),
+            suggestedItems = suggestedItems,
             onValueChange = { onAction(SearchQueryChanged(it)) },
-            onDonePressed = { onAction(KeyboardDonePressed) },
+            onDonePressed = { onAction(ItemFieldKeyboardDonePressed) },
+            onSelectedItemChanged = {onAction(SuggestedItemSelected(it))},
             modifier = Modifier.fillMaxWidth()
         )
         SmallSpacingBox()
@@ -237,25 +240,6 @@ private fun ShoppingListItem(
     }
 }
 
-@Composable
-private fun StoresDropdown(
-    items: ImmutableList<DropdownItem<Store>>,
-    selectedItem: DropdownItem<Store>,
-    onItemSelected: (DropdownItem<Store>) -> Unit = {}
-) {
-    PrimaryDropdown(
-        selectedItem = selectedItem,
-        dropdownItems = items,
-        onSelectedItemChanged = onItemSelected,
-        createItem = { dropdownItem ->
-            StoreItem(
-                store = dropdownItem.item
-            )
-        },
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun ShoppingListScreenPreview() {
@@ -286,6 +270,7 @@ private fun ShoppingListScreenPreview() {
                     "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
                     "Coffee", "Tea", "Juice", "Soda", "Water"
                 ).map { SingleItem(it) }.toImmutableList(),
+                suggestedItems = emptyList<DropdownItem<SingleItem>>().toImmutableList(),
                 searchQuery = "Preview Search", // Optional: Provide a preview search query
                 selectedStoreDropdownItem = selectedStoreDropdownItem,
                 storeDropdownItems = storeDropdownItems,

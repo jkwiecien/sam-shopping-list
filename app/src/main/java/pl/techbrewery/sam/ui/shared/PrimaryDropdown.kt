@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -23,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 data class DropdownItem<T>(
@@ -41,20 +41,23 @@ data class DropdownItem<T>(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> PrimaryDropdown(
-    selectedItem: DropdownItem<T>,
+    selectedItemText: String,
     dropdownItems: List<DropdownItem<T>>,
     modifier: Modifier = Modifier,
     label: String? = null,
     enabled: Boolean = true,
     initiallyExpanded: Boolean = false,
     colors: TextFieldColors = primaryDropdownColors(),
+    menuAnchorType: MenuAnchorType = MenuAnchorType.PrimaryNotEditable,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     leadingIcon: @Composable (() -> Unit)? = null,
+    onValueChange: (String) -> Unit = {},
     createItem: @Composable ((DropdownItem<T>) -> Unit)? = null,
     onSelectedItemChanged: (DropdownItem<T>) -> Unit = {},
+    onDonePressed: () -> Unit = {},
 ) {
-    tempLog("selected item: $selectedItem")
     var expanded by remember { mutableStateOf(initiallyExpanded) }
-    val trailingIcon: @Composable (() -> Unit) = {
+    val trailingIcon: @Composable (() -> Unit)? = {
         ExposedDropdownMenuDefaults.TrailingIcon(
             expanded = expanded
         )
@@ -67,14 +70,17 @@ fun <T> PrimaryDropdown(
         PrimaryTextField(
             readOnly = true,
             enabled = enabled,
-            value = selectedItem.selectedText,
+            value = selectedItemText,
             label = label,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
+            onValueChange = onValueChange,
+            keyboardOptions = keyboardOptions,
+            onDonePressed = onDonePressed,
             colors = colors,
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .menuAnchor(menuAnchorType)
         )
         ExposedDropdownMenu(
             expanded = expanded,
@@ -112,11 +118,6 @@ fun <T> PrimaryDropdown(
     }
 }
 
-@Composable
-private fun PrimaryDropdownItem() {
-
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun primaryDropdownColors() = ExposedDropdownMenuDefaults.textFieldColors(
@@ -135,7 +136,7 @@ private fun PrimaryDropdownPreview() {
     )
     SAMTheme {
         PrimaryDropdown(
-            selectedItem = items.first(),
+            selectedItemText = items.first().text,
             dropdownItems = items
         )
     }

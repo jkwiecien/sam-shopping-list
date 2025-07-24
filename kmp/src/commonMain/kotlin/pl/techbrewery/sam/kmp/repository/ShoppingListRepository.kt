@@ -2,7 +2,8 @@ package pl.techbrewery.sam.kmp.repository
 
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.take
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
@@ -12,12 +13,18 @@ import pl.techbrewery.sam.kmp.utils.tempLog
 class ShoppingListRepository(
     private val db: KmpDatabase
 ) {
-    suspend fun insertItem(itemName: String, indexWeight: Long) {
-        val item = SingleItem(
-            itemName = itemName.lowercase(),
-            indexWeight = indexWeight
-        )
-        db.singleItemDao().insertSingleItem(item)
+    suspend fun addItemToShoppingList(itemName: String, indexWeight: Long) {
+        val existingItem = db.singleItemDao().getSingleItemByName(itemName)
+        if (existingItem != null) {
+            db.singleItemDao().updateSingleItem(existingItem.copy(checkedOff = false))
+        } else {
+            val item = SingleItem(
+                itemName = itemName.lowercase(),
+                checkedOff = false,
+                indexWeight = indexWeight
+            )
+            db.singleItemDao().insertSingleItem(item)
+        }
     }
 
     suspend fun checkOffItem(itemName: String) {
@@ -81,5 +88,16 @@ class ShoppingListRepository(
                 val newWeight = (items.size - index + 1) * DEFAULT_INDEX_GAP
                 item.copy(indexWeight = newWeight)
             }
+    }
+
+    fun getSuggestedItems(
+        storeId: Long,
+        query: String
+    ): Flow<List<SingleItem>> {
+        if (query.isBlank()) {
+            return flowOf(emptyList())
+        } else {
+            return db.singleItemDao().getSuggestedItemsFlow(query).take(5)
+        }
     }
 }

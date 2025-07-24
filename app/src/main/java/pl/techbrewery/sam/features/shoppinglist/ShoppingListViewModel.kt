@@ -7,12 +7,15 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -25,7 +28,6 @@ import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.BaseViewModel
 import pl.techbrewery.sam.shared.BottomPageContentState
-import pl.techbrewery.sam.shared.KeyboardDonePressed
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.DropdownItem
 
@@ -36,10 +38,15 @@ class ShoppingListViewModel(
 ) : BaseViewModel() {
 
     private val mutableSearchFlow: MutableStateFlow<String> = MutableStateFlow("")
-    internal val searchQueryFLow: StateFlow<String> = mutableSearchFlow
+    internal val searchQueryFlow: StateFlow<String> = mutableSearchFlow
     var bottomSheetContentState: BottomPageContentState? by mutableStateOf(null)
         private set
 
+    private val selectedStoreDropdownItemMutableFlow: MutableStateFlow<DropdownItem<Store>> =
+        MutableStateFlow(DropdownItem.dummyItem(Store.createDefaultMainStore()))
+
+    val selectedStoreDropdownItemFlow: StateFlow<DropdownItem<Store>> =
+        selectedStoreDropdownItemMutableFlow
     internal val storeDropdownItems: StateFlow<ImmutableList<DropdownItem<Store>>> =
         storesRepository.getAllStoresFlow()
             .debounce { 50L }
@@ -52,7 +59,7 @@ class ShoppingListViewModel(
                     )
                 }.also { allStores ->
                     if (allStores.isNotEmpty()) {
-                        selectedStoreDropdownItem = allStores.first()
+                        selectedStoreDropdownItemMutableFlow.value = allStores.first()
                     }
                 }.toImmutableList()
             }
@@ -62,12 +69,32 @@ class ShoppingListViewModel(
                 initialValue = emptyList<DropdownItem<Store>>().toImmutableList()
             )
 
-    var selectedStoreDropdownItem: DropdownItem<Store> by mutableStateOf(
-        DropdownItem.dummyItem(
-            Store.createDefaultMainStore()
-        )
-    )
-        private set
+    @OptIn(ExperimentalCoroutinesApi::class)
+    internal val suggestedItemsDropdownItems: StateFlow<ImmutableList<DropdownItem<SingleItem>>> =
+        searchQueryFlow
+            .combine(selectedStoreDropdownItemFlow) { query, store ->
+                query to store.item
+            }
+            .flatMapLatest { dataPair ->
+                val query = dataPair.first
+                val store = dataPair.second
+                shoppingList.getSuggestedItems(store.storeId, query)
+                    .map { suggestedItems ->
+                        tempLog("Collected suggested items for query '$query': ${suggestedItems.joinToString { it.itemName }}")
+                        suggestedItems.map { item ->
+                            DropdownItem(
+                                item = item,
+                                text = item.itemName
+                            )
+                        }
+                    }
+            }
+            .map { it.toImmutableList() }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = emptyList<DropdownItem<SingleItem>>().toImmutableList()
+            )
 
     private val itemsMutableFlow: MutableStateFlow<List<SingleItem>> =
         MutableStateFlow(emptyList())
@@ -126,10 +153,12 @@ class ShoppingListViewModel(
     override fun onAction(action: Any) {
         when (action) {
             is ItemChecked -> onItemChecked(action.itemName)
-            is KeyboardDonePressed -> addItem()
+            is ItemFieldKeyboardDonePressed -> addItem()
             is SearchQueryChanged -> onSearchQueryChanged(action.query)
             is ItemMoved -> moveItemMutableFlow.value = action.from to action.to
-            is StoreDropdownItemSelected -> selectedStoreDropdownItem = action.dropdownItem
+            is StoreDropdownItemSelected -> selectedStoreDropdownItemMutableFlow.value =
+                action.dropdownItem
+            is SuggestedItemSelected -> addSuggestedItem(action.item)
         }
     }
 
@@ -153,15 +182,25 @@ class ShoppingListViewModel(
         mutableSearchFlow.value = ""
     }
 
+    private fun addSuggestedItem(item: SingleItem) {
+        val uncheckedItem = item.copy(checkedOff = false)
+        val updatedItems = itemsMutableFlow.value.plus(uncheckedItem).sortedByDescending { it.indexWeight }
+        itemsMutableFlow.value = updatedItems
+        mutableSearchFlow.value = "" 
+    }
+
     private fun addItem() {
         viewModelScope.launch(Dispatchers.Main) {
-            val currentItems = items.value
+            val newItemName = mutableSearchFlow.value
+            val currentItems = items.value.filterNot { it.checkedOff }
+            //dont add duplicates. todo show error on text field in case of duplicate
+            if (currentItems.any { it.itemName.lowercase() ==  newItemName.lowercase()}) return@launch
             val maxWeight = currentItems.maxOfOrNull { it.indexWeight } ?: 0L
             val newWeight = maxWeight + DEFAULT_INDEX_GAP
             tempLog("Adding new item with weight: $newWeight")
             withContext(Dispatchers.Default) {
-                shoppingList.insertItem(
-                    mutableSearchFlow.value,
+                shoppingList.addItemToShoppingList(
+                    newItemName,
                     newWeight
                 )
             }
