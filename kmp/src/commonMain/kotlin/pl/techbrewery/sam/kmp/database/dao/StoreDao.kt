@@ -30,8 +30,8 @@ interface StoreDao {
     @Query("SELECT * FROM stores WHERE main = true")
     suspend fun getMainStore(): Store?
 
-    @Query("SELECT * FROM stores ORDER BY name ASC")
-    fun getAllStores(): Flow<List<Store>> // Observe changes with Flow
+    @Query("SELECT * FROM stores")
+    fun getAllStores(): Flow<List<Store>>
 
     @Query("SELECT * FROM stores WHERE name LIKE :searchQuery || '%' ORDER BY name ASC")
     fun searchStoresByName(searchQuery: String): Flow<List<Store>>

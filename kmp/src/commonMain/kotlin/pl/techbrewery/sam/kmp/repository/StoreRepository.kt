@@ -43,7 +43,7 @@ class StoreRepository(
     suspend fun saveStoreLayout(
         storeId: Long,
         storeName: String,
-        storeAddress: String? = null,
+        storeAddress: String = "",
         departments: List<StoreDepartment>
     ) {
         var store = getStore(storeId)
@@ -89,7 +89,6 @@ class StoreRepository(
                 )
             }
         }
-        kmpDatabase.storeDao().insert(store)
     }
 
 

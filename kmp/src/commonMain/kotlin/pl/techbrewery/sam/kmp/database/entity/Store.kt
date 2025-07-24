@@ -11,7 +11,7 @@ import kotlin.time.ExperimentalTime
 data class Store(
     @ColumnInfo(name = "store_id") @PrimaryKey(autoGenerate = true) val storeId: Long = 0,
     @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name = "address") val address: String? = null,
+    @ColumnInfo(name = "address") val address: String = "",
     @ColumnInfo(name = "created_at") val createdAt: String = Clock.System.now().toString(),
     @ColumnInfo(name = "updated_at") val updatedAt: String = createdAt,
     @ColumnInfo(name = "main") val main: Boolean = false,

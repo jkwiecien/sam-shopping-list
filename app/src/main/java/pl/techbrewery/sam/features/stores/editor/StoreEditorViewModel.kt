@@ -61,6 +61,14 @@ class StoreEditorViewModel(
         }
     }
 
+    fun clearContents() {
+        storeId = -1
+        storeName = ""
+        storeAddress = ""
+        newDepartmentName = ""
+        storeDepartmentsMutableFlow.value = emptyList()
+    }
+
     override fun onAction(action: Any) {
         when (action) {
             is SaveStorePressed -> saveStore()

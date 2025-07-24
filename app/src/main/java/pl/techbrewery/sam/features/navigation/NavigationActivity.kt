@@ -99,7 +99,10 @@ class NavigationActivity : ComponentActivity() {
                                             navController.navigate(ScreenRoute.StoreEditor)
                                         }
 
-                                        is CreateStorePressed -> navController.navigate(ScreenRoute.StoreEditor)
+                                        is CreateStorePressed -> {
+                                            storeEditorViewModel.clearContents()
+                                            navController.navigate(ScreenRoute.StoreEditor)
+                                        }
                                     }
                                 }
                             )
@@ -141,7 +144,10 @@ class NavigationActivity : ComponentActivity() {
                                 route = currentRoute,
                                 onFloatingActionButtonPressed = { route ->
                                     when (route) {
-                                        ScreenRoute.Stores -> navController.navigate(route = ScreenRoute.StoreEditor)
+                                        ScreenRoute.Stores -> {
+                                            storeEditorViewModel.clearContents()
+                                            navController.navigate(route = ScreenRoute.StoreEditor)
+                                        }
                                     }
                                 }
                             )

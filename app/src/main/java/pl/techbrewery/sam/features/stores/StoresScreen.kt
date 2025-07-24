@@ -140,9 +140,9 @@ fun StoreItem(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            store.address?.let { address ->
+            if (store.address.isNotEmpty()) {
                 Text(
-                    text = address,
+                    text = store.address,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.tertiary
                 )
