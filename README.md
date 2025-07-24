@@ -12,7 +12,9 @@ This gets complicated due to usage of KMP.
 
 ## Technology used
 ### Compose
-Greatest Android invention since ActionBarSherlock (I guess I'm a boomer)
+Greatest Android invention since ActionBarSherlock (I guess I'm a boomer).
+### Coroutines & flows
+Used for reactive data models.
 ### Kotlin multiplatform
 So far this is just an Android app but I'm trying to make some layers of the code to be shared with iOS using kotlin multiplatform.
 #### Compose resources
