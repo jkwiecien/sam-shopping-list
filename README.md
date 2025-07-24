@@ -1,4 +1,4 @@
-![sam-demo](https://github.com/user-attachments/assets/74e0b362-f354-429c-9f26-c6bc53452786)
+<img src="https://github.com/user-attachments/assets/74e0b362-f354-429c-9f26-c6bc53452786" alt="sam-demo" width="300"/>
 # Yet another shopping list!
 Boring, right? Right, but I actualy do it for myself. Check out the problem definition. This project is under construction.
 ## Problem definition
