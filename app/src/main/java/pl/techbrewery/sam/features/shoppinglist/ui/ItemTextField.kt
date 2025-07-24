@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
@@ -45,6 +47,17 @@ fun  ItemTextField(
             label = itemTextFieldError ?: "Add item",
             isError = itemTextFieldError != null,
             leadingIcon =  { Icon(Icons.Filled.Search, contentDescription = "Search or Add Item") },
+            trailingIcon = {
+                if (value.isNotEmpty()) {
+                    IconButton(
+                        onClick = {onValueChange("")}
+                    ) {
+                        Icon(Icons.Filled.Clear,
+                            contentDescription = "Clear query",
+                        )
+                    }
+                }
+            },
             onValueChange = onValueChange,
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
             onDonePressed = onDonePressed,

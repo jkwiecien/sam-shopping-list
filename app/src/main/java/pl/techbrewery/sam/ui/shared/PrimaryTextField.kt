@@ -67,10 +67,10 @@ fun primaryTextFieldColors() = TextFieldDefaults.colors(
     unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
     errorSupportingTextColor = MaterialTheme.colorScheme.error,
     errorContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-    errorIndicatorColor = Transparent
+    errorIndicatorColor = Transparent,
+    errorLeadingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    errorTrailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer
 )
-
-
 
 @Preview
 @Composable
