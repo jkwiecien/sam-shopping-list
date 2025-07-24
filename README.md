@@ -1,4 +1,5 @@
-# Yet another shopping list
+[sam-demo](https://github.com/user-attachments/assets/74e0b362-f354-429c-9f26-c6bc53452786)
+# Yet another shopping list!
 Boring, right? Right, but I actualy do it for myself. Check out the problem definition. This project is under construction.
 ## Problem definition
 When doing the big weekly shopping, I always go to the same store. I always follow the same path and the items I collect are also similar each time. Still, I'm the kind of guy who forgets stuff so I have to get them written down anyway. I've been using Google Keep notes with checked lists. The problem is that I always order the items when I create the list so they appear in the order I'm going to encounter them on the store's shelf.
