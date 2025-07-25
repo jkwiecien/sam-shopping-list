@@ -65,7 +65,7 @@ jobs:
       # Step 6: Distribute the app to Firebase App Distribution
       # This step uses the official Firebase GitHub Action for distribution.
       - name: Deploy to Firebase App Distribution
-        uses: FirebaseExtended/action-hosting-deploy@v0 # Use the latest stable version
+        uses: FirebaseExtended/firebase-app-distribution-action@v1 # Use the latest stable version
         with:
           # Your Firebase App ID for the Android app (e.g., 1:1234567890:android:abcdef123456)
           # This should be stored as a GitHub Secret.
