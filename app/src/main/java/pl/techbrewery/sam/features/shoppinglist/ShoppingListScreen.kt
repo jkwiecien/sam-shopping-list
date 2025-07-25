@@ -149,19 +149,19 @@ private fun ShoppingListScreenContent(
                 rememberReorderableLazyListState(lazyListState) { from, to ->
                     onAction(ItemMoved(from.index, to.index))
                 }
-            var hideDropdown by remember { mutableStateOf(false) } //fixme glitches when scrolling full screen
+
+            var hideStoreDropdown by remember { mutableStateOf(storeDropdownItems.size == 1) } //fixme glitches when scrolling full screen
 
             LaunchedEffect(lazyListState) {
                 snapshotFlow { lazyListState.firstVisibleItemIndex }
                     .collect { index ->
                         val listScrolled = index > 0
-                        hideDropdown = listScrolled
+                        hideStoreDropdown = listScrolled
                         onAction(ShoppingListScrollChanged(listScrolled))
                     }
             }
             AnimatedVisibility(
-//            visible = !hideDropdown
-                visible = true //fixme glitches when scrolling full screen
+                visible = !hideStoreDropdown
             ) {
                 Column {
                     StoresDropdown(

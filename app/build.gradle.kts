@@ -58,6 +58,10 @@ android {
     }
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
 dependencies {
     implementation(project(":kmp"))
     implementation(libs.androidx.core.ktx)
