@@ -22,7 +22,7 @@ jobs:
 
     # Environment variables for the build process
     env:
-      BUILD_TYPE: release 
+      BUILD_TYPE: Release 
       # Replace with the path to your APK/AAB file after building
       # For release builds, it's typically app/build/outputs/apk/release/app-release.apk
       # Or for AAB: app/build/outputs/bundle/release/app-release.aab
