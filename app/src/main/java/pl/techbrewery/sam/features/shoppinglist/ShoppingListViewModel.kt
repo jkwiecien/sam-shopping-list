@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -39,16 +38,24 @@ class ShoppingListViewModel(
 
     private val mutableSearchFlow: MutableStateFlow<String> = MutableStateFlow("")
     internal val searchQueryFlow: StateFlow<String> = mutableSearchFlow
-    var bottomSheetContentState: BottomPageContentState? by mutableStateOf(null)
-        private set
     var itemTextFieldError: String? by mutableStateOf(null)
         private set
 
-    private val selectedStoreDropdownItemMutableFlow: MutableStateFlow<DropdownItem<Store>> =
-        MutableStateFlow(DropdownItem.dummyItem(Store.createDefaultMainStore()))
-
     val selectedStoreDropdownItemFlow: StateFlow<DropdownItem<Store>> =
-        selectedStoreDropdownItemMutableFlow
+        storesRepository.getSelectedStoreFlow()
+            .map {
+                tempLog("Selected store collected: $it")
+                DropdownItem(
+                    item = it,
+                    text = it.name,
+                    extraText = it.address
+                )
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = Store.createInitialStore().let { DropdownItem(it, it.name, extraText = it.address) }
+            )
     internal val storeDropdownItems: StateFlow<ImmutableList<DropdownItem<Store>>> =
         storesRepository.getAllStoresFlow()
             .debounce { 50L }
@@ -59,10 +66,6 @@ class ShoppingListViewModel(
                         text = store.name,
                         extraText = store.address
                     )
-                }.also { allStores ->
-                    if (allStores.isNotEmpty()) {
-                        selectedStoreDropdownItemMutableFlow.value = allStores.first()
-                    }
                 }.toImmutableList()
             }
             .stateIn(
@@ -121,13 +124,6 @@ class ShoppingListViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.Default) {
-//            val hasAnyStores = withContext(Dispatchers.Default) { stores.hasAnyStores() }
-//            if (!hasAnyStores) bottomSheetContentState = CreateStoreBottomSheetState
-            launch {
-                itemsMutableFlow.value =
-                    withContext(Dispatchers.Default) { shoppingList.getAllItems() }
-            }
-
             launch {
                 moveItemFlow.collect { pair ->
                     moveItem(pair.first, pair.second)
@@ -135,10 +131,9 @@ class ShoppingListViewModel(
             }
 
             launch {
-                // Ensure that when the list of stores is loaded,
-                // the first item is selected if nothing has been selected yet.
-                // This handles the initial state or when the selected item becomes invalid.
-                storeDropdownItems.first { it.isNotEmpty() }
+                selectedStoreDropdownItemFlow.collect {
+                    itemsMutableFlow.value = shoppingList.getItemsForSelectedStore()
+                }
             }
         }
 
@@ -155,10 +150,14 @@ class ShoppingListViewModel(
             is ItemFieldKeyboardDonePressed -> addItem()
             is SearchQueryChanged -> onSearchQueryChanged(action.query)
             is ItemMoved -> moveItemMutableFlow.value = action.from to action.to
-            is StoreDropdownItemSelected -> selectedStoreDropdownItemMutableFlow.value =
-                action.dropdownItem
-
+            is StoreDropdownItemSelected -> saveSelectedStore(action.dropdownItem.item)
             is SuggestedItemSelected -> addSuggestedItem(action.item)
+        }
+    }
+
+    private fun saveSelectedStore(store: Store) {
+        viewModelScope.launch(Dispatchers.Default) {
+            storesRepository.saveSelectedStore(store.storeId)
         }
     }
 
@@ -209,13 +208,9 @@ class ShoppingListViewModel(
                     newWeight
                 )
             }
-            itemsMutableFlow.value = withContext(Dispatchers.Default) { shoppingList.getAllItems() }
+            itemsMutableFlow.value = withContext(Dispatchers.Default) { shoppingList.getItemsForSelectedStore() }
             clearSearchField()
         }
-    }
-
-    fun dismissBottomSheet() {
-        bottomSheetContentState = null
     }
 
     private fun moveItem(from: Int, to: Int) {

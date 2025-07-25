@@ -244,7 +244,7 @@ private fun ShoppingListScreenPreview() {
     SAMTheme {
         // 1. Create some dummy Store objects
         val dummyStores = listOf(
-            Store(storeId = 1, name = "Main Store", main = true),
+            Store(storeId = 1, name = "Main Store", selected = true),
             Store(storeId = 2, name = "Second Store"),
             Store(storeId = 3, name = "Another Grocer")
         )
@@ -257,7 +257,7 @@ private fun ShoppingListScreenPreview() {
         // 3. Select one as the default selected item
         val selectedStoreDropdownItem = storeDropdownItems.firstOrNull()
             ?: DropdownItem(
-                item = Store.createDefaultMainStore(),
+                item = Store.createInitialStore(),
                 text = "No Store"
             ) // Fallback if list is empty
 

@@ -5,37 +5,36 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import org.jetbrains.compose.resources.getString
 import pl.techbrewery.sam.kmp.database.KmpDatabase
+import pl.techbrewery.sam.kmp.database.dao.StoreDao
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.utils.getCurrentTime
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.store_default_name
-import pl.techbrewery.sam.resources.store_main_default_name
 
 class StoreRepository(
-    private val kmpDatabase: KmpDatabase
+    private val db: KmpDatabase
 ) {
+    val storeDao: StoreDao get() = db.storeDao()
     suspend fun hasAnyStores(): Boolean {
-        return kmpDatabase.storeDao().hasAnyStores()
+        return storeDao.hasAnyStores()
     }
 
     private suspend fun validateStore(
         store: Store
     ): Store {
-        val fallbackNameResource =
-            if (store.main) Res.string.store_main_default_name else Res.string.store_default_name
-        return if (store.name.isBlank()) store.copy(name = getString(fallbackNameResource))
+        return if (store.name.isBlank()) store.copy(name = getString(Res.string.store_default_name))
         else store
     }
 
     suspend fun getStore(storeId: Long): Store? {
-        return kmpDatabase.storeDao().getStoreById(storeId)?.let {
+        return storeDao.getStoreById(storeId)?.let {
             validateStore(it)
         }
     }
 
-    suspend fun getMainStore(): Store? {
-        return kmpDatabase.storeDao().getMainStore()?.let {
+    suspend fun getSelectedStore(): Store? {
+        return storeDao.getSelectedStore()?.let {
             validateStore(it)
         }
     }
@@ -48,7 +47,7 @@ class StoreRepository(
     ) {
         var store = getStore(storeId)
         if (store != null) {
-            kmpDatabase.storeDao().update(
+            storeDao.update(
                 store.copy(
                     name = storeName,
                     address = storeAddress,
@@ -60,28 +59,28 @@ class StoreRepository(
                 name = storeName,
                 address = storeAddress
             )
-            val newlyCreatedStoreId = kmpDatabase.storeDao().insert(
+            val newlyCreatedStoreId = storeDao.insert(
                 Store(
                     name = storeName,
                     address = storeAddress
                 )
             )
             store = store.copy(storeId = newlyCreatedStoreId)
-            kmpDatabase.storeDao().insert(store)
+            storeDao.insert(store)
         }
 
 
         departments.forEachIndexed { index, department ->
-            val existingDepartment = kmpDatabase.storeDepartmentDao()
+            val existingDepartment = db.storeDepartmentDao()
                 .getStoreDepartment(store.storeId, department.departmentName)
             if (existingDepartment != null) {
-                kmpDatabase.storeDepartmentDao().update(
+                db.storeDepartmentDao().update(
                     existingDepartment.copy(
                         position = index
                     )
                 )
             } else {
-                kmpDatabase.storeDepartmentDao().insert(
+                db.storeDepartmentDao().insert(
                     department.copy(
                         storeId = store.storeId,
                         position = index
@@ -92,32 +91,47 @@ class StoreRepository(
     }
 
 
-    private suspend fun createMainStoreIfNotPresent() {
-        val mainStore = getMainStore()
-        if (mainStore == null) {
-            kmpDatabase.storeDao().insert(
-                Store.createDefaultMainStore()
+    private suspend fun createInitialStoreIfNotPresent() {
+        val firstStore = getSelectedStore()
+        if (firstStore == null) {
+            storeDao.insert(
+                validateStore(Store.createInitialStore())
             )
         }
     }
 
     fun getAllStoresFlow(): Flow<List<Store>> {
-        return kmpDatabase.storeDao().getAllStores()
-            .onStart {
-                createMainStoreIfNotPresent()
-            }
+        return storeDao.getAllStores()
             .map { stores ->
                 stores.map { store -> validateStore(store) }
             }
     }
 
     suspend fun getStoreDepartments(storeId: Long): List<StoreDepartment> {
-        return kmpDatabase.storeDepartmentDao().getStoreDepartments(storeId)
+        return db.storeDepartmentDao().getStoreDepartments(storeId)
     }
 
     fun reindexDepartments(departments: List<StoreDepartment>): List<StoreDepartment> {
         return departments.mapIndexed { index, department ->
             department.copy(position = index)
         }
+    }
+
+    fun getSelectedStoreFlow(): Flow<Store> {
+        return storeDao.getSelectedStoreFlow()
+            .onStart { createInitialStoreIfNotPresent() }
+    }
+
+    suspend fun saveSelectedStore(newSelectedStoreId: Long) {
+        val currentSelectedStore = storeDao.getSelectedStore()!!.copy(selected = false)
+        val storesToUpdate = mutableListOf(currentSelectedStore)
+        storeDao.getStoreById(newSelectedStoreId)?.let { newSelectedStore ->
+            storesToUpdate.add(newSelectedStore.copy(selected = true))
+            updateStores(storesToUpdate)
+        }
+    }
+
+    suspend fun updateStores(stores: List<Store>) {
+        storeDao.update(stores)
     }
 }

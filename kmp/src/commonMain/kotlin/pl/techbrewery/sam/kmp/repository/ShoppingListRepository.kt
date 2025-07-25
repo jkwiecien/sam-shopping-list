@@ -19,7 +19,7 @@ class ShoppingListRepository(
     val storeDao get() = db.storeDao()
 
     suspend fun addItemToShoppingList(itemName: String, indexWeight: Long) {
-        val selectedStore = storeDao.getSelectedStore()
+        val selectedStore = storeDao.getSelectedStore()!!
         val existingItem = singleItemDao.getSingleItemByName(itemName, selectedStore.storeId)
         if (existingItem != null) {
             singleItemDao.updateSingleItem(existingItem.copy(checkedOff = false))
@@ -42,6 +42,12 @@ class ShoppingListRepository(
 
     suspend fun getAllItems(): List<SingleItem> {
         return singleItemDao.getAllSingleItems()
+    }
+
+    suspend fun getItemsForSelectedStore(): List<SingleItem> {
+        return storeDao.getSelectedStore()?.let { selectedStore ->
+            singleItemDao.getAllSingleItemsForStore(selectedStore.storeId)
+        } ?: emptyList()
     }
 
     fun getAllItemsFlow(): Flow<List<SingleItem>> {
@@ -108,16 +114,5 @@ class ShoppingListRepository(
         }
     }
 
-    suspend fun saveSelectedStore(newSelectedStoreId: Long) {
-        val currentSelectedStore = storeDao.getSelectedStore().copy(selected = false)
-        val storesToUpdate = mutableListOf(currentSelectedStore)
-        storeDao.getStoreById(newSelectedStoreId)?.let { newSelectedStore ->
-            storesToUpdate.add(newSelectedStore.copy(selected = true))
-            updateStores(storesToUpdate)
-        }
-    }
 
-    suspend fun updateStores(stores: List<Store>) {
-        storeDao.update(stores)
-    }
 }

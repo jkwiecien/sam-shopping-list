@@ -119,7 +119,7 @@ fun StoreItem(
                     color = MaterialTheme.colorScheme.secondaryContainer
                 )
                 .let {
-                    if (store.main) {
+                    if (store.selected) {
                         it.border(
                             width = 2.dp,
                             shape = RoundedCornerShape(Spacing.Small),
@@ -209,7 +209,7 @@ fun StoresScreenPreview() {
     SAMTheme {
         StoresScreenContent(
             stores = listOf(
-                Store(storeId = 0, name = "Biedronka", main = true),
+                Store(storeId = 0, name = "Biedronka", selected = true),
                 Store(storeId = 1, name = "Auchan", address = "ul. Puławska 123")
             ).toImmutableList(),
             modifier = Modifier.fillMaxSize()

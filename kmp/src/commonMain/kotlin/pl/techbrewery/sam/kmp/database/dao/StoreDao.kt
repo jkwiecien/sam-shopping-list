@@ -30,11 +30,8 @@ interface StoreDao {
     @Query("SELECT * FROM stores WHERE store_id = :storeId")
     suspend fun getStoreById(storeId: Long): Store?
 
-    @Query("SELECT * FROM stores WHERE main = true")
-    suspend fun getMainStore(): Store?
-
     @Query("SELECT * FROM stores WHERE selected = true")
-    suspend fun getSelectedStore(): Store
+    suspend fun getSelectedStore(): Store?
 
     @Query("SELECT * FROM stores WHERE selected = true")
     fun getSelectedStoreFlow(): Flow<Store>
