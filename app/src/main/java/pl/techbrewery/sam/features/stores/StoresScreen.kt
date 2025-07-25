@@ -54,17 +54,11 @@ fun StoresScreen(
             else -> viewModel.onAction(action)
         }
     }
-    if (stores.isNotEmpty()) {
-        StoresScreenContent(
-            stores = stores,
-            modifier = modifier,
-            onAction = onAction
-        )
-    } else {
-        EmptyStoresScreenContent(
-            onAction = onAction
-        )
-    }
+    StoresScreenContent(
+        stores = stores,
+        modifier = modifier,
+        onAction = onAction
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -151,58 +145,6 @@ fun StoreItem(
     }
 }
 
-
-@Composable
-fun EmptyStoresScreenContent(
-    onAction: (Any) -> Unit = {},
-) {
-    Surface(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Column(
-            modifier = Modifier.padding(Spacing.Large),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Image(
-                painter = painterResource(R.drawable.illustration_empty_stores), // Replace with your actual drawable
-                contentDescription = "No stores yet",
-                contentScale = ContentScale.Crop, // Crop to fill bounds
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .height(250.dp)
-            )
-
-            Spacer(modifier = Modifier.height(Spacing.XL))
-
-            Text(
-                text = "No stores yet",
-                style = MaterialTheme.typography.headlineSmall,
-            )
-
-            Spacer(modifier = Modifier.height(Spacing.Small))
-
-            Text(
-                text = "Create a shop to start adding items to your shopping list.",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 32.dp), // Add some horizontal padding for centering
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            PrimaryOutlinedButton(
-                title = "Create store",
-                onPressed = { onAction(CreateStorePressed) },
-                modifier = Modifier
-                    .padding(horizontal = 40.dp) // Add padding to make button wider
-                    .fillMaxWidth()
-            )
-        }
-    }
-}
-
-
 @Preview(showBackground = true)
 @Composable
 fun StoresScreenPreview() {
@@ -217,11 +159,3 @@ fun StoresScreenPreview() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun EmptyStoresScreenContentPreview() {
-    SAMTheme {
-        EmptyStoresScreenContent()
-    }
-
-}
