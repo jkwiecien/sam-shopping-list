@@ -26,7 +26,6 @@ import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.BaseViewModel
-import pl.techbrewery.sam.shared.BottomPageContentState
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.DropdownItem
 
