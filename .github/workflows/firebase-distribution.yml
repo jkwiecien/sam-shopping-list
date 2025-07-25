@@ -60,7 +60,7 @@ jobs:
       # We use 'assembleRelease' to create a release build. For debug, use 'assembleDebug'.
       # Ensure your project is configured to sign release builds if you're distributing them.
       - name: Build Android App (${{ env.BUILD_TYPE }})
-        run: ./gradlew assemble${{ env.BUILD_TYPE }}
+        run: ./gradlew bundle${{ env.BUILD_TYPE }}
 
       # Step 6: Distribute the app to Firebase App Distribution
       # This step uses the official Firebase GitHub Action for distribution.
