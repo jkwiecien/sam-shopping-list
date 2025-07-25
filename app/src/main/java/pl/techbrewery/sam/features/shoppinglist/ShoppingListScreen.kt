@@ -199,7 +199,7 @@ private fun ShoppingListScreenContent(
                             )
                             ShoppingListItem(
                                 itemName = item.itemName,
-                                onCheckboxChecked = { onAction(ItemChecked(it)) },
+                                onCheckboxChecked = { onAction(ItemChecked(item.itemId)) },
                                 modifier = Modifier.animateItem()
                             )
                         }
@@ -215,7 +215,7 @@ private fun ShoppingListScreenContent(
 private fun ShoppingListItem(
     itemName: String,
     modifier: Modifier = Modifier,
-    onCheckboxChecked: (itemName: String) -> Unit
+    onCheckboxChecked: () -> Unit
 ) {
     Row(
         modifier = modifier
@@ -227,7 +227,7 @@ private fun ShoppingListItem(
         Checkbox(
             checked = false,
             onCheckedChange = { checked ->
-                if (checked) onCheckboxChecked(itemName)
+                if (checked) onCheckboxChecked()
             }
         )
         Text(
@@ -267,7 +267,7 @@ private fun ShoppingListScreenPreview() {
                     "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
                     "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
                     "Coffee", "Tea", "Juice", "Soda", "Water"
-                ).map { SingleItem(it) }.toImmutableList(),
+                ).map { SingleItem(itemName = it, storeId = 0) }.toImmutableList(),
                 suggestedItems = emptyList<DropdownItem<SingleItem>>().toImmutableList(),
                 searchQuery = "Preview Search", // Optional: Provide a preview search query
                 selectedStoreDropdownItem = selectedStoreDropdownItem,

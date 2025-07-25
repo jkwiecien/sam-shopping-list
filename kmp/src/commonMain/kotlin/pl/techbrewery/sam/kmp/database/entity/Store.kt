@@ -15,9 +15,10 @@ data class Store(
     @ColumnInfo(name = "created_at") val createdAt: String = Clock.System.now().toString(),
     @ColumnInfo(name = "updated_at") val updatedAt: String = createdAt,
     @ColumnInfo(name = "main") val main: Boolean = false,
+    @ColumnInfo(name = "selected") val selected: Boolean = false,
 ) {
     companion object {
-        fun createDefaultMainStore(): Store = Store(0, name = "", main = true)
+        fun createDefaultMainStore(): Store = Store(0, name = "", main = true, selected = true)
     }
 }
 

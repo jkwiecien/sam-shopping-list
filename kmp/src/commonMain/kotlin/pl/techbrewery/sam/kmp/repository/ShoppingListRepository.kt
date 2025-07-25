@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
+import pl.techbrewery.sam.kmp.database.entity.Store
+import pl.techbrewery.sam.kmp.di.kmpModules
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.SamConfig.INDEX_INCREMENT
 import pl.techbrewery.sam.kmp.utils.tempLog
@@ -13,43 +15,48 @@ import pl.techbrewery.sam.kmp.utils.tempLog
 class ShoppingListRepository(
     private val db: KmpDatabase
 ) {
+    val singleItemDao get() = db.singleItemDao()
+    val storeDao get() = db.storeDao()
+
     suspend fun addItemToShoppingList(itemName: String, indexWeight: Long) {
-        val existingItem = db.singleItemDao().getSingleItemByName(itemName)
+        val selectedStore = storeDao.getSelectedStore()
+        val existingItem = singleItemDao.getSingleItemByName(itemName, selectedStore.storeId)
         if (existingItem != null) {
-            db.singleItemDao().updateSingleItem(existingItem.copy(checkedOff = false))
+            singleItemDao.updateSingleItem(existingItem.copy(checkedOff = false))
         } else {
             val item = SingleItem(
+                storeId = selectedStore.storeId,
                 itemName = itemName.lowercase(),
                 checkedOff = false,
                 indexWeight = indexWeight
             )
-            db.singleItemDao().insertSingleItem(item)
+            singleItemDao.insertSingleItem(item)
         }
     }
 
-    suspend fun checkOffItem(itemName: String) {
-        db.singleItemDao().getSingleItemByName(itemName)?.let { item ->
-            db.singleItemDao().updateSingleItem(item.copy(checkedOff = true))
+    suspend fun checkOffItem(itemId: Long) {
+        singleItemDao.getSingleItemById(itemId)?.let { item ->
+            singleItemDao.updateSingleItem(item.copy(checkedOff = true))
         }
     }
 
     suspend fun getAllItems(): List<SingleItem> {
-        return db.singleItemDao().getAllSingleItems()
+        return singleItemDao.getAllSingleItems()
     }
 
     fun getAllItemsFlow(): Flow<List<SingleItem>> {
-        return db.singleItemDao().getAllSingleItemsFlow()
+        return singleItemDao.getAllSingleItemsFlow()
     }
 
     suspend fun updateItems(items: List<SingleItem>) {
         tempLog("Updating items with ${items.joinToString { "${it.itemName}:${it.indexWeight}" }}")
         items.forEach { item ->
-            db.singleItemDao().updateSingleItem(item)
+            singleItemDao.updateSingleItem(item)
         }
     }
 
     suspend fun updateItem(item: SingleItem) {
-        db.singleItemDao().updateSingleItem(item)
+        singleItemDao.updateSingleItem(item)
     }
 
     suspend fun moveItem(from: Int, to: Int, currentItems: List<SingleItem>): List<SingleItem> =
@@ -97,7 +104,20 @@ class ShoppingListRepository(
         if (query.isBlank()) {
             return flowOf(emptyList())
         } else {
-            return db.singleItemDao().getSuggestedItemsFlow(query).take(5)
+            return singleItemDao.getSuggestedItemsFlow(query).take(5)
         }
+    }
+
+    suspend fun saveSelectedStore(newSelectedStoreId: Long) {
+        val currentSelectedStore = storeDao.getSelectedStore().copy(selected = false)
+        val storesToUpdate = mutableListOf(currentSelectedStore)
+        storeDao.getStoreById(newSelectedStoreId)?.let { newSelectedStore ->
+            storesToUpdate.add(newSelectedStore.copy(selected = true))
+            updateStores(storesToUpdate)
+        }
+    }
+
+    suspend fun updateStores(stores: List<Store>) {
+        storeDao.update(stores)
     }
 }

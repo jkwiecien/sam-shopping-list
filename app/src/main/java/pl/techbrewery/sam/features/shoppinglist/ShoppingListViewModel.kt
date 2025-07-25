@@ -151,7 +151,7 @@ class ShoppingListViewModel(
 
     override fun onAction(action: Any) {
         when (action) {
-            is ItemChecked -> onItemChecked(action.itemName)
+            is ItemChecked -> onItemChecked(action.itemId)
             is ItemFieldKeyboardDonePressed -> addItem()
             is SearchQueryChanged -> onSearchQueryChanged(action.query)
             is ItemMoved -> moveItemMutableFlow.value = action.from to action.to
@@ -162,10 +162,10 @@ class ShoppingListViewModel(
         }
     }
 
-    private fun onItemChecked(itemName: String) {
+    private fun onItemChecked(itemId: Long) {
         viewModelScope.launch(Dispatchers.Main) {
             withContext(Dispatchers.Default) {
-                shoppingList.checkOffItem(itemName)
+                shoppingList.checkOffItem(itemId)
             }
             withContext(Dispatchers.Default) {
                 itemsMutableFlow.value = shoppingList.getAllItems()

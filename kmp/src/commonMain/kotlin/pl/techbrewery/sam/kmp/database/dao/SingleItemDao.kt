@@ -31,11 +31,14 @@ interface SingleItemDao {
     fun getUncheckedSingleItems(): Flow<List<SingleItem>>
 
     // Get a single item by its ID
-    @Query("SELECT * FROM single_items WHERE item_name = :name")
-    fun getSingleItemByNameAsFlow(name: String): Flow<SingleItem?> // Returns Flow<SingleItem?> as it might not exist
+    @Query("SELECT * FROM single_items WHERE item_id = :id")
+    fun getSingleItemByIdAsFlow(id: Long): Flow<SingleItem?>
 
-    @Query("SELECT * FROM single_items WHERE item_name = :name")
-    fun getSingleItemByName(name: String): SingleItem? // Returns Flow<SingleItem?> as it might not exist
+    @Query("SELECT * FROM single_items WHERE item_id = :id")
+    fun getSingleItemById(id: Long): SingleItem?
+
+   @Query("SELECT * FROM single_items WHERE item_name = :itemName AND store_id = :storeId")
+   fun getSingleItemByName(itemName: String, storeId: Long) : SingleItem?
 
     // --- Update Operations ---
     @Update(onConflict = OnConflictStrategy.REPLACE)
@@ -46,6 +49,7 @@ interface SingleItemDao {
     suspend fun deleteSingleItem(singleItem: SingleItem)
 
     // Delete a single item by its ID
-    @Query("DELETE FROM single_items WHERE item_name = :name")
-    suspend fun deleteSingleItemByName(name: String): Int // Returns number of rows deleted
+    @Query("DELETE FROM single_items WHERE item_id = :id")
+    suspend fun deleteSingleItemById(id: Long): Int // Returns number of rows deleted
+
 }

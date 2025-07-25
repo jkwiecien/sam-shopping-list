@@ -42,7 +42,7 @@ interface ItemBundleDao {
     @Query(
         """
         SELECT si.* FROM single_items si
-        INNER JOIN item_bundle_join bicr ON si.item_name = bicr.item_name_join
+        INNER JOIN item_bundle_join bicr ON si.item_id = bicr.item_id_join
         WHERE bicr.bundle_id_join = :bundleId
     """
     )

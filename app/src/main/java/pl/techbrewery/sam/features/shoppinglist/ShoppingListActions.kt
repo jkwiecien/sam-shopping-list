@@ -4,7 +4,7 @@ import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.ui.shared.DropdownItem
 
-class ItemChecked(val itemName: String)
+class ItemChecked(val itemId: Long)
 internal class ItemMoved(val from: Int, val to: Int)
 class StoreDropdownItemSelected(val dropdownItem: DropdownItem<Store>)
 class ShoppingListScrollChanged(val scrolled: Boolean)

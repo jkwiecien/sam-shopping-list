@@ -10,12 +10,12 @@ import pl.techbrewery.sam.kmp.database.entity.SingleItem
 data class ItemBundleWithItems(
     @Embedded val bundle: ItemBundle,
     @Relation(
-        parentColumn = "bundle_id", // From ItemBundle
-        entityColumn = "item_name",   // From SingleItem
+        parentColumn = "bundle_id",
+        entityColumn = "item_id",
         associateBy = Junction(
             value = ItemBundleJoin::class,
-            parentColumn = "bundle_id_join", // From BundleItemJoin (references ItemBundle)
-            entityColumn = "item_name_join"  // From BundleItemJoin (references SingleItem)
+            parentColumn = "bundle_id_join",
+            entityColumn = "item_id_join"
         )
     )
     val items: List<SingleItem>

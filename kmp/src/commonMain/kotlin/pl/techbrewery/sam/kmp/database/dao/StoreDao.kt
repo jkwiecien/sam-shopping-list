@@ -21,6 +21,9 @@ interface StoreDao {
     @Update
     suspend fun update(store: Store)
 
+    @Update
+    suspend fun update(stores: List<Store>)
+
     @Delete
     suspend fun delete(store: Store)
 
@@ -29,6 +32,12 @@ interface StoreDao {
 
     @Query("SELECT * FROM stores WHERE main = true")
     suspend fun getMainStore(): Store?
+
+    @Query("SELECT * FROM stores WHERE selected = true")
+    suspend fun getSelectedStore(): Store
+
+    @Query("SELECT * FROM stores WHERE selected = true")
+    fun getSelectedStoreFlow(): Flow<Store>
 
     @Query("SELECT * FROM stores")
     fun getAllStores(): Flow<List<Store>>
