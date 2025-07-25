@@ -62,6 +62,16 @@ jobs:
       - name: Build Android App (${{ env.BUILD_TYPE }})
         run: ./gradlew assemble${{ env.BUILD_TYPE }}
 
+      # DEBUGGING STEP: List contents of the outputs directory
+      - name: List build outputs
+        run: |
+          echo "Listing contents of app/build/outputs/apk/release/"
+          ls -lR app/build/outputs/apk/release/
+          echo "Listing contents of app/build/outputs/bundle/release/"
+          ls -lR app/build/outputs/bundle/release/
+        # Continue on error so the Firebase step still runs and we see its error
+        continue-on-error: true
+
       # Step 6: Distribute the app to Firebase App Distribution
       # This step uses the official Firebase GitHub Action for distribution.
       - name: Deploy to Firebase App Distribution
