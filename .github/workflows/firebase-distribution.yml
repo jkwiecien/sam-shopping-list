@@ -1,0 +1,88 @@
+# This workflow builds your Android app and distributes it to Firebase App Distribution.
+
+name: Firebase Distribution
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push events to the "main" branch
+  push:
+    branches: [ "main" ]
+  # Triggers the workflow on pull request events to the "main" branch
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build_and_distribute:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Environment variables for the build process
+    env:
+      BUILD_TYPE: release 
+      # Replace with the path to your APK/AAB file after building
+      # For release builds, it's typically app/build/outputs/apk/release/app-release.apk
+      # Or for AAB: app/build/outputs/bundle/release/app-release.aab
+      # Adjust the path based on your project structure and build type.
+      APP_FILE_PATH: app/build/outputs/bundle/release/app-release.aab
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Step 1: Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Java Development Kit (JDK)
+      # This is required for building Android applications.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # Recommended distribution for GitHub Actions
+          java-version: '17'      # Android projects typically use JDK 17 or higher
+
+      # Step 3: Set up Gradle and cache dependencies
+      # This action sets up Gradle and caches dependencies to speed up subsequent builds.
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: '8.14.3' # Use the Gradle wrapper version defined in your project
+
+      # Step 4: Grant execute permission to the Gradle wrapper script
+      # This is necessary to run the gradlew script.
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      # Step 5: Build the Android application
+      # This command runs the Gradle build task to generate the APK/AAB.
+      # We use 'assembleRelease' to create a release build. For debug, use 'assembleDebug'.
+      # Ensure your project is configured to sign release builds if you're distributing them.
+      - name: Build Android App (${{ env.BUILD_TYPE }})
+        run: ./gradlew assemble${{ env.BUILD_TYPE }}
+
+      # Step 6: Distribute the app to Firebase App Distribution
+      # This step uses the official Firebase GitHub Action for distribution.
+      - name: Deploy to Firebase App Distribution
+        uses: FirebaseExtended/action-hosting-deploy@v0 # Use the latest stable version
+        with:
+          # Your Firebase App ID for the Android app (e.g., 1:1234567890:android:abcdef123456)
+          # This should be stored as a GitHub Secret.
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          # The Firebase CLI token or service account key.
+          # Generate with `firebase login:ci` and store as a GitHub Secret.
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          # Path to the APK or AAB file to be distributed.
+          # This should match the output path from your build step.
+          file: ${{ env.APP_FILE_PATH }}
+          # Optional: Release notes for this distribution.
+          # You can make this dynamic, e.g., using commit messages.
+          releaseNotes: |
+            New build from GitHub Actions.
+            Build Type: ${{ env.BUILD_TYPE }}
+            Commit: ${{ github.sha }}
+          # Optional: Comma-separated list of tester group aliases (e.g., 'qa-team,beta-users')
+          # Or use 'testers' for a comma-separated list of tester emails.
+          groups: 'all-testers' # IMPORTANT: Replace with your actual tester group alias
+
