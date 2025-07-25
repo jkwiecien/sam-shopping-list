@@ -27,7 +27,7 @@ jobs:
       # For release builds, it's typically app/build/outputs/apk/release/app-release.apk
       # Or for AAB: app/build/outputs/bundle/release/app-release.aab
       # Adjust the path based on your project structure and build type.
-      APP_FILE_PATH: app/build/outputs/apk/release/app-release.aab
+      APP_FILE_PATH: app/build/outputs/apk/release/app-release.apk
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
