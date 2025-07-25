@@ -1,13 +1,33 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
+}
+
+val secretsFile = file("../secret/secret.properties")
+val secrets = Properties()
+if (secretsFile.exists()) {
+    secrets.load(secretsFile.inputStream())
 }
 
 android {
+
+
     namespace = "pl.techbrewery.sam"
     compileSdk = 36
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("../secret/techbrewery-keystore.jks")
+            storePassword = secrets.getProperty("keystore.password", System.getenv("KEYSTORE_PASSWORD"))
+            keyAlias = secrets.getProperty("keystore.key.alias", System.getenv("KEYSTORE_KEY_ALIAS"))
+            keyPassword = secrets.getProperty("keystore.key.password", System.getenv("KEYSTORE_KEY_PASSWORD"))
+        }
+    }
 
     defaultConfig {
         applicationId = "pl.techbrewery.sam"
@@ -26,14 +46,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true

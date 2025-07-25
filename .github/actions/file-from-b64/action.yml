@@ -1,0 +1,21 @@
+name: 'File from base64'
+description: 'Creates file on the given path with a given b64 input'
+inputs:
+  file-path:
+    description: 'Path to the file that will be'
+    required: true
+  file-b64:
+    description: 'Base64 of the file'
+    required: true
+outputs:
+  file-path:
+    value: ${{ inputs.file-path }}
+    description: 'Path of the file created'
+runs:
+  using: 'composite'
+  steps:
+    - name: Create file from B64 secret
+      run: |
+        mkdir -p "$(dirname "${{ inputs.file-path }}")"
+        echo "${{ inputs.file-b64 }}" | base64 --decode > ${{ inputs.file-path }}
+      shell: bash

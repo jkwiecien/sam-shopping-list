@@ -24,6 +24,8 @@ gson = "2.13.1"
 composeResources = "1.8.2"
 reorderable = "2.5.1"
 napier = "2.7.1"
+googleServices = "4.4.3"
+firebaseBom = "34.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -56,6 +58,8 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 compose-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "composeResources" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 napier = { group = "io.github.aakira", name = "napier", version.ref = "napier" }
+#firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+#firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 
 
 [plugins]
@@ -69,3 +73,4 @@ room = { id = "androidx.room", version.ref = "room" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization" }
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "composeResources" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
