@@ -43,7 +43,6 @@ class ShoppingListViewModel(
     val selectedStoreDropdownItemFlow: StateFlow<DropdownItem<Store>> =
         storesRepository.getSelectedStoreFlow()
             .map {
-                tempLog("Selected store collected: $it")
                 DropdownItem(
                     item = it,
                     text = it.name,
@@ -85,7 +84,6 @@ class ShoppingListViewModel(
                 val store = dataPair.second
                 shoppingList.getSuggestedItems(store.storeId, query)
                     .map { suggestedItems ->
-                        tempLog("Collected suggested items for query '$query': ${suggestedItems.joinToString { it.itemName }}")
                         suggestedItems.map { item ->
                             DropdownItem(
                                 item = item,
@@ -107,7 +105,6 @@ class ShoppingListViewModel(
         itemsMutableFlow
             .debounce { 50L }
             .map { items ->
-                tempLog("Got items: ${items.joinToString { "${it.itemName}:${it.indexWeight}" }}")
                 items.filterNot { it.checkedOff }.toImmutableList()
             }
             .stateIn(

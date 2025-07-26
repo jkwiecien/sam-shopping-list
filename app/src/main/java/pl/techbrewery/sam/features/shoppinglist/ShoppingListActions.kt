@@ -7,7 +7,7 @@ import pl.techbrewery.sam.ui.shared.DropdownItem
 class ItemChecked(val itemId: Long)
 internal class ItemMoved(val from: Int, val to: Int)
 class StoreDropdownItemSelected(val dropdownItem: DropdownItem<Store>)
-class ShoppingListScrollChanged(val scrolled: Boolean)
+class StoresDropdownVisibilityChanged(val visible: Boolean)
 class SuggestedItemSelected(val item: SingleItem)
 object ItemFieldKeyboardDonePressed
 class ShoppingListItemDismissed(val item: SingleItem)

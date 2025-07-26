@@ -83,9 +83,8 @@ class NavigationActivity : ComponentActivity() {
                             ShoppingListScreen(
                                 viewModel = shoppingListViewModel,
                                 modifier = Modifier.padding(vertical = Spacing.Small),
-                                onListScrollChanged = { scrolled ->
-                                    tempLog("onListScrollChanged: $scrolled")
-                                    hideAppBar = scrolled
+                                onStoreDropdownVisibilityChanged = { visible ->
+                                    hideAppBar = !visible
                                 })
                         }
                         composable(route = ScreenRoute.Stores) {
@@ -200,8 +199,7 @@ private fun AppBarForRoute(
         ScreenRoute.StoreEditor -> stringResource(Res.string.screen_title_store_editor)
         else -> "" // Or handle unknown routes appropriately
     }
-//    val height: Dp = if (hideBar) 0.dp else AppBarHeight //fixme as it glitched with full screen list
-    val height: Dp = AppBarHeight
+    val height: Dp = if (hideBar) 0.dp else AppBarHeight //fixme as it glitched with full screen list
     val modifier = Modifier
         .animateContentSize(animationSpec = tween(durationMillis = 300))
         .fillMaxWidth().let {

@@ -27,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -44,6 +43,7 @@ import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
+import pl.techbrewery.sam.ui.shared.ScrollListener
 import pl.techbrewery.sam.ui.shared.SmallSpacingBox
 import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.shared.SwipeToDismissBackground
@@ -55,13 +55,13 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 fun ShoppingListScreen(
     viewModel: ShoppingListViewModel,
     modifier: Modifier = Modifier,
-    onListScrollChanged: (Boolean) -> Unit = {}
+    onStoreDropdownVisibilityChanged: (visible: Boolean) -> Unit = {}
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQueryFlow.collectAsStateWithLifecycle()
     val onAction: (Any) -> Unit = { action ->
         when (action) {
-            is ShoppingListScrollChanged -> onListScrollChanged(action.scrolled)
+            is StoresDropdownVisibilityChanged -> onStoreDropdownVisibilityChanged(action.visible)
             else -> viewModel.onAction(action)
         }
     }
@@ -77,55 +77,6 @@ fun ShoppingListScreen(
         modifier = modifier
     )
 }
-
-//fixme maybe I use this bottom sheet later
-//@Composable
-//private fun ShoppingListScreenContent(
-//    items: ImmutableList<SingleItem>,
-//    suggestedItems: ImmutableList<DropdownItem<SingleItem>>,
-//    modifier: Modifier = Modifier,
-//    searchQuery: String = "",
-//    selectedStoreDropdownItem: DropdownItem<Store>,
-//    storeDropdownItems: ImmutableList<DropdownItem<Store>>,
-//    bottomSheetContentState: BottomPageContentState? = null,
-//    onAction: (Any) -> Unit = {}
-//) {
-//    Surface(
-//        modifier = Modifier.fillMaxSize()
-//    ) {
-//        val modalBottomSheetState = rememberModalBottomSheetState(
-//            skipPartiallyExpanded = true
-//        )
-//        ShoppingListScreenContent(
-//            items = items,
-//            suggestedItems = suggestedItems,
-//            searchQuery = searchQuery,
-//            modifier = modifier,
-//            selectedStoreDropdownItem = selectedStoreDropdownItem,
-//            storeDropdownItems = storeDropdownItems,
-//            onAction = onAction
-//        )
-//        when (bottomSheetContentState) {
-//            is CreateStoreBottomSheetState -> CreateStoreModalBottomSheet(
-//                modalBottomSheetState,
-//                onAction
-//            )
-//        }
-//    }
-//}
-
-//@Composable
-//private fun CreateStoreModalBottomSheet(
-//    sheetState: SheetState,
-//    onAction: (Any) -> Unit = {}
-//) {
-//    SharedModalBottomSheet(
-//        sheetState = sheetState,
-//        onAction = onAction
-//    ) {
-//        CreateStoreSheetContent()
-//    }
-//}
 
 @Composable
 private fun ShoppingListScreenContent(
@@ -154,18 +105,26 @@ private fun ShoppingListScreenContent(
                     onAction(ItemMoved(from.index, to.index))
                 }
 
-            var hideStoreDropdown by remember { mutableStateOf(storeDropdownItems.size == 1) } //fixme glitches when scrolling full screen
-
-            LaunchedEffect(lazyListState) {
-                snapshotFlow { lazyListState.firstVisibleItemIndex }
-                    .collect { index ->
-                        val listScrolled = index > 0
-                        hideStoreDropdown = listScrolled
-                        onAction(ShoppingListScrollChanged(listScrolled))
-                    }
+            val hasMultipleStores = storeDropdownItems.size > 1
+            var scrolledUp by remember { mutableStateOf(true) }
+            var showStoresDropdown by remember(hasMultipleStores && scrolledUp) {
+                mutableStateOf(
+                    hasMultipleStores && scrolledUp
+                )
             }
+
+            LaunchedEffect(showStoresDropdown) {
+                onAction(StoresDropdownVisibilityChanged(showStoresDropdown))
+            }
+
+            ScrollListener(
+                listState = lazyListState,
+                onScrolledUp = { scrolledUp = true },
+                onScrolledDown = { scrolledUp = false }
+            )
+
             AnimatedVisibility(
-                visible = !hideStoreDropdown
+                visible = showStoresDropdown
             ) {
                 Column {
                     StoresDropdown(
