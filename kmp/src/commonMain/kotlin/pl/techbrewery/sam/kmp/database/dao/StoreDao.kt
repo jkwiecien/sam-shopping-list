@@ -37,7 +37,10 @@ interface StoreDao {
     fun getSelectedStoreFlow(): Flow<Store>
 
     @Query("SELECT * FROM stores")
-    fun getAllStores(): Flow<List<Store>>
+    fun getAllStoresFlow(): Flow<List<Store>>
+
+    @Query("SELECT * FROM stores WHERE store_id != :storeId ORDER BY name ASC")
+    suspend fun getStoresOtherThan(storeId: Long): List<Store>
 
     @Query("SELECT * FROM stores WHERE name LIKE :searchQuery || '%' ORDER BY name ASC")
     fun searchStoresByName(searchQuery: String): Flow<List<Store>>

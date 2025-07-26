@@ -1,5 +1,6 @@
 package pl.techbrewery.sam.kmp.repository
 
+import androidx.sqlite.throwSQLiteException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -10,7 +11,10 @@ import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.utils.getCurrentTime
 import pl.techbrewery.sam.resources.Res
+import pl.techbrewery.sam.resources.error_message_last_store_delete_forbidden
 import pl.techbrewery.sam.resources.store_default_name
+import java.sql.SQLIntegrityConstraintViolationException
+import kotlin.io.path.Path
 
 class StoreRepository(
     private val db: KmpDatabase
@@ -101,7 +105,7 @@ class StoreRepository(
     }
 
     fun getAllStoresFlow(): Flow<List<Store>> {
-        return storeDao.getAllStores()
+        return storeDao.getAllStoresFlow()
             .map { stores ->
                 stores.map { store -> validateStore(store) }
             }
@@ -133,5 +137,19 @@ class StoreRepository(
 
     suspend fun updateStores(stores: List<Store>) {
         storeDao.update(stores)
+    }
+
+    suspend fun deleteStore(store: Store) {
+        if (store.selected) {
+            val otherStores = storeDao.getStoresOtherThan(store.storeId)
+            if (otherStores.isNotEmpty()) {
+                storeDao.delete(store)
+                storeDao.update(otherStores.first().copy(selected = true))
+            } else {
+               throw SQLIntegrityConstraintViolationException(getString(Res.string.error_message_last_store_delete_forbidden))
+            }
+        } else {
+            storeDao.delete(store)
+        }
     }
 }
