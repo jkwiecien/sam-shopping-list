@@ -53,7 +53,8 @@ class ShoppingListViewModel(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(),
-                initialValue = Store.createInitialStore().let { DropdownItem(it, it.name, extraText = it.address) }
+                initialValue = Store.createInitialStore()
+                    .let { DropdownItem(it, it.name, extraText = it.address) }
             )
     internal val storeDropdownItems: StateFlow<ImmutableList<DropdownItem<Store>>> =
         storesRepository.getAllStoresFlow()
@@ -151,6 +152,7 @@ class ShoppingListViewModel(
             is ItemMoved -> moveItemMutableFlow.value = action.from to action.to
             is StoreDropdownItemSelected -> saveSelectedStore(action.dropdownItem.item)
             is SuggestedItemSelected -> addSuggestedItem(action.item)
+            is ShoppingListItemDismissed -> deleteItem(action.item)
         }
     }
 
@@ -207,8 +209,17 @@ class ShoppingListViewModel(
                     newWeight
                 )
             }
-            itemsMutableFlow.value = withContext(Dispatchers.Default) { shoppingList.getItemsForSelectedStore() }
+            itemsMutableFlow.value =
+                withContext(Dispatchers.Default) { shoppingList.getItemsForSelectedStore() }
             clearSearchField()
+        }
+    }
+
+    fun deleteItem(item: SingleItem) {
+        viewModelScope.launch(Dispatchers.Main) {
+            withContext(Dispatchers.Default) { shoppingList.deleteItem(item) }
+            itemsMutableFlow.value =
+                withContext(Dispatchers.Default) { shoppingList.getItemsForSelectedStore() }
         }
     }
 

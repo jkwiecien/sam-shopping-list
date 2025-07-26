@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
-import pl.techbrewery.sam.kmp.database.entity.Store
-import pl.techbrewery.sam.kmp.di.kmpModules
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.SamConfig.INDEX_INCREMENT
 import pl.techbrewery.sam.kmp.utils.tempLog
@@ -114,5 +112,8 @@ class ShoppingListRepository(
         }
     }
 
+    suspend fun deleteItem(item: SingleItem) {
+        singleItemDao.deleteSingleItem(item)
+    }
 
 }

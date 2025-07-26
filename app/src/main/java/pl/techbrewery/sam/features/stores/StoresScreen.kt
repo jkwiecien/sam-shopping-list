@@ -57,6 +57,7 @@ import pl.techbrewery.sam.shared.ToastRequested
 import pl.techbrewery.sam.ui.shared.LargeSpacingBox
 import pl.techbrewery.sam.ui.shared.PrimaryOutlinedButton
 import pl.techbrewery.sam.ui.shared.Spacing
+import pl.techbrewery.sam.ui.shared.SwipeToDismissBackground
 import pl.techbrewery.sam.ui.theme.Red
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
@@ -116,8 +117,9 @@ fun StoresScreenContent(
 
                 SwipeToDismissBox(
                     state = dismissState,
+                    enableDismissFromStartToEnd = false,
                     backgroundContent = {
-                        DismissBackground(dismissState.dismissDirection)
+                        SwipeToDismissBackground(dismissState.dismissDirection)
                     }
                 ) {
                     StoreItem(
@@ -131,40 +133,7 @@ fun StoresScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DismissBackground(dismissDirection: SwipeToDismissBoxValue) {
-    val color by animateColorAsState(
-        when (dismissDirection) {
-            SwipeToDismissBoxValue.EndToStart -> Red
-            else -> Color.Transparent
-        }
-    )
-    val alignment = when (dismissDirection) {
-        SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-        else -> Alignment.CenterStart
-    }
-    val scale by animateFloatAsState(
-        if (dismissDirection != SwipeToDismissBoxValue.Settled) 1.25f else 0f
-    )
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(
-                color = color,
-                shape  = RoundedCornerShape(8.dp)
-            )
-            .padding(horizontal = Spacing.Large),
-        contentAlignment = alignment
-    ) {
-        Icon(
-            Icons.Outlined.Delete,
-            contentDescription = "Localized description",
-            modifier = Modifier.scale(scale)
-        )
-    }
-}
 
 
 @Composable
@@ -176,7 +145,6 @@ fun StoreItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
             .let {
                 if (onAction != null) {
                     it.clickable { onAction(StorePressed(store)) }

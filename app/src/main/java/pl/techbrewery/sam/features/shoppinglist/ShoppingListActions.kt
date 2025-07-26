@@ -10,3 +10,4 @@ class StoreDropdownItemSelected(val dropdownItem: DropdownItem<Store>)
 class ShoppingListScrollChanged(val scrolled: Boolean)
 class SuggestedItemSelected(val item: SingleItem)
 object ItemFieldKeyboardDonePressed
+class ShoppingListItemDismissed(val item: SingleItem)

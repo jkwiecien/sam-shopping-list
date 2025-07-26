@@ -17,7 +17,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +46,7 @@ import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
 import pl.techbrewery.sam.ui.shared.SmallSpacingBox
 import pl.techbrewery.sam.ui.shared.Spacing
+import pl.techbrewery.sam.ui.shared.SwipeToDismissBackground
 import pl.techbrewery.sam.ui.theme.SAMTheme
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -186,22 +190,41 @@ private fun ShoppingListScreenContent(
             LazyColumn(
                 state = lazyListState
             ) {
-                items(items, key = { it.itemName }) { item ->
+                items(items, key = { it.itemId }) { item ->
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = {
+                            if (it == SwipeToDismissBoxValue.EndToStart) onAction(
+                                ShoppingListItemDismissed(item)
+                            )
+                            true
+                        },
+                        positionalThreshold = { totalDistance -> totalDistance * 0.75f }
+                    )
+
                     ReorderableItem(
                         reorderableLazyListState,
-                        key = item.itemName
+                        key = item.itemId
                     ) { isDragging ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            enableDismissFromStartToEnd = false,
+                            backgroundContent = {
+                                SwipeToDismissBackground(dismissState.dismissDirection)
+                            }
                         ) {
-                            ItemDragHandle(
-                                modifier = Modifier.draggableHandle(),
-                            )
-                            ShoppingListItem(
-                                itemName = item.itemName,
-                                onCheckboxChecked = { onAction(ItemChecked(item.itemId)) },
-                                modifier = Modifier.animateItem()
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                ItemDragHandle(
+                                    modifier = Modifier.draggableHandle(),
+                                )
+
+                                ShoppingListItem(
+                                    itemName = item.itemName,
+                                    onCheckboxChecked = { onAction(ItemChecked(item.itemId)) },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
                         }
                     }
                     HorizontalDivider()
