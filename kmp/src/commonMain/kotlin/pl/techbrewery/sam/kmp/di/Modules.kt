@@ -5,6 +5,7 @@ import org.koin.dsl.module
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.getDatabaseBuilder
 import pl.techbrewery.sam.kmp.database.getRoomDatabase
+import pl.techbrewery.sam.kmp.repository.RecipeRepository
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 
@@ -28,4 +29,5 @@ private val databaseModule = module {
 private val repositoryModule = module {
     single { ShoppingListRepository(get<KmpDatabase>()) }
     single { StoreRepository(get<KmpDatabase>()) }
+    single { RecipeRepository(get<KmpDatabase>()) }
 }

@@ -33,6 +33,8 @@ import androidx.navigation.createGraph
 import org.jetbrains.compose.resources.stringResource
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pl.techbrewery.sam.features.navigation.ui.BottomNavigationBar
+import pl.techbrewery.sam.features.recipes.editor.RecipeEditorScreen
+import pl.techbrewery.sam.features.recipes.editor.RecipeEditorViewModel
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListScreen
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
 import pl.techbrewery.sam.features.stores.CreateStorePressed
@@ -65,6 +67,7 @@ class NavigationActivity : ComponentActivity() {
     private val shoppingListViewModel by viewModel<ShoppingListViewModel>()
     private val storesViewModel by viewModel<StoresViewModel>()
     private val storeEditorViewModel by viewModel<StoreEditorViewModel>()
+    private val recipeEditorViewModel by viewModel<RecipeEditorViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,6 +118,12 @@ class NavigationActivity : ComponentActivity() {
                                         is StoreUpdated -> navController.navigate(ScreenRoute.Stores)
                                     }
                                 }
+                            )
+                        }
+                        composable(route = ScreenRoute.RecipeEditor) {
+                            resetAppBarVisibility()
+                            RecipeEditorScreen(
+                                recipeEditorViewModel
                             )
                         }
                     }

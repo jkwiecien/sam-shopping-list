@@ -4,6 +4,7 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import pl.techbrewery.sam.features.navigation.NavigationViewModel
+import pl.techbrewery.sam.features.recipes.editor.RecipeEditorViewModel
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
 import pl.techbrewery.sam.features.stores.StoresViewModel
 import pl.techbrewery.sam.features.stores.editor.StoreEditorViewModel
@@ -24,4 +25,5 @@ private val viewModelModule = module {
     viewModel { ShoppingListViewModel(get(), get()) }
     viewModel { StoresViewModel(get()) }
     viewModel { StoreEditorViewModel(get()) }
+    viewModel { RecipeEditorViewModel(get()) }
 }
