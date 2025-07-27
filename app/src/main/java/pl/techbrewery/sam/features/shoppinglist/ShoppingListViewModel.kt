@@ -8,11 +8,14 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -28,6 +31,7 @@ import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.BaseViewModel
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.DropdownItem
+import pl.techbrewery.sam.ui.shared.LastScrollDirection
 
 
 class ShoppingListViewModel(
@@ -72,6 +76,44 @@ class ShoppingListViewModel(
                 started = SharingStarted.WhileSubscribed(),
                 initialValue = emptyList<DropdownItem<Store>>().toImmutableList()
             )
+
+    private val shoppingListLastScrollDirectionMutableFlow: MutableStateFlow<LastScrollDirection> =
+        MutableStateFlow(LastScrollDirection.NONE)
+
+    private val lockDropdownStoreVisibilityChangeMutableFlow: MutableStateFlow<Boolean> =
+        MutableStateFlow(false)
+
+    val showStoresDropdownFlow = combine(
+        shoppingListLastScrollDirectionMutableFlow,
+        storeDropdownItems,
+        lockDropdownStoreVisibilityChangeMutableFlow
+    ) { lastScrollDirection, dropdownItems, isLocked ->
+        val hasMultipleStores = dropdownItems.size > 1
+        val visible = hasMultipleStores &&
+                (lastScrollDirection == LastScrollDirection.NONE || lastScrollDirection == LastScrollDirection.DOWN)
+        visible to isLocked
+    }
+        .distinctUntilChanged()
+        .map { (visible, isLocked) ->
+            visible && !isLocked
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(),
+            initialValue = false
+        )
+
+    private var lockDropdownStoreVisibilityChangeJob: Job? = null
+    private fun lockDropdownStoreVisibilityChange() {
+        tempLog("Locking dropdown store visibility change")
+        lockDropdownStoreVisibilityChangeJob?.cancel()
+        lockDropdownStoreVisibilityChangeJob = viewModelScope.launch {
+            lockDropdownStoreVisibilityChangeMutableFlow.value = true
+            delay(500)
+            lockDropdownStoreVisibilityChangeMutableFlow.value = false
+            tempLog("Un-locking dropdown store visibility change")
+        }
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     internal val suggestedItemsDropdownItems: StateFlow<ImmutableList<DropdownItem<SingleItem>>> =
@@ -133,8 +175,6 @@ class ShoppingListViewModel(
                 }
             }
         }
-
-
     }
 
     override fun onCleared() {
@@ -222,17 +262,19 @@ class ShoppingListViewModel(
 
     private fun moveItem(from: Int, to: Int) {
         moveItemMutableFlow.value = from to to
-
-
-        val currentItems = items.value
-        val fromItem = currentItems[from]
-        val toItem = currentItems[to]
-        tempLog("Moving item from ${fromItem.itemName}:${fromItem.indexWeight}($from) to ${toItem.itemName}:${toItem.indexWeight}($to)")
-
         viewModelScope.launch(Dispatchers.Default) {
             val updatedItems = shoppingList.moveItem(from, to, items.value)
             itemsMutableFlow.value = shoppingList.moveItem(from, to, items.value)
             launch { withContext(Dispatchers.Default) { shoppingList.updateItems(updatedItems) } }
         }
+    }
+
+    fun onShoppingListScrolled(scrollDirection: LastScrollDirection) {
+        shoppingListLastScrollDirectionMutableFlow.value = scrollDirection
+    }
+
+    fun onShoppingListBouncedOffBottom(atBottom: Boolean) {
+        val lastScrollDirection = shoppingListLastScrollDirectionMutableFlow.value
+        if (lastScrollDirection == LastScrollDirection.DOWN && atBottom ) lockDropdownStoreVisibilityChange()
     }
 }

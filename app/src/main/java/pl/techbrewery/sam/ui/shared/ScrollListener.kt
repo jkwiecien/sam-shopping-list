@@ -9,11 +9,14 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 import pl.techbrewery.sam.kmp.utils.tempLog
 
+enum class LastScrollDirection {
+    UP, DOWN, NONE
+}
+
 @Composable
 fun ScrollListener(
     listState: LazyListState,
-    onScrolledDown: () -> Unit = {},
-    onScrolledUp: () -> Unit = {},
+    onScrolled: (LastScrollDirection) -> Unit = {},
     threshold: Int = 120
 ) {
     LaunchedEffect(listState) {
@@ -32,14 +35,14 @@ fun ScrollListener(
                 // Check if the scroll is significant enough to act on
                 if (listState.isScrollInProgress) {
                     if (currentIndex > previousIndex) {
-                        onScrolledUp()
+                        onScrolled(LastScrollDirection.UP)
                     } else if (currentIndex < previousIndex) {
-                        onScrolledDown()
+                        onScrolled(LastScrollDirection.DOWN)
                     } else {
                         if (currentOffset > previousOffset) {
-                            onScrolledUp()
+                            onScrolled(LastScrollDirection.UP)
                         } else if (currentOffset < previousOffset) {
-                            onScrolledDown()
+                            onScrolled(LastScrollDirection.DOWN)
                         }
                     }
                 }

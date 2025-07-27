@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Checkbox
@@ -24,9 +25,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -34,7 +33,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.delay
 import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.features.shoppinglist.ui.ItemTextField
@@ -68,11 +66,34 @@ fun ShoppingListScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.showStoresDropdownFlow.collect { visible ->
+            tempLog("Changing visible: $visible")
+            onStoreDropdownVisibilityChanged(visible)
+        }
+    }
+
+    val lazyListState = rememberLazyListState()
+    ScrollListener(
+        listState = lazyListState,
+        onScrolled = { viewModel.onShoppingListScrolled(it) }
+    )
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { lazyListState.firstVisibleItemScrollOffset  }
+            .collect {
+                val isAtBottom = !lazyListState.canScrollForward
+                viewModel.onShoppingListBouncedOffBottom(isAtBottom)
+            }
+    }
+
     ShoppingListScreenContent(
         items = items,
+        lazyListState = lazyListState,
         storeDropdownItems = viewModel.storeDropdownItems.collectAsStateWithLifecycle().value,
         suggestedItems = viewModel.suggestedItemsDropdownItems.collectAsStateWithLifecycle().value,
         selectedStoreDropdownItem = viewModel.selectedStoreDropdownItemFlow.collectAsStateWithLifecycle().value,
+        showStoresDropdown = viewModel.showStoresDropdownFlow.collectAsStateWithLifecycle().value,
         searchQuery = searchQuery,
         itemTextFieldError = viewModel.itemTextFieldError,
         onAction = onAction,
@@ -83,10 +104,12 @@ fun ShoppingListScreen(
 @Composable
 private fun ShoppingListScreenContent(
     modifier: Modifier = Modifier,
+    lazyListState: LazyListState = rememberLazyListState(),
     items: ImmutableList<SingleItem>,
     suggestedItems: ImmutableList<DropdownItem<SingleItem>>,
     selectedStoreDropdownItem: DropdownItem<Store>,
     storeDropdownItems: ImmutableList<DropdownItem<Store>>,
+    showStoresDropdown: Boolean = false,
     searchQuery: String = "",
     itemTextFieldError: String? = null,
     onAction: (Any) -> Unit = {}
@@ -101,47 +124,10 @@ private fun ShoppingListScreenContent(
                 )
                 .padding(horizontal = Spacing.Large)
         ) {
-            val lazyListState = rememberLazyListState()
             val reorderableLazyListState =
                 rememberReorderableLazyListState(lazyListState) { from, to ->
                     onAction(ItemMoved(from.index, to.index))
                 }
-
-            val hasMultipleStores = storeDropdownItems.size > 1
-            var scrolledDown by remember { mutableStateOf(true) }
-            var isAnimating by remember { mutableStateOf(false) }
-
-            // 1. Decouple the state from the key. Initialize it with the correct starting value.
-            var showStoresDropdown by remember { mutableStateOf(false) }
-            tempLog("showStoresDropdown: $showStoresDropdown")
-
-            LaunchedEffect(hasMultipleStores, scrolledDown) {
-                val targetVisibility = hasMultipleStores && scrolledDown
-
-                if (showStoresDropdown != targetVisibility && !isAnimating) {
-                    try {
-                        isAnimating = true
-                        showStoresDropdown = targetVisibility
-                        onAction(StoresDropdownVisibilityChanged(targetVisibility))
-                        delay(1000) // delay to limit the bounce back effect when scrolling to the top of the list rapidly
-                    } finally {
-                        isAnimating = false
-                    }
-                }
-            }
-
-            ScrollListener(
-                listState = lazyListState,
-                onScrolledDown = {
-//                    tempLog("Scrolled down")
-                    scrolledDown = true
-                },
-                onScrolledUp = {
-//                    tempLog("Scrolled up")
-                    scrolledDown = false
-                }
-
-            )
 
             AnimatedVisibility(
                 visible = showStoresDropdown,
