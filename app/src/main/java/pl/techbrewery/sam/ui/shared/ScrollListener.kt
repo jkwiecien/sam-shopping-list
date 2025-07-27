@@ -4,14 +4,16 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
+import pl.techbrewery.sam.kmp.utils.tempLog
 
 @Composable
 fun ScrollListener(
     listState: LazyListState,
-    onScrolledUp: () -> Unit = {},
     onScrolledDown: () -> Unit = {},
+    onScrolledUp: () -> Unit = {},
     threshold: Int = 120
 ) {
     LaunchedEffect(listState) {
@@ -25,20 +27,19 @@ fun ScrollListener(
                 listState.firstVisibleItemScrollOffset
             )
         }
-            .debounce { 10L }
             .filter { (_, currentOffset) -> currentOffset > threshold }
             .collect { (currentIndex, currentOffset) ->
                 // Check if the scroll is significant enough to act on
                 if (listState.isScrollInProgress) {
                     if (currentIndex > previousIndex) {
-                        onScrolledDown()
-                    } else if (currentIndex < previousIndex) {
                         onScrolledUp()
+                    } else if (currentIndex < previousIndex) {
+                        onScrolledDown()
                     } else {
                         if (currentOffset > previousOffset) {
-                            onScrolledDown()
-                        } else if (currentOffset < previousOffset) {
                             onScrolledUp()
+                        } else if (currentOffset < previousOffset) {
+                            onScrolledDown()
                         }
                     }
                 }

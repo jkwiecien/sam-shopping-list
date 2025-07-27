@@ -34,12 +34,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.delay
 import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.features.shoppinglist.ui.ItemTextField
 import pl.techbrewery.sam.features.shoppinglist.ui.StoresDropdown
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
+import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
@@ -106,25 +108,43 @@ private fun ShoppingListScreenContent(
                 }
 
             val hasMultipleStores = storeDropdownItems.size > 1
-            var scrolledUp by remember { mutableStateOf(true) }
-            var showStoresDropdown by remember(hasMultipleStores && scrolledUp) {
-                mutableStateOf(
-                    hasMultipleStores && scrolledUp
-                )
-            }
+            var scrolledDown by remember { mutableStateOf(true) }
+            var isAnimating by remember { mutableStateOf(false) }
 
-            LaunchedEffect(showStoresDropdown) {
-                onAction(StoresDropdownVisibilityChanged(showStoresDropdown))
+            // 1. Decouple the state from the key. Initialize it with the correct starting value.
+            var showStoresDropdown by remember { mutableStateOf(false) }
+            tempLog("showStoresDropdown: $showStoresDropdown")
+
+            LaunchedEffect(hasMultipleStores, scrolledDown) {
+                val targetVisibility = hasMultipleStores && scrolledDown
+
+                if (showStoresDropdown != targetVisibility && !isAnimating) {
+                    try {
+                        isAnimating = true
+                        showStoresDropdown = targetVisibility
+                        onAction(StoresDropdownVisibilityChanged(targetVisibility))
+                        delay(1000) // delay to limit the bounce back effect when scrolling to the top of the list rapidly
+                    } finally {
+                        isAnimating = false
+                    }
+                }
             }
 
             ScrollListener(
                 listState = lazyListState,
-                onScrolledUp = { scrolledUp = true },
-                onScrolledDown = { scrolledUp = false }
+                onScrolledDown = {
+//                    tempLog("Scrolled down")
+                    scrolledDown = true
+                },
+                onScrolledUp = {
+//                    tempLog("Scrolled up")
+                    scrolledDown = false
+                }
+
             )
 
             AnimatedVisibility(
-                visible = showStoresDropdown
+                visible = showStoresDropdown,
             ) {
                 Column {
                     StoresDropdown(
