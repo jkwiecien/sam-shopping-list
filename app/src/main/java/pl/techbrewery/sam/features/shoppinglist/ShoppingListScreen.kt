@@ -38,10 +38,12 @@ import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.features.shoppinglist.ui.ItemTextField
 import pl.techbrewery.sam.features.shoppinglist.ui.StoresDropdown
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
-import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
+import pl.techbrewery.sam.kmp.model.SuggestedItem
 import pl.techbrewery.sam.kmp.utils.tempLog
+import pl.techbrewery.sam.shared.OnItemTextFieldFocusChanged
 import pl.techbrewery.sam.shared.SearchQueryChanged
+import pl.techbrewery.sam.shared.SuggestedItemDeletePressed
 import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.ItemDragHandle
 import pl.techbrewery.sam.ui.shared.ScrollListener
@@ -58,7 +60,7 @@ fun ShoppingListScreen(
     modifier: Modifier = Modifier,
     onStoreDropdownVisibilityChanged: (visible: Boolean) -> Unit = {}
 ) {
-    val items by viewModel.items.collectAsStateWithLifecycle()
+    val items by viewModel.itemsFlow.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQueryFlow.collectAsStateWithLifecycle()
     val onAction: (Any) -> Unit = { action ->
         when (action) {
@@ -81,7 +83,7 @@ fun ShoppingListScreen(
     )
 
     LaunchedEffect(Unit) {
-        snapshotFlow { lazyListState.firstVisibleItemScrollOffset  }
+        snapshotFlow { lazyListState.firstVisibleItemScrollOffset }
             .collect {
                 val isAtBottom = !lazyListState.canScrollForward
                 viewModel.onShoppingListBouncedOffBottom(isAtBottom)
@@ -107,7 +109,7 @@ private fun ShoppingListScreenContent(
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
     items: ImmutableList<ShoppingListItem>,
-    suggestedItems: ImmutableList<DropdownItem<SingleItem>>,
+    suggestedItems: ImmutableList<DropdownItem<SuggestedItem>>,
     selectedStoreDropdownItem: DropdownItem<Store>,
     storeDropdownItems: ImmutableList<DropdownItem<Store>>,
     showStoresDropdown: Boolean = false,
@@ -146,10 +148,12 @@ private fun ShoppingListScreenContent(
                 value = searchQuery,
                 expanded = suggestedItems.isNotEmpty(),
                 suggestedItems = suggestedItems,
-                itemTextFieldError = itemTextFieldError,
+                errorText = itemTextFieldError,
                 onValueChange = { onAction(SearchQueryChanged(it)) },
                 onDonePressed = { onAction(ItemFieldKeyboardDonePressed) },
                 onSelectedItemChanged = { onAction(SuggestedItemSelected(it)) },
+                onDeleteSuggestedItemPressed = { onAction(SuggestedItemDeletePressed(it)) },
+                onFocusChanged = { onAction(OnItemTextFieldFocusChanged(it)) },
                 modifier = Modifier.fillMaxWidth()
             )
             SmallSpacingBox()
@@ -257,7 +261,7 @@ private fun ShoppingListScreenPreview() {
                     "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
                     "Coffee", "Tea", "Juice", "Soda", "Water"
                 ).map { ShoppingListItem(itemName = it, storeId = 0) }.toImmutableList(),
-                suggestedItems = emptyList<DropdownItem<SingleItem>>().toImmutableList(),
+                suggestedItems = emptyList<DropdownItem<SuggestedItem>>().toImmutableList(),
                 searchQuery = "Preview Search", // Optional: Provide a preview search query
                 selectedStoreDropdownItem = selectedStoreDropdownItem,
                 storeDropdownItems = storeDropdownItems,

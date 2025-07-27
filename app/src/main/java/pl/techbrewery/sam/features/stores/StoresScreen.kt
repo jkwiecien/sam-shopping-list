@@ -51,6 +51,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import pl.techbrewery.sam.R
+import pl.techbrewery.sam.features.shoppinglist.ShoppingListItemDismissed
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.ToastRequested
@@ -58,6 +59,7 @@ import pl.techbrewery.sam.ui.shared.LargeSpacingBox
 import pl.techbrewery.sam.ui.shared.PrimaryOutlinedButton
 import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.shared.SwipeToDismissBackground
+import pl.techbrewery.sam.ui.shared.rememberSwipeToDeleteBoxState
 import pl.techbrewery.sam.ui.theme.Red
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
@@ -106,14 +108,8 @@ fun StoresScreenContent(
                 .padding(Spacing.Large)
         ) {
             items(stores, key = { store -> store.storeId }) { store ->
-                val dismissState = rememberSwipeToDismissBoxState(
-                    confirmValueChange = {
-                        if (it == SwipeToDismissBoxValue.EndToStart) onAction(StoreDismissed(store))
-                        // in case deletion was blocked we wanna item get back to the original state, hence returning false
-                        false
-                    },
-                    positionalThreshold = { totalDistance -> totalDistance * 0.75f }
-                )
+                val dismissState =
+                    rememberSwipeToDeleteBoxState(false) { onAction(StoreDismissed(store)) }
 
                 SwipeToDismissBox(
                     state = dismissState,

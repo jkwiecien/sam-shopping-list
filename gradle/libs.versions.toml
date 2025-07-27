@@ -58,6 +58,7 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 compose-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "composeResources" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 napier = { group = "io.github.aakira", name = "napier", version.ref = "napier" }
+androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 #firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 #firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 

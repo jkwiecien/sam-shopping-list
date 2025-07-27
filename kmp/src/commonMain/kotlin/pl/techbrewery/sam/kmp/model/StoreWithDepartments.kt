@@ -1,9 +1,5 @@
-package pl.techbrewery.sam.kmp.database.pojo
+package pl.techbrewery.sam.kmp.model
 
-import androidx.room.Embedded
-import androidx.room.Junction
-import androidx.room.Relation
-// ... other imports
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 

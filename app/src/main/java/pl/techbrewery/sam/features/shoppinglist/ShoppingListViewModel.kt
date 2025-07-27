@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -25,16 +25,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
-import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
+import pl.techbrewery.sam.kmp.model.SuggestedItem
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 import pl.techbrewery.sam.kmp.repository.StoreRepository
-import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.BaseViewModel
+import pl.techbrewery.sam.shared.OnItemTextFieldFocusChanged
 import pl.techbrewery.sam.shared.SearchQueryChanged
+import pl.techbrewery.sam.shared.SuggestedItemDeletePressed
 import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.LastScrollDirection
+import java.sql.SQLIntegrityConstraintViolationException
 
 
 class ShoppingListViewModel(
@@ -46,6 +48,8 @@ class ShoppingListViewModel(
     internal val searchQueryFlow: StateFlow<String> = mutableSearchFlow
     var itemTextFieldError: String? by mutableStateOf(null)
         private set
+
+    private val itemTextFieldFocusedMutableFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     val selectedStoreDropdownItemFlow: StateFlow<DropdownItem<Store>> =
         storesRepository.getSelectedStoreFlow()
@@ -118,39 +122,9 @@ class ShoppingListViewModel(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    internal val suggestedItemsDropdownItems: StateFlow<ImmutableList<DropdownItem<SingleItem>>> =
-        searchQueryFlow
-            .combine(selectedStoreDropdownItemFlow) { query, store ->
-                query to store.item
-            }
-            .flatMapLatest { dataPair ->
-                val query = dataPair.first
-                val store = dataPair.second
-                if (query.isNotEmpty()) {
-                    shoppingList.getSuggestedItems(store.storeId, query)
-                        .map { items ->
-                            items.map { item ->
-                                DropdownItem(
-                                    item = item,
-                                    text = item.itemName
-                                )
-                            }
-                        }
-                } else {
-                    flowOf(emptyList())
-                }
-            }
-            .map { it.toImmutableList() }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(),
-                initialValue = emptyList<DropdownItem<SingleItem>>().toImmutableList()
-            )
-
     private val itemsMutableFlow: MutableStateFlow<List<ShoppingListItem>> =
         MutableStateFlow(emptyList())
-    internal val items: StateFlow<ImmutableList<ShoppingListItem>> =
+    internal val itemsFlow: StateFlow<ImmutableList<ShoppingListItem>> =
         itemsMutableFlow
             .debounce { 50L }
             .map { items ->
@@ -160,6 +134,36 @@ class ShoppingListViewModel(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
                 initialValue = emptyList<ShoppingListItem>().toImmutableList()
+            )
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    internal val suggestedItemsDropdownItems: StateFlow<ImmutableList<DropdownItem<SuggestedItem>>> =
+        combine(searchQueryFlow, itemTextFieldFocusedMutableFlow) { query, focused ->
+            query to focused
+        }
+            .flatMapLatest { dataPair ->
+                val query = dataPair.first
+                val focused = dataPair.second
+                if (query.isNotEmpty() && focused) {
+                    shoppingList.getSuggestedShoppingListItems(query)
+                } else {
+                    flowOf(emptyList())
+                }
+            }
+            .map { suggestedItems ->
+                suggestedItems.map { item ->
+                    DropdownItem(
+                        item = item,
+                        text = item.itemName
+                    )
+                }
+            }
+            .map { it.toImmutableList() }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = emptyList<DropdownItem<SuggestedItem>>().toImmutableList()
             )
 
     private val moveItemMutableFlow: MutableStateFlow<Pair<Int, Int>> = MutableStateFlow(-1 to -1)
@@ -177,15 +181,11 @@ class ShoppingListViewModel(
             }
 
             launch {
-                shoppingList.getShoppingListItemsForSelectedStore().collect {
+                shoppingList.getShoppingListItemsForSelectedStoreFlow().collect {
                     itemsMutableFlow.value = it
                 }
             }
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
     }
 
     override fun onAction(action: Any) {
@@ -197,6 +197,14 @@ class ShoppingListViewModel(
             is StoreDropdownItemSelected -> saveSelectedStore(action.dropdownItem.item)
             is SuggestedItemSelected -> addSuggestedItem(action.item)
             is ShoppingListItemDismissed -> deleteItem(action.item)
+            is SuggestedItemDeletePressed -> deleteSuggestedItem(action.item)
+            is OnItemTextFieldFocusChanged ->      itemTextFieldFocusedMutableFlow.value = action.focused
+        }
+    }
+
+    private fun deleteSuggestedItem(item: SuggestedItem) {
+        viewModelScope.launch(Dispatchers.Default) {
+            withContext(Dispatchers.Default) { shoppingList.deleteSuggestedItem(item) }
         }
     }
 
@@ -224,32 +232,25 @@ class ShoppingListViewModel(
         mutableSearchFlow.value = ""
     }
 
-    private fun addSuggestedItem(item: SingleItem) {
-        viewModelScope.launch(Dispatchers.Default) {
-            val maxWeight = itemsMutableFlow.value.maxOfOrNull { it.indexWeight } ?: 0L
-            val newWeight = maxWeight + DEFAULT_INDEX_GAP
-            shoppingList.addItemToShoppingList(item.itemName, newWeight)
+    private fun addSuggestedItem(item: SuggestedItem) {
+        viewModelScope.launch(Dispatchers.Main) {
+            withContext(Dispatchers.Default) {
+                shoppingList.addSuggestedItemToShoppingList(item)
+            }
         }
         mutableSearchFlow.value = ""
     }
 
     private fun addItem() {
-        viewModelScope.launch(Dispatchers.Main) {
-            val newItemName = mutableSearchFlow.value
-            val currentItems = items.value.filterNot { it.checkedOff }
-            val singleItems = shoppingList.getAllItems()
-            //dont add duplicates
-            if (currentItems.any { singleItems.first{ si -> si.itemName == it.itemName}.itemName.lowercase() == newItemName.lowercase() }) {
-                itemTextFieldError = "Already on the list"
-                return@launch
+        viewModelScope.launch(Dispatchers.Main + CoroutineExceptionHandler { _, error ->
+            when (error) {
+                is SQLIntegrityConstraintViolationException -> itemTextFieldError = error.message
             }
-            val maxWeight = currentItems.maxOfOrNull { it.indexWeight } ?: 0L
-            val newWeight = maxWeight + DEFAULT_INDEX_GAP
-            tempLog("Adding new item with weight: $newWeight")
+            clearSearchField()
+        }) {
             withContext(Dispatchers.Default) {
                 shoppingList.addItemToShoppingList(
-                    newItemName,
-                    newWeight
+                    itemName = mutableSearchFlow.value
                 )
             }
             clearSearchField()
@@ -265,7 +266,7 @@ class ShoppingListViewModel(
     private fun moveItem(from: Int, to: Int) {
         moveItemMutableFlow.value = from to to
         viewModelScope.launch(Dispatchers.Default) {
-            val updatedItems = shoppingList.moveItem(from, to, items.value)
+            val updatedItems = shoppingList.moveItem(from, to, itemsFlow.value)
             itemsMutableFlow.value = updatedItems
             launch { withContext(Dispatchers.Default) { shoppingList.updateItems(updatedItems) } }
         }
@@ -277,6 +278,6 @@ class ShoppingListViewModel(
 
     fun onShoppingListBouncedOffBottom(atBottom: Boolean) {
         val lastScrollDirection = shoppingListLastScrollDirectionMutableFlow.value
-        if (lastScrollDirection == LastScrollDirection.DOWN && atBottom ) lockDropdownStoreVisibilityChange()
+        if (lastScrollDirection == LastScrollDirection.DOWN && atBottom) lockDropdownStoreVisibilityChange()
     }
 }

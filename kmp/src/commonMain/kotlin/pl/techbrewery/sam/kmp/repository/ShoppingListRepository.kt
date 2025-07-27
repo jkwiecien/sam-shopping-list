@@ -3,13 +3,21 @@ package pl.techbrewery.sam.kmp.repository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import org.jetbrains.compose.resources.getString
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
+import pl.techbrewery.sam.kmp.model.SuggestedItem
+import pl.techbrewery.sam.kmp.model.SuggestedItemType
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.SamConfig.INDEX_INCREMENT
+import pl.techbrewery.sam.kmp.utils.tempLog
+import pl.techbrewery.sam.resources.Res
+import pl.techbrewery.sam.resources.error_item_already_in_shopping_list
+import java.sql.SQLIntegrityConstraintViolationException
 
 class ShoppingListRepository(
     private val db: KmpDatabase
@@ -17,14 +25,41 @@ class ShoppingListRepository(
     private val singleItemDao get() = db.singleItemDao()
     private val storeDao get() = db.storeDao()
     private val shoppingListItemDao get() = db.shoppingListItemDao()
+    private val recipesDao get() = db.itemBundleDao()
 
-    suspend fun addItemToShoppingList(itemName: String, indexWeight: Long) {
+    suspend fun saveSearchResult(itemName: String) {
+        singleItemDao.insertSingleItem(SingleItem(itemName = itemName))
+    }
+
+    suspend fun addSuggestedItemToShoppingList(suggestedItem: SuggestedItem) {
+        when (suggestedItem.type) {
+            SuggestedItemType.ITEM -> addItemToShoppingList(suggestedItem.itemName, false)
+            SuggestedItemType.RECIPE -> {
+                recipesDao.getRecipeWithItemsByName(suggestedItem.itemName)?.let { recipe ->
+                    recipe.items.forEach { item -> addItemToShoppingList(item.itemName, false) }
+                }
+            }
+        }
+    }
+
+    suspend fun addItemToShoppingList(itemName: String,  throwErrorOnDuplicate: Boolean = true) {
         val selectedStore = storeDao.getSelectedStore()!!
+        val allSingleItems = singleItemDao.getAllSingleItems()
+        val allShoppingItems = getShoppingListItemsForSelectedStore()
+        if (allShoppingItems.any { allSingleItems.first { si -> si.itemName == it.itemName }.itemName.lowercase() == itemName.lowercase() }) {
+            if (throwErrorOnDuplicate) throw SQLIntegrityConstraintViolationException(getString(Res.string.error_item_already_in_shopping_list))
+            else return
+        }
+        val uncheckedItems = allShoppingItems.filterNot { item -> item.checkedOff }
+
+        val maxWeight = uncheckedItems.maxOfOrNull { it.indexWeight } ?: 0L
+        val newWeight = maxWeight + DEFAULT_INDEX_GAP
+
+
         var singleItem = singleItemDao.getSingleItemByName(itemName)
         if (singleItem == null) {
             singleItem = SingleItem(itemName = itemName.lowercase())
             singleItemDao.insertSingleItem(singleItem)
-//            singleItem = singleItem.copy(itemName = singleItem.itemName)
         }
 
         val shoppingListItem =
@@ -37,7 +72,7 @@ class ShoppingListRepository(
                 ShoppingListItem(
                     itemName = singleItem.itemName,
                     storeId = selectedStore.storeId,
-                    indexWeight = indexWeight,
+                    indexWeight = newWeight,
                     checkedOff = false
                 )
             )
@@ -55,12 +90,18 @@ class ShoppingListRepository(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getShoppingListItemsForSelectedStore(): Flow<List<ShoppingListItem>> {
+    fun getShoppingListItemsForSelectedStoreFlow(): Flow<List<ShoppingListItem>> {
         return storeDao.getSelectedStoreFlow()
             .filterNotNull()
             .flatMapLatest { store ->
-                shoppingListItemDao.getShoppingListItemsForStore(store.storeId) // Changed here
+                shoppingListItemDao.getShoppingListItemsForStoreFlow(store.storeId)
             }
+    }
+
+    suspend fun getShoppingListItemsForSelectedStore(): List<ShoppingListItem> {
+        return storeDao.getSelectedStore()?.let { selectedStore ->
+            shoppingListItemDao.getShoppingListItemsForStore(selectedStore.storeId)
+        } ?: emptyList()
     }
 
     fun getAllItemsFlow(): Flow<List<SingleItem>> {
@@ -116,14 +157,50 @@ class ShoppingListRepository(
             }
     }
 
-    fun getSuggestedItems(
-        storeId: Long,
-        query: String
-    ): Flow<List<SingleItem>> {
-        return shoppingListItemDao.getSuggestedItems(storeId, query)
+    fun getSearchResults(query: String): Flow<List<SingleItem>> {
+        return shoppingListItemDao.getSearchResults(query)
+    }
+
+    fun getSearchResults(query: String, exceptItems: List<String>): Flow<List<SingleItem>> {
+        return shoppingListItemDao.getSearchResultsExcept(query, exceptItems)
     }
 
     suspend fun deleteItem(item: ShoppingListItem) {
         shoppingListItemDao.deleteById(item.id)
+    }
+
+    fun getSuggestedShoppingListItems(query: String): Flow<List<SuggestedItem>> {
+        return combine(
+            shoppingListItemDao.getSearchResults(query),
+            recipesDao.getRecipesWithItemsFlow(query)
+        ) { searchResults, recipes ->
+            tempLog("recipes for query: ${recipes.joinToString { it.bundle.name }}")
+            val searchResultsSuggestedItems =
+                searchResults.map { SuggestedItem(it.itemName, SuggestedItemType.ITEM) }
+            val recipesSuggestedItems =
+                recipes.map { SuggestedItem(it.bundle.name, SuggestedItemType.RECIPE) }
+            val combinedList = searchResultsSuggestedItems + recipesSuggestedItems
+            combinedList.sortedBy { it.itemName }
+        }
+    }
+
+    fun getSuggestedRecipeIngredients(query: String): Flow<List<SuggestedItem>> {
+        return combine(
+            shoppingListItemDao.getSearchResults(query),
+            recipesDao.getRecipesWithItemsFlow(query)
+        ) { searchResults, recipes ->
+            val searchResultsSuggestedItems =
+                searchResults.map { SuggestedItem(it.itemName, SuggestedItemType.ITEM) }
+            searchResultsSuggestedItems.sortedBy { it.itemName }
+        }
+    }
+
+    suspend fun deleteSuggestedItem(item: SuggestedItem) {
+        when (item.type) {
+            SuggestedItemType.ITEM -> singleItemDao.deleteSingleItem(SingleItem(item.itemName))
+            SuggestedItemType.RECIPE -> recipesDao.getRecipeByName(item.itemName)?.let { recipe ->
+                recipesDao.deleteRecipe(recipe)
+            }
+        }
     }
 }

@@ -21,9 +21,9 @@ fun PrimaryTextField(
     value: String,
     modifier: Modifier = Modifier,
     label: String? = null,
+    errorText: String? = null,
     readOnly: Boolean = false,
     enabled: Boolean = true,
-    isError: Boolean = false,
     colors: TextFieldColors = primaryTextFieldColors(),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     leadingIcon: @Composable (() -> Unit)? = null,
@@ -36,12 +36,12 @@ fun PrimaryTextField(
         modifier = modifier,
         readOnly = readOnly,
         enabled = enabled,
-        isError = isError,
+        isError = errorText != null,
         onValueChange = onValueChange,
         label = label?.let {
             {
                 Text(
-                    text = label,
+                    text = errorText ?: label,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

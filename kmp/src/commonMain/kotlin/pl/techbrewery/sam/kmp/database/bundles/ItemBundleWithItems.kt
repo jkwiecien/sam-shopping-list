@@ -1,4 +1,4 @@
-package pl.techbrewery.sam.kmp.database.pojo
+package pl.techbrewery.sam.kmp.database.bundles
 
 import androidx.room.Embedded
 import androidx.room.Junction
