@@ -219,5 +219,6 @@ fabric.properties
 ### AndroidStudio Patch ###
 
 !/gradle/wrapper/gradle-wrapper.jar
+.kotlin/
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,android,androidstudio,kotlin
