@@ -58,7 +58,7 @@ fun ShoppingListScreen(
     modifier: Modifier = Modifier,
     onStoreDropdownVisibilityChanged: (visible: Boolean) -> Unit = {}
 ) {
-    val items by viewModel.items.collectAsStateWithLifecycle()
+    val items by viewModel.itemsFlow.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQueryFlow.collectAsStateWithLifecycle()
     val onAction: (Any) -> Unit = { action ->
         when (action) {
@@ -146,7 +146,7 @@ private fun ShoppingListScreenContent(
                 value = searchQuery,
                 expanded = suggestedItems.isNotEmpty(),
                 suggestedItems = suggestedItems,
-                itemTextFieldError = itemTextFieldError,
+                errorText = itemTextFieldError,
                 onValueChange = { onAction(SearchQueryChanged(it)) },
                 onDonePressed = { onAction(ItemFieldKeyboardDonePressed) },
                 onSelectedItemChanged = { onAction(SuggestedItemSelected(it)) },

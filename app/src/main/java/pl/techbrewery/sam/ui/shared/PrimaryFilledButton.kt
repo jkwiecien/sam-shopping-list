@@ -25,10 +25,12 @@ fun PrimaryFilledButton(
     title: String,
     modifier: Modifier = Modifier,
     leadingIcon: HeterogeneousVectorIcon? = null,
+    enabled: Boolean = true,
     onPressed: () -> Unit = {},
 ) {
     Button(
         onClick = onPressed,
+        enabled = enabled,
         modifier = modifier
     ) {
         Row(

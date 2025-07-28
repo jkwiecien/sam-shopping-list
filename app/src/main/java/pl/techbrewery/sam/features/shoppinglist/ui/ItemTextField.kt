@@ -1,7 +1,6 @@
 package pl.techbrewery.sam.features.shoppinglist.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,9 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
+import pl.techbrewery.sam.resources.Res
+import pl.techbrewery.sam.resources.label_add_item
 import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.PrimaryTextField
 import pl.techbrewery.sam.ui.shared.primaryTextFieldColors
+import pl.techbrewery.sam.ui.shared.stringResourceCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +34,7 @@ fun  ItemTextField(
     suggestedItems: List<DropdownItem<SingleItem>>,
     modifier: Modifier = Modifier,
     expanded: Boolean = false,
-    itemTextFieldError: String? = null,
+    errorText: String? = null,
     onValueChange: (String) -> Unit = {},
     onSelectedItemChanged: (SingleItem) -> Unit = {},
     onDonePressed: () -> Unit = {}
@@ -44,8 +46,8 @@ fun  ItemTextField(
     ) {
         PrimaryTextField(
             value = value,
-            label = itemTextFieldError ?: "Add item",
-            isError = itemTextFieldError != null,
+            label = errorText ?: stringResourceCompat(Res.string.label_add_item, "Add item"),
+            errorText = errorText,
             leadingIcon =  { Icon(Icons.Filled.Search, contentDescription = "Search or Add Item") },
             trailingIcon = {
                 if (value.isNotEmpty()) {
@@ -81,7 +83,6 @@ fun  ItemTextField(
                         onSelectedItemChanged(dropdownItem.item)
                     }
                 )
-
             }
         }
     }

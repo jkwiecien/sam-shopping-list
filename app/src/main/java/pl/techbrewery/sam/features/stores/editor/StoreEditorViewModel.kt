@@ -18,7 +18,6 @@ import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 import pl.techbrewery.sam.kmp.repository.StoreRepository
 import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.BaseViewModel
-import pl.techbrewery.sam.shared.KeyboardDonePressed
 
 class StoreEditorViewModel(
     private val storeRepository: StoreRepository
@@ -61,7 +60,7 @@ class StoreEditorViewModel(
         }
     }
 
-    fun clearContents() {
+    fun clearState() {
         storeId = -1
         storeName = ""
         storeAddress = ""

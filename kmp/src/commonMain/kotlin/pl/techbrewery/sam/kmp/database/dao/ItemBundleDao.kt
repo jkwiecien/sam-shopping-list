@@ -8,6 +8,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow // Import Flow
 import pl.techbrewery.sam.kmp.database.entity.ItemBundleJoin
 import pl.techbrewery.sam.kmp.database.pojo.ItemBundleWithItems
@@ -16,14 +17,20 @@ import pl.techbrewery.sam.kmp.database.pojo.ItemBundleWithItems
 interface ItemBundleDao {
 
     // --- Insert Operations ---
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertItemBundle(itemBundle: ItemBundle): Long
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateRecipe(itemBundle: ItemBundle)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSingleItem(singleItem: SingleItem): Long
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE) // Use IGNORE if a cross-ref might already exist
-    suspend fun insertBundleItemJoin(crossRef: ItemBundleJoin)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRecipeIngredient(ingredient: ItemBundleJoin)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRecipeIngredients(ingredients: List<ItemBundleJoin>)
 
     // --- Query Operations (Flows) ---
 
@@ -32,11 +39,21 @@ interface ItemBundleDao {
     @Query("SELECT * FROM item_bundles")
     fun getItemBundlesWithSingleItems(): Flow<List<ItemBundleWithItems>>
 
+    @Query("SELECT * FROM item_bundles WHERE bundle_id = :recipeId")
+    suspend fun getRecipe(recipeId: Long): ItemBundle?
+
+    @Query("SELECT * FROM item_bundles WHERE name = :recipName")
+    suspend fun getRecipeByName(recipName: String): ItemBundle?
+
     // Get a specific item bundle with its single items
     // Returns Flow<ItemBundleWithSingleItems?> because the bundle might not exist
     @Transaction
     @Query("SELECT * FROM item_bundles WHERE bundle_id = :bundleId")
-    fun getItemBundleWithSingleItems(bundleId: Long): Flow<ItemBundleWithItems?>
+    fun getItemBundleWithSingleItemsFlow(bundleId: Long): Flow<ItemBundleWithItems?>
+
+    @Transaction
+    @Query("SELECT * FROM item_bundles WHERE bundle_id = :bundleId")
+    suspend fun getItemBundleWithSingleItems(bundleId: Long): ItemBundleWithItems?
 
     // Get single items for a specific bundle (if you only need items, not the bundle object itself)
     @Query(
@@ -48,13 +65,19 @@ interface ItemBundleDao {
     )
     fun getSingleItemsForBundle(bundleId: Long): Flow<List<SingleItem>>
 
+    @Query("SELECT * FROM item_bundle_join WHERE bundle_id_join = :recipeId")
+    suspend fun getIngredients(recipeId: Long): List<ItemBundleJoin>
+
 //    // Get a single item by ID
 //    @Query("SELECT * FROM single_items WHERE item_name = :itemName")
 //    fun getSingleItemByName(itemName: String): Flow<SingleItem?>
 //
-//    // --- Delete Operations ---
-//    @Delete
-//    suspend fun deleteItemBundle(itemBundle: ItemBundle)
+    // --- Delete Operations ---
+    @Delete
+    suspend fun deleteRecipe(itemBundle: ItemBundle)
+
+    @Delete
+    suspend fun deleteRecipeIngredients(ingredients: List<ItemBundleJoin>)
 //
 //    @Delete
 //    suspend fun deleteSingleItem(singleItem: SingleItem)

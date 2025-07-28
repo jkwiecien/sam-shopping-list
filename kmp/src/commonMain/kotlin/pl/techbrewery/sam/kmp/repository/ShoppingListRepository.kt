@@ -5,11 +5,16 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import org.jetbrains.compose.resources.getString
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.SamConfig.INDEX_INCREMENT
+import pl.techbrewery.sam.resources.Res
+import pl.techbrewery.sam.resources.error_item_already_in_recipe
+import pl.techbrewery.sam.resources.error_item_already_in_shopping_list
+import java.sql.SQLIntegrityConstraintViolationException
 
 class ShoppingListRepository(
     private val db: KmpDatabase
@@ -18,13 +23,25 @@ class ShoppingListRepository(
     private val storeDao get() = db.storeDao()
     private val shoppingListItemDao get() = db.shoppingListItemDao()
 
-    suspend fun addItemToShoppingList(itemName: String, indexWeight: Long) {
+    suspend fun saveSearchResult(itemName: String) {
+        singleItemDao.insertSingleItem(SingleItem(itemName = itemName))
+    }
+
+    suspend fun addItemToShoppingList(itemName: String, allShoppingListItems: List<ShoppingListItem>) {
+        val allSingleItems = singleItemDao.getAllSingleItems()
+        if (allShoppingListItems.any { allSingleItems.first{ si -> si.itemName == it.itemName}.itemName.lowercase() == itemName.lowercase() }) {
+            throw SQLIntegrityConstraintViolationException(getString(Res.string.error_item_already_in_shopping_list))
+        }
+        val uncheckedItems = allShoppingListItems.filterNot { item -> item.checkedOff }
+
+        val maxWeight = uncheckedItems.maxOfOrNull { it.indexWeight } ?: 0L
+        val newWeight = maxWeight + DEFAULT_INDEX_GAP
+
         val selectedStore = storeDao.getSelectedStore()!!
         var singleItem = singleItemDao.getSingleItemByName(itemName)
         if (singleItem == null) {
             singleItem = SingleItem(itemName = itemName.lowercase())
             singleItemDao.insertSingleItem(singleItem)
-//            singleItem = singleItem.copy(itemName = singleItem.itemName)
         }
 
         val shoppingListItem =
@@ -37,16 +54,10 @@ class ShoppingListRepository(
                 ShoppingListItem(
                     itemName = singleItem.itemName,
                     storeId = selectedStore.storeId,
-                    indexWeight = indexWeight,
+                    indexWeight = newWeight,
                     checkedOff = false
                 )
             )
-        }
-    }
-
-    suspend fun getSingleItemByName(itemName: String): SingleItem? {
-        return storeDao.getSelectedStore()?.let { selectedStore ->
-            singleItemDao.getSingleItemByName(itemName, selectedStore.storeId)
         }
     }
 
@@ -122,10 +133,12 @@ class ShoppingListRepository(
             }
     }
 
-    fun getSuggestedItems(
-        query: String
-    ): Flow<List<SingleItem>> {
-        return shoppingListItemDao.getSuggestedItems(storeId, query)
+    fun getSearchResults(query: String): Flow<List<SingleItem>> {
+        return shoppingListItemDao.getSearchResults(query)
+    }
+
+    fun getSearchResults(query: String, exceptItems: List<String>): Flow<List<SingleItem>> {
+        return shoppingListItemDao.getSearchResultsExcept(query, exceptItems)
     }
 
     suspend fun deleteItem(item: ShoppingListItem) {

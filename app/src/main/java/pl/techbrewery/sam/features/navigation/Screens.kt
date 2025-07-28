@@ -28,11 +28,11 @@ object NavigationTopLevelRoutes {
                 HeterogeneousVectorIcon.VectorIcon(Icons.AutoMirrored.Filled.List),
                 ScreenRoute.ShoppingList
             ),
-//            TopLevelRoute(
-//                Res.string.tab_title_recipes,
-//                HeterogeneousVectorIcon.PainterIcon(R.drawable.ic_recipe_book_24dp),
-//                ScreenRoute.Recipes
-//            ),
+            TopLevelRoute(
+                Res.string.tab_title_recipes,
+                HeterogeneousVectorIcon.PainterIcon(R.drawable.ic_recipe_book_24dp),
+                ScreenRoute.Recipes
+            ),
             TopLevelRoute(
                 Res.string.tab_title_stores,
                 HeterogeneousVectorIcon.PainterIcon(R.drawable.ic_store_24dp),

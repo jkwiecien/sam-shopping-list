@@ -33,8 +33,13 @@ import androidx.navigation.createGraph
 import org.jetbrains.compose.resources.stringResource
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pl.techbrewery.sam.features.navigation.ui.BottomNavigationBar
+import pl.techbrewery.sam.features.recipes.CreateRecipePressed
+import pl.techbrewery.sam.features.recipes.RecipePressed
+import pl.techbrewery.sam.features.recipes.RecipesScreen
+import pl.techbrewery.sam.features.recipes.RecipesViewModel
 import pl.techbrewery.sam.features.recipes.editor.RecipeEditorScreen
 import pl.techbrewery.sam.features.recipes.editor.RecipeEditorViewModel
+import pl.techbrewery.sam.features.recipes.editor.RecipeSaved
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListScreen
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
 import pl.techbrewery.sam.features.stores.CreateStorePressed
@@ -45,8 +50,10 @@ import pl.techbrewery.sam.features.stores.editor.StoreEditorScreen
 import pl.techbrewery.sam.features.stores.editor.StoreEditorViewModel
 import pl.techbrewery.sam.features.stores.editor.StoreUpdated
 import pl.techbrewery.sam.kmp.routes.ScreenRoute
-import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.resources.Res
+import pl.techbrewery.sam.resources.button_title_new_recipe
+import pl.techbrewery.sam.resources.button_title_new_store
+import pl.techbrewery.sam.resources.screen_title_recipe_editor
 import pl.techbrewery.sam.resources.screen_title_recipes
 import pl.techbrewery.sam.resources.screen_title_settings
 import pl.techbrewery.sam.resources.screen_title_shopping_list
@@ -58,6 +65,7 @@ import pl.techbrewery.sam.ui.shared.AppBarHeight
 import pl.techbrewery.sam.ui.shared.PrimaryFilledButton
 import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.shared.statusBarAsTopPadding
+import pl.techbrewery.sam.ui.shared.stringResourceCompat
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,6 +75,7 @@ class NavigationActivity : ComponentActivity() {
     private val shoppingListViewModel by viewModel<ShoppingListViewModel>()
     private val storesViewModel by viewModel<StoresViewModel>()
     private val storeEditorViewModel by viewModel<StoreEditorViewModel>()
+    private val recipesViewModel by viewModel<RecipesViewModel>()
     private val recipeEditorViewModel by viewModel<RecipeEditorViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,7 +111,7 @@ class NavigationActivity : ComponentActivity() {
                                         }
 
                                         is CreateStorePressed -> {
-                                            storeEditorViewModel.clearContents()
+                                            storeEditorViewModel.clearState()
                                             navController.navigate(ScreenRoute.StoreEditor)
                                         }
                                     }
@@ -120,10 +129,34 @@ class NavigationActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        composable(route = ScreenRoute.Recipes) {
+                            resetAppBarVisibility()
+                            RecipesScreen(
+                                recipesViewModel,
+                                onExternalAction = { action ->
+                                    when (action) {
+                                        is CreateRecipePressed -> {
+                                            recipeEditorViewModel.clearState()
+                                            navController.navigate(ScreenRoute.RecipeEditor)
+                                        }
+
+                                        is RecipePressed -> {
+                                            recipeEditorViewModel.setRecipe(action.recipe)
+                                            navController.navigate(ScreenRoute.RecipeEditor)
+                                        }
+                                    }
+                                }
+                            )
+                        }
                         composable(route = ScreenRoute.RecipeEditor) {
                             resetAppBarVisibility()
                             RecipeEditorScreen(
-                                recipeEditorViewModel
+                                recipeEditorViewModel,
+                                onExternalAction = {action ->
+                                    when (action) {
+                                        is RecipeSaved -> navController.navigate(ScreenRoute.Recipes)
+                                    }
+                                }
                             )
                         }
                     }
@@ -153,7 +186,7 @@ class NavigationActivity : ComponentActivity() {
                                 onFloatingActionButtonPressed = { route ->
                                     when (route) {
                                         ScreenRoute.Stores -> {
-                                            storeEditorViewModel.clearContents()
+                                            storeEditorViewModel.clearState()
                                             navController.navigate(route = ScreenRoute.StoreEditor)
                                         }
                                     }
@@ -179,13 +212,24 @@ private fun FloatingActionButtonForRoute(
     route: String,
     onFloatingActionButtonPressed: (String) -> Unit
 ) {
-    if (route == ScreenRoute.Stores) {
-        Box(
+    when (route) {
+        ScreenRoute.Stores -> Box(
             contentAlignment = Alignment.CenterEnd,
             modifier = Modifier.fillMaxWidth()
         ) {
             PrimaryFilledButton(
-                title = "New store",
+                title = stringResourceCompat(Res.string.button_title_new_store, "New store"),
+                onPressed = { onFloatingActionButtonPressed(route) },
+                leadingIcon = HeterogeneousVectorIcon.VectorIcon(Icons.Filled.Add)
+            )
+        }
+
+        ScreenRoute.Recipes -> Box(
+            contentAlignment = Alignment.CenterEnd,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            PrimaryFilledButton(
+                title = stringResourceCompat(Res.string.button_title_new_recipe, "New recipe"),
                 onPressed = { onFloatingActionButtonPressed(route) },
                 leadingIcon = HeterogeneousVectorIcon.VectorIcon(Icons.Filled.Add)
             )
@@ -206,9 +250,11 @@ private fun AppBarForRoute(
         ScreenRoute.Stores -> stringResource(Res.string.screen_title_stores)
         ScreenRoute.Settings -> stringResource(Res.string.screen_title_settings)
         ScreenRoute.StoreEditor -> stringResource(Res.string.screen_title_store_editor)
+        ScreenRoute.RecipeEditor -> stringResource(Res.string.screen_title_recipe_editor)
         else -> "" // Or handle unknown routes appropriately
     }
-    val height: Dp = if (hideBar) 0.dp else AppBarHeight //fixme as it glitched with full screen list
+    val height: Dp =
+        if (hideBar) 0.dp else AppBarHeight //fixme as it glitched with full screen list
     val modifier = Modifier
         .animateContentSize(animationSpec = tween(durationMillis = 300))
         .fillMaxWidth().let {
