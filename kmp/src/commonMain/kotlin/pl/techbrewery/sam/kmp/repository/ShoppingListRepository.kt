@@ -44,6 +44,12 @@ class ShoppingListRepository(
         }
     }
 
+    suspend fun getSingleItemByName(itemName: String): SingleItem? {
+        return storeDao.getSelectedStore()?.let { selectedStore ->
+            singleItemDao.getSingleItemByName(itemName, selectedStore.storeId)
+        }
+    }
+
     suspend fun checkOffItem(itemId: Long) {
         shoppingListItemDao.getShoppingListItem(itemId)?.let { item ->
             shoppingListItemDao.update(item.copy(checkedOff = true))
@@ -117,7 +123,6 @@ class ShoppingListRepository(
     }
 
     fun getSuggestedItems(
-        storeId: Long,
         query: String
     ): Flow<List<SingleItem>> {
         return shoppingListItemDao.getSuggestedItems(storeId, query)

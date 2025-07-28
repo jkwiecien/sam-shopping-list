@@ -16,4 +16,7 @@
     <string name="error_message_last_store_delete_forbidden">Can't delete last store. One must stay selected.</string>
     <string name="label_recipe_name">Recipe name</string>
     <string name="label_ingredients">Ingredients</string>
+    <string name="label_no_recipes_title">No recipes yet</string>
+    <string name="label_no_recipes_message">Create your first recipe to start adding multiple items at once.</string>
+    <string name="button_title_create_recipe">Create your first recipe to start adding multiple items at once.</string>
 </resources>
