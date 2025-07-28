@@ -11,11 +11,11 @@ data class ItemBundleWithItems(
     @Embedded val bundle: ItemBundle,
     @Relation(
         parentColumn = "bundle_id",
-        entityColumn = "item_id",
+        entityColumn = "item_name",
         associateBy = Junction(
             value = ItemBundleJoin::class,
             parentColumn = "bundle_id_join",
-            entityColumn = "item_id_join"
+            entityColumn = "item_name_join"
         )
     )
     val items: List<SingleItem>

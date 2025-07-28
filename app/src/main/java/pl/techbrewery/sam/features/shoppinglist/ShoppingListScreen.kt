@@ -37,6 +37,7 @@ import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.features.shoppinglist.ui.ItemTextField
 import pl.techbrewery.sam.features.shoppinglist.ui.StoresDropdown
+import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.utils.tempLog
@@ -105,7 +106,7 @@ fun ShoppingListScreen(
 private fun ShoppingListScreenContent(
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
-    items: ImmutableList<SingleItem>,
+    items: ImmutableList<ShoppingListItem>,
     suggestedItems: ImmutableList<DropdownItem<SingleItem>>,
     selectedStoreDropdownItem: DropdownItem<Store>,
     storeDropdownItems: ImmutableList<DropdownItem<Store>>,
@@ -155,7 +156,7 @@ private fun ShoppingListScreenContent(
             LazyColumn(
                 state = lazyListState
             ) {
-                items(items, key = { it.itemId }) { item ->
+                items(items, key = { it.id }) { item ->
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = {
                             if (it == SwipeToDismissBoxValue.EndToStart) onAction(
@@ -168,7 +169,7 @@ private fun ShoppingListScreenContent(
 
                     ReorderableItem(
                         reorderableLazyListState,
-                        key = item.itemId
+                        key = item.id
                     ) { isDragging ->
                         SwipeToDismissBox(
                             state = dismissState,
@@ -186,7 +187,7 @@ private fun ShoppingListScreenContent(
 
                                 ShoppingListItem(
                                     itemName = item.itemName,
-                                    onCheckboxChecked = { onAction(ItemChecked(item.itemId)) },
+                                    onCheckboxChecked = { onAction(ItemChecked(item.id)) },
                                     modifier = Modifier.animateItem()
                                 )
                             }
@@ -255,7 +256,7 @@ private fun ShoppingListScreenPreview() {
                     "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
                     "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
                     "Coffee", "Tea", "Juice", "Soda", "Water"
-                ).map { SingleItem(itemName = it, storeId = 0) }.toImmutableList(),
+                ).map { ShoppingListItem(itemName = it, storeId = 0) }.toImmutableList(),
                 suggestedItems = emptyList<DropdownItem<SingleItem>>().toImmutableList(),
                 searchQuery = "Preview Search", // Optional: Provide a preview search query
                 selectedStoreDropdownItem = selectedStoreDropdownItem,

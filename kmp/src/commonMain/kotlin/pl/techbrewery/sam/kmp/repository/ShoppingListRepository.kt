@@ -1,40 +1,52 @@
 package pl.techbrewery.sam.kmp.repository
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import pl.techbrewery.sam.kmp.database.KmpDatabase
+import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.SamConfig.INDEX_INCREMENT
-import pl.techbrewery.sam.kmp.utils.tempLog
 
 class ShoppingListRepository(
     private val db: KmpDatabase
 ) {
-    val singleItemDao get() = db.singleItemDao()
-    val storeDao get() = db.storeDao()
+    private val singleItemDao get() = db.singleItemDao()
+    private val storeDao get() = db.storeDao()
+    private val shoppingListItemDao get() = db.shoppingListItemDao()
 
     suspend fun addItemToShoppingList(itemName: String, indexWeight: Long) {
         val selectedStore = storeDao.getSelectedStore()!!
-        val existingItem = singleItemDao.getSingleItemByName(itemName, selectedStore.storeId)
-        if (existingItem != null) {
-            singleItemDao.updateSingleItem(existingItem.copy(checkedOff = false))
+        var singleItem = singleItemDao.getSingleItemByName(itemName)
+        if (singleItem == null) {
+            singleItem = SingleItem(itemName = itemName.lowercase())
+            singleItemDao.insertSingleItem(singleItem)
+//            singleItem = singleItem.copy(itemName = singleItem.itemName)
+        }
+
+        val shoppingListItem =
+            shoppingListItemDao.getShoppingListItem(selectedStore.storeId, singleItem.itemName)
+
+        if (shoppingListItem != null) {
+            shoppingListItemDao.update(shoppingListItem.copy(checkedOff = false))
         } else {
-            val item = SingleItem(
-                storeId = selectedStore.storeId,
-                itemName = itemName.lowercase(),
-                checkedOff = false,
-                indexWeight = indexWeight
+            shoppingListItemDao.insert(
+                ShoppingListItem(
+                    itemName = singleItem.itemName,
+                    storeId = selectedStore.storeId,
+                    indexWeight = indexWeight,
+                    checkedOff = false
+                )
             )
-            singleItemDao.insertSingleItem(item)
         }
     }
 
     suspend fun checkOffItem(itemId: Long) {
-        singleItemDao.getSingleItemById(itemId)?.let { item ->
-            singleItemDao.updateSingleItem(item.copy(checkedOff = true))
+        shoppingListItemDao.getShoppingListItem(itemId)?.let { item ->
+            shoppingListItemDao.update(item.copy(checkedOff = true))
         }
     }
 
@@ -42,30 +54,33 @@ class ShoppingListRepository(
         return singleItemDao.getAllSingleItems()
     }
 
-    suspend fun getItemsForSelectedStore(): List<SingleItem> {
-        return storeDao.getSelectedStore()?.let { selectedStore ->
-            singleItemDao.getAllSingleItemsForStore(selectedStore.storeId)
-        } ?: emptyList()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun getShoppingListItemsForSelectedStore(): Flow<List<ShoppingListItem>> {
+        return storeDao.getSelectedStoreFlow()
+            .filterNotNull()
+            .flatMapLatest { store ->
+                shoppingListItemDao.getShoppingListItemsForStore(store.storeId) // Changed here
+            }
     }
 
     fun getAllItemsFlow(): Flow<List<SingleItem>> {
         return singleItemDao.getAllSingleItemsFlow()
     }
 
-    suspend fun updateItems(items: List<SingleItem>) {
-        tempLog("Updating items with ${items.joinToString { "${it.itemName}:${it.indexWeight}" }}")
+    suspend fun updateItems(items: List<ShoppingListItem>) {
         items.forEach { item ->
-            singleItemDao.updateSingleItem(item)
+            shoppingListItemDao.update(item)
         }
     }
 
-    suspend fun updateItem(item: SingleItem) {
-        singleItemDao.updateSingleItem(item)
-    }
-
-    suspend fun moveItem(from: Int, to: Int, currentItems: List<SingleItem>): List<SingleItem> =
+    suspend fun moveItem(
+        from: Int,
+        to: Int,
+        currentItems: List<ShoppingListItem>
+    ): List<ShoppingListItem> =
         coroutineScope {
-            if (from == to) currentItems
+            if (from == to) return@coroutineScope currentItems
+
             val itemMoved = currentItems[from]
             val itemReplaced = currentItems[to]
             val goingUp = itemMoved.indexWeight < itemReplaced.indexWeight
@@ -77,13 +92,13 @@ class ShoppingListRepository(
 
             var updatedItems = currentItems
                 .map { item ->
-                    //Safely entering new weight after potential reindexing
-                    if (item.itemName == itemMoved.itemName) {
+                    if (item.id == itemMoved.id) {
                         item.copy(indexWeight = newIndexWeight)
                     } else {
                         item
                     }
                 }.sortedByDescending { it.indexWeight }
+
             if (updatedItems.groupBy { it.indexWeight }.any { it.value.size >= 2 }) {
                 updatedItems = reIndexWeights(updatedItems)
             }
@@ -91,8 +106,8 @@ class ShoppingListRepository(
         }
 
     private fun reIndexWeights(
-        items: List<SingleItem>
-    ): List<SingleItem> {
+        items: List<ShoppingListItem>
+    ): List<ShoppingListItem> {
         return items
             .sortedByDescending { it.indexWeight }
             .mapIndexed { index, item ->
@@ -105,15 +120,10 @@ class ShoppingListRepository(
         storeId: Long,
         query: String
     ): Flow<List<SingleItem>> {
-        if (query.isBlank()) {
-            return flowOf(emptyList())
-        } else {
-            return singleItemDao.getSuggestedItemsFlow(query).take(5)
-        }
+        return shoppingListItemDao.getSuggestedItems(storeId, query)
     }
 
-    suspend fun deleteItem(item: SingleItem) {
-        singleItemDao.deleteSingleItem(item)
+    suspend fun deleteItem(item: ShoppingListItem) {
+        shoppingListItemDao.deleteById(item.id)
     }
-
 }

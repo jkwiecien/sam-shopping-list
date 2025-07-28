@@ -4,11 +4,13 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import pl.techbrewery.sam.kmp.database.dao.ItemBundleDao
+import pl.techbrewery.sam.kmp.database.dao.ShoppingListItemDao
 import pl.techbrewery.sam.kmp.database.dao.SingleItemDao
 import pl.techbrewery.sam.kmp.database.dao.StoreDao
 import pl.techbrewery.sam.kmp.database.dao.StoreDepartmentDao
 import pl.techbrewery.sam.kmp.database.entity.ItemBundle
 import pl.techbrewery.sam.kmp.database.entity.ItemBundleJoin
+import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
@@ -19,7 +21,9 @@ import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
         SingleItem::class,
         ItemBundle::class,
         ItemBundleJoin::class,
-        StoreDepartment::class],
+        StoreDepartment::class,
+        ShoppingListItem::class
+    ],
     version = 1
 )
 abstract class KmpDatabase : RoomDatabase() {
@@ -27,6 +31,7 @@ abstract class KmpDatabase : RoomDatabase() {
     abstract fun itemBundleDao(): ItemBundleDao
     abstract fun storeDao(): StoreDao
     abstract fun storeDepartmentDao(): StoreDepartmentDao
+    abstract fun shoppingListItemDao(): ShoppingListItemDao
 }
 
 // Room compiler generates the 'actual' implementations for this constructor

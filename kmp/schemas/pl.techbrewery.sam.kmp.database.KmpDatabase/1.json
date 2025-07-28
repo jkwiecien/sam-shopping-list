@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "d25e2aa19fe9b2035eadb4ebb3138bd9",
+    "identityHash": "ef13beddbe4f557ed43a0454fa2022c2",
     "entities": [
       {
         "tableName": "stores",
@@ -54,20 +54,8 @@
       },
       {
         "tableName": "single_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`item_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `store_id` INTEGER NOT NULL, `item_name` TEXT NOT NULL, `created_at` TEXT NOT NULL, `index_weight` INTEGER NOT NULL, `checked_off` INTEGER NOT NULL, FOREIGN KEY(`store_id`) REFERENCES `stores`(`store_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`item_name` TEXT NOT NULL, `created_at` TEXT NOT NULL, PRIMARY KEY(`item_name`))",
         "fields": [
-          {
-            "fieldPath": "itemId",
-            "columnName": "item_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "storeId",
-            "columnName": "store_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
           {
             "fieldPath": "itemName",
             "columnName": "item_name",
@@ -79,50 +67,14 @@
             "columnName": "created_at",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "indexWeight",
-            "columnName": "index_weight",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "checkedOff",
-            "columnName": "checked_off",
-            "affinity": "INTEGER",
-            "notNull": true
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
-            "item_id"
+            "item_name"
           ]
-        },
-        "indices": [
-          {
-            "name": "index_single_items_store_id",
-            "unique": false,
-            "columnNames": [
-              "store_id"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_single_items_store_id` ON `${TABLE_NAME}` (`store_id`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "stores",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "store_id"
-            ],
-            "referencedColumns": [
-              "store_id"
-            ]
-          }
-        ]
+        }
       },
       {
         "tableName": "item_bundles",
@@ -156,7 +108,7 @@
       },
       {
         "tableName": "item_bundle_join",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bundle_id_join` INTEGER NOT NULL, `item_id_join` INTEGER NOT NULL, PRIMARY KEY(`bundle_id_join`, `item_id_join`), FOREIGN KEY(`bundle_id_join`) REFERENCES `item_bundles`(`bundle_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`item_id_join`) REFERENCES `single_items`(`item_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bundle_id_join` INTEGER NOT NULL, `item_name_join` TEXT NOT NULL, PRIMARY KEY(`bundle_id_join`, `item_name_join`), FOREIGN KEY(`bundle_id_join`) REFERENCES `item_bundles`(`bundle_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`item_name_join`) REFERENCES `single_items`(`item_name`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "bundleId",
@@ -165,9 +117,9 @@
             "notNull": true
           },
           {
-            "fieldPath": "itemId",
-            "columnName": "item_id_join",
-            "affinity": "INTEGER",
+            "fieldPath": "itemName",
+            "columnName": "item_name_join",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -175,18 +127,18 @@
           "autoGenerate": false,
           "columnNames": [
             "bundle_id_join",
-            "item_id_join"
+            "item_name_join"
           ]
         },
         "indices": [
           {
-            "name": "index_item_bundle_join_item_id_join",
+            "name": "index_item_bundle_join_item_name_join",
             "unique": false,
             "columnNames": [
-              "item_id_join"
+              "item_name_join"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_item_bundle_join_item_id_join` ON `${TABLE_NAME}` (`item_id_join`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_item_bundle_join_item_name_join` ON `${TABLE_NAME}` (`item_name_join`)"
           }
         ],
         "foreignKeys": [
@@ -206,10 +158,10 @@
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "item_id_join"
+              "item_name_join"
             ],
             "referencedColumns": [
-              "item_id"
+              "item_name"
             ]
           }
         ]
@@ -279,11 +231,97 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "shopping_list_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `item_name` TEXT NOT NULL, `store_id` INTEGER NOT NULL, `index_weight` INTEGER NOT NULL, `checked_off` INTEGER NOT NULL, FOREIGN KEY(`store_id`) REFERENCES `stores`(`store_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`item_name`) REFERENCES `single_items`(`item_name`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemName",
+            "columnName": "item_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "storeId",
+            "columnName": "store_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "indexWeight",
+            "columnName": "index_weight",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "checkedOff",
+            "columnName": "checked_off",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_shopping_list_items_item_name",
+            "unique": false,
+            "columnNames": [
+              "item_name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_shopping_list_items_item_name` ON `${TABLE_NAME}` (`item_name`)"
+          },
+          {
+            "name": "index_shopping_list_items_store_id",
+            "unique": false,
+            "columnNames": [
+              "store_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_shopping_list_items_store_id` ON `${TABLE_NAME}` (`store_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "stores",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "store_id"
+            ],
+            "referencedColumns": [
+              "store_id"
+            ]
+          },
+          {
+            "table": "single_items",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "item_name"
+            ],
+            "referencedColumns": [
+              "item_name"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd25e2aa19fe9b2035eadb4ebb3138bd9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ef13beddbe4f557ed43a0454fa2022c2')"
     ]
   }
 }

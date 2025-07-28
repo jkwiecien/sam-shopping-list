@@ -34,7 +34,7 @@ interface StoreDao {
     suspend fun getSelectedStore(): Store?
 
     @Query("SELECT * FROM stores WHERE selected = true")
-    fun getSelectedStoreFlow(): Flow<Store>
+    fun getSelectedStoreFlow(): Flow<Store?>
 
     @Query("SELECT * FROM stores")
     fun getAllStoresFlow(): Flow<List<Store>>

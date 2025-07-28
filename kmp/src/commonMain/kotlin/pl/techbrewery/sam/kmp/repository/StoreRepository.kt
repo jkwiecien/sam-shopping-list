@@ -2,6 +2,7 @@ package pl.techbrewery.sam.kmp.repository
 
 import androidx.sqlite.throwSQLiteException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull // Added import
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import org.jetbrains.compose.resources.getString
@@ -122,8 +123,9 @@ class StoreRepository(
     }
 
     fun getSelectedStoreFlow(): Flow<Store> {
-        return storeDao.getSelectedStoreFlow()
+        return storeDao.getSelectedStoreFlow() // Returns Flow<Store?>
             .onStart { createInitialStoreIfNotPresent() }
+            .filterNotNull() // Ensures only non-null Stores are emitted
     }
 
     suspend fun saveSelectedStore(newSelectedStoreId: Long) {

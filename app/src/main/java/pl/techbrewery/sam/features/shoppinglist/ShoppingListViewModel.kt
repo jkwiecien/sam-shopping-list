@@ -16,12 +16,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
@@ -124,15 +127,19 @@ class ShoppingListViewModel(
             .flatMapLatest { dataPair ->
                 val query = dataPair.first
                 val store = dataPair.second
-                shoppingList.getSuggestedItems(store.storeId, query)
-                    .map { suggestedItems ->
-                        suggestedItems.map { item ->
-                            DropdownItem(
-                                item = item,
-                                text = item.itemName
-                            )
+                if (query.isNotEmpty()) {
+                    shoppingList.getSuggestedItems(store.storeId, query)
+                        .map { items ->
+                            items.map { item ->
+                                DropdownItem(
+                                    item = item,
+                                    text = item.itemName
+                                )
+                            }
                         }
-                    }
+                } else {
+                    flowOf(emptyList())
+                }
             }
             .map { it.toImmutableList() }
             .stateIn(
@@ -141,9 +148,9 @@ class ShoppingListViewModel(
                 initialValue = emptyList<DropdownItem<SingleItem>>().toImmutableList()
             )
 
-    private val itemsMutableFlow: MutableStateFlow<List<SingleItem>> =
+    private val itemsMutableFlow: MutableStateFlow<List<ShoppingListItem>> =
         MutableStateFlow(emptyList())
-    internal val items: StateFlow<ImmutableList<SingleItem>> =
+    internal val items: StateFlow<ImmutableList<ShoppingListItem>> =
         itemsMutableFlow
             .debounce { 50L }
             .map { items ->
@@ -152,7 +159,7 @@ class ShoppingListViewModel(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
-                initialValue = emptyList<SingleItem>().toImmutableList()
+                initialValue = emptyList<ShoppingListItem>().toImmutableList()
             )
 
     private val moveItemMutableFlow: MutableStateFlow<Pair<Int, Int>> = MutableStateFlow(-1 to -1)
@@ -170,8 +177,8 @@ class ShoppingListViewModel(
             }
 
             launch {
-                selectedStoreDropdownItemFlow.collect {
-                    itemsMutableFlow.value = shoppingList.getItemsForSelectedStore()
+                shoppingList.getShoppingListItemsForSelectedStore().collect {
+                    itemsMutableFlow.value = it
                 }
             }
         }
@@ -204,9 +211,6 @@ class ShoppingListViewModel(
             withContext(Dispatchers.Default) {
                 shoppingList.checkOffItem(itemId)
             }
-            withContext(Dispatchers.Default) {
-                itemsMutableFlow.value = shoppingList.getAllItems()
-            }
         }
     }
 
@@ -221,10 +225,11 @@ class ShoppingListViewModel(
     }
 
     private fun addSuggestedItem(item: SingleItem) {
-        val uncheckedItem = item.copy(checkedOff = false)
-        val updatedItems =
-            itemsMutableFlow.value.plus(uncheckedItem).sortedByDescending { it.indexWeight }
-        itemsMutableFlow.value = updatedItems
+        viewModelScope.launch(Dispatchers.Default) {
+            val maxWeight = itemsMutableFlow.value.maxOfOrNull { it.indexWeight } ?: 0L
+            val newWeight = maxWeight + DEFAULT_INDEX_GAP
+            shoppingList.addItemToShoppingList(item.itemName, newWeight)
+        }
         mutableSearchFlow.value = ""
     }
 
@@ -232,8 +237,9 @@ class ShoppingListViewModel(
         viewModelScope.launch(Dispatchers.Main) {
             val newItemName = mutableSearchFlow.value
             val currentItems = items.value.filterNot { it.checkedOff }
-            //dont add duplicates. todo show error on text field in case of duplicate
-            if (currentItems.any { it.itemName.lowercase() == newItemName.lowercase() }) {
+            val singleItems = shoppingList.getAllItems()
+            //dont add duplicates
+            if (currentItems.any { singleItems.first{ si -> si.itemName == it.itemName}.itemName.lowercase() == newItemName.lowercase() }) {
                 itemTextFieldError = "Already on the list"
                 return@launch
             }
@@ -246,17 +252,13 @@ class ShoppingListViewModel(
                     newWeight
                 )
             }
-            itemsMutableFlow.value =
-                withContext(Dispatchers.Default) { shoppingList.getItemsForSelectedStore() }
             clearSearchField()
         }
     }
 
-    fun deleteItem(item: SingleItem) {
+    fun deleteItem(item: ShoppingListItem) {
         viewModelScope.launch(Dispatchers.Main) {
             withContext(Dispatchers.Default) { shoppingList.deleteItem(item) }
-            itemsMutableFlow.value =
-                withContext(Dispatchers.Default) { shoppingList.getItemsForSelectedStore() }
         }
     }
 
@@ -264,7 +266,7 @@ class ShoppingListViewModel(
         moveItemMutableFlow.value = from to to
         viewModelScope.launch(Dispatchers.Default) {
             val updatedItems = shoppingList.moveItem(from, to, items.value)
-            itemsMutableFlow.value = shoppingList.moveItem(from, to, items.value)
+            itemsMutableFlow.value = updatedItems
             launch { withContext(Dispatchers.Default) { shoppingList.updateItems(updatedItems) } }
         }
     }
