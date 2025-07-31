@@ -1,4 +1,6 @@
-<img src="https://github.com/user-attachments/assets/74e0b362-f354-429c-9f26-c6bc53452786" alt="sam-demo" width="300"/>
+<img src="https://github.com/user-attachments/assets/a71ec6cf-561a-428d-b26c-84fcf649ee53" alt="sam-demo" width="300"/>
+<img src="https://github.com/user-attachments/assets/c70e8453-fe89-41e2-8864-a26d9b0c3254" alt="sam-demo" width="300"/>
+<img src="https://github.com/user-attachments/assets/8a778527-df5f-4181-aab8-f9465052f8be" alt="sam-demo" width="300"/>
 
 # Yet another shopping list!
 Boring, right? Right, but I actualy do it for myself. Check out the problem definition. This project is under construction.
