@@ -3,18 +3,18 @@ package pl.techbrewery.sam.kmp.database.bundles
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
-import pl.techbrewery.sam.kmp.database.entity.ItemBundle
-import pl.techbrewery.sam.kmp.database.entity.ItemBundleJoin
+import pl.techbrewery.sam.kmp.database.entity.Recipe
+import pl.techbrewery.sam.kmp.database.entity.RecipeJoin
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 
-data class ItemBundleWithItems(
-    @Embedded val bundle: ItemBundle,
+data class RecipeWithItems(
+    @Embedded val recipe: Recipe,
     @Relation(
-        parentColumn = "bundle_id",
+        parentColumn = "recipe_id",
         entityColumn = "item_name",
         associateBy = Junction(
-            value = ItemBundleJoin::class,
-            parentColumn = "bundle_id_join",
+            value = RecipeJoin::class,
+            parentColumn = "recipe_id_join",
             entityColumn = "item_name_join"
         )
     )

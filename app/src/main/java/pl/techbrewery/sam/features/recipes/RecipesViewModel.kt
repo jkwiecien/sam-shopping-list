@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import pl.techbrewery.sam.kmp.database.bundles.ItemBundleWithItems
+import pl.techbrewery.sam.kmp.database.bundles.RecipeWithItems // Updated import
 import pl.techbrewery.sam.kmp.repository.RecipeRepository
 import pl.techbrewery.sam.shared.BaseViewModel
 
@@ -19,7 +19,7 @@ class RecipesViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList<ItemBundleWithItems>().toImmutableList()
+            initialValue = emptyList<RecipeWithItems>().toImmutableList() // Updated type
         )
 
     override fun onAction(action: Any) {
@@ -28,10 +28,10 @@ class RecipesViewModel(
         }
     }
 
-    fun deleteRecipe(recipe: ItemBundleWithItems) {
+    fun deleteRecipe(recipe: RecipeWithItems) { // Updated parameter type
         viewModelScope.launch {
             repository.deleteRecipeWithIngredients(recipe)
         }
     }
-    
+
 }

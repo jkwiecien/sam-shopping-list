@@ -25,7 +25,7 @@ class ShoppingListRepository(
     private val singleItemDao get() = db.singleItemDao()
     private val storeDao get() = db.storeDao()
     private val shoppingListItemDao get() = db.shoppingListItemDao()
-    private val recipesDao get() = db.itemBundleDao()
+    private val recipesDao get() = db.recipeDao()
 
     suspend fun saveSearchResult(itemName: String) {
         singleItemDao.insertSingleItem(SingleItem(itemName = itemName))
@@ -174,11 +174,11 @@ class ShoppingListRepository(
             shoppingListItemDao.getSearchResults(query),
             recipesDao.getRecipesWithItemsFlow(query)
         ) { searchResults, recipes ->
-            tempLog("recipes for query: ${recipes.joinToString { it.bundle.name }}")
+            tempLog("recipes for query: ${recipes.joinToString { it.recipe.name }}")
             val searchResultsSuggestedItems =
                 searchResults.map { SuggestedItem(it.itemName, SuggestedItemType.ITEM) }
             val recipesSuggestedItems =
-                recipes.map { SuggestedItem(it.bundle.name, SuggestedItemType.RECIPE) }
+                recipes.map { SuggestedItem(it.recipe.name, SuggestedItemType.RECIPE) }
             val combinedList = searchResultsSuggestedItems + recipesSuggestedItems
             combinedList.sortedBy { it.itemName }
         }

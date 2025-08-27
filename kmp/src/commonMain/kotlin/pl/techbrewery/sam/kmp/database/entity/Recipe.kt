@@ -7,10 +7,10 @@ import androidx.room.PrimaryKey
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-@Entity(tableName = "item_bundles", indices = [Index(value = ["name"], unique = true)])
+@Entity(tableName = "recipes", indices = [Index(value = ["name"], unique = true)])
 @OptIn(ExperimentalTime::class)
-data class ItemBundle(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "bundle_id") val bundleId: Long = 0,
+data class Recipe(
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "recipe_id") val recipeId: Long = 0,
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "created_at") val createdAt: String = Clock.System.now().toString(),
     @ColumnInfo(name = "updated_at") val updatedAt: String = createdAt

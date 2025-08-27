@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import pl.techbrewery.sam.features.shoppinglist.SuggestedItemSelected
-import pl.techbrewery.sam.kmp.database.bundles.ItemBundleWithItems
+import pl.techbrewery.sam.kmp.database.bundles.RecipeWithItems // Changed import
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.model.SuggestedItem
 import pl.techbrewery.sam.kmp.repository.RecipeRepository
@@ -50,7 +50,7 @@ class RecipeEditorViewModel(
     var itemNameTextFieldError: String? by mutableStateOf(null)
         private set
 
-    private var editedRecipe: ItemBundleWithItems? = null
+    private var editedRecipe: RecipeWithItems? = null // Changed type
 
     private val itemTextFieldFocusedMutableFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
@@ -129,10 +129,10 @@ class RecipeEditorViewModel(
         itemsMutableFlow.value = emptyList()
     }
 
-    fun setRecipe(recipe: ItemBundleWithItems) {
+    fun setRecipe(recipe: RecipeWithItems) { // Changed parameter type
         crud = CRUD.UPDATE
         editedRecipe = recipe
-        recipeNameMutableFlow.value = recipe.bundle.name
+        recipeNameMutableFlow.value = recipe.recipe.name // Changed from recipe.bundle.name
         itemsMutableFlow.value = recipe.items
     }
 
@@ -204,7 +204,7 @@ class RecipeEditorViewModel(
                 )
 
                 CRUD.UPDATE -> repository.updateRecipe(
-                    recipe = editedRecipe!!.bundle,
+                    recipe = editedRecipe!!.recipe, // Changed from editedRecipe!!.bundle
                     recipeName = recipeNameFlow.value,
                     items = itemsFlow.value
                 )

@@ -49,7 +49,7 @@ class StoreEditorViewModel(
                     storeRepository.getStore(existingStoreId)
                 }?.let { store ->
                     storeId = store.storeId
-                    storeName = store.name
+                    storeName = store.storeName
                 }
             }
             launch {

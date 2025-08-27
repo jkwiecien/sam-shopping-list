@@ -24,6 +24,7 @@ import androidx.room.PrimaryKey
 )
 data class ShoppingListItem(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id: Long = 0,
+    @ColumnInfo(name = "cloud_id") val cloudId: String? = null,
     @ColumnInfo(name = "item_name", index = true) val itemName: String,
     @ColumnInfo(name = "store_id", index = true) val storeId: Long,
     @ColumnInfo(name = "index_weight") val indexWeight: Long = 0,

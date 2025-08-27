@@ -5,13 +5,13 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 
 @Entity(
-    tableName = "item_bundle_join",
-    primaryKeys = ["bundle_id_join", "item_name_join"],
+    tableName = "recipe_item_join",
+    primaryKeys = ["recipe_id_join", "item_name_join"],
     foreignKeys = [
         ForeignKey(
-            entity = ItemBundle::class,
-            parentColumns = ["bundle_id"],
-            childColumns = ["bundle_id_join"],
+            entity = Recipe::class,
+            parentColumns = ["recipe_id"],
+            childColumns = ["recipe_id_join"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
@@ -22,7 +22,7 @@ import androidx.room.ForeignKey
         )
     ]
 )
-data class ItemBundleJoin(
-    @ColumnInfo(name = "bundle_id_join") val bundleId: Long,
+data class RecipeJoin(
+    @ColumnInfo(name = "recipe_id_join") val recipeId: Long,
     @ColumnInfo(name = "item_name_join", index = true) val itemName: String
 )

@@ -22,7 +22,7 @@ private val databaseModule = module {
     }
 
     single { get<KmpDatabase>().singleItemDao() }
-    single { get<KmpDatabase>().itemBundleDao() }
+    single { get<KmpDatabase>().recipeDao() }
     single { get<KmpDatabase>().storeDao() }
 }
 

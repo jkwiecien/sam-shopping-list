@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f81ee8d2904075a7da6165615b3a8ce5",
+    "identityHash": "a8c43d1d229bf8e0c0a106fa2cfb9a08",
     "entities": [
       {
         "tableName": "stores",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`store_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `address` TEXT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `selected` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`store_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloud_id` TEXT, `name` TEXT NOT NULL, `address` TEXT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `selected` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "storeId",
@@ -15,7 +15,12 @@
             "notNull": true
           },
           {
-            "fieldPath": "name",
+            "fieldPath": "cloudId",
+            "columnName": "cloud_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "storeName",
             "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
@@ -54,13 +59,18 @@
       },
       {
         "tableName": "single_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`item_name` TEXT NOT NULL, `created_at` TEXT NOT NULL, PRIMARY KEY(`item_name`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`item_name` TEXT NOT NULL, `cloud_id` TEXT, `created_at` TEXT NOT NULL, PRIMARY KEY(`item_name`))",
         "fields": [
           {
             "fieldPath": "itemName",
             "columnName": "item_name",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "cloudId",
+            "columnName": "cloud_id",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "createdAt",
@@ -77,12 +87,12 @@
         }
       },
       {
-        "tableName": "item_bundles",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bundle_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL)",
+        "tableName": "recipes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`recipe_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL)",
         "fields": [
           {
-            "fieldPath": "bundleId",
-            "columnName": "bundle_id",
+            "fieldPath": "recipeId",
+            "columnName": "recipe_id",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -108,28 +118,28 @@
         "primaryKey": {
           "autoGenerate": true,
           "columnNames": [
-            "bundle_id"
+            "recipe_id"
           ]
         },
         "indices": [
           {
-            "name": "index_item_bundles_name",
+            "name": "index_recipes_name",
             "unique": true,
             "columnNames": [
               "name"
             ],
             "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_item_bundles_name` ON `${TABLE_NAME}` (`name`)"
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_recipes_name` ON `${TABLE_NAME}` (`name`)"
           }
         ]
       },
       {
-        "tableName": "item_bundle_join",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bundle_id_join` INTEGER NOT NULL, `item_name_join` TEXT NOT NULL, PRIMARY KEY(`bundle_id_join`, `item_name_join`), FOREIGN KEY(`bundle_id_join`) REFERENCES `item_bundles`(`bundle_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`item_name_join`) REFERENCES `single_items`(`item_name`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "recipe_item_join",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`recipe_id_join` INTEGER NOT NULL, `item_name_join` TEXT NOT NULL, PRIMARY KEY(`recipe_id_join`, `item_name_join`), FOREIGN KEY(`recipe_id_join`) REFERENCES `recipes`(`recipe_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`item_name_join`) REFERENCES `single_items`(`item_name`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
-            "fieldPath": "bundleId",
-            "columnName": "bundle_id_join",
+            "fieldPath": "recipeId",
+            "columnName": "recipe_id_join",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -143,31 +153,31 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "bundle_id_join",
+            "recipe_id_join",
             "item_name_join"
           ]
         },
         "indices": [
           {
-            "name": "index_item_bundle_join_item_name_join",
+            "name": "index_recipe_item_join_item_name_join",
             "unique": false,
             "columnNames": [
               "item_name_join"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_item_bundle_join_item_name_join` ON `${TABLE_NAME}` (`item_name_join`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recipe_item_join_item_name_join` ON `${TABLE_NAME}` (`item_name_join`)"
           }
         ],
         "foreignKeys": [
           {
-            "table": "item_bundles",
+            "table": "recipes",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "bundle_id_join"
+              "recipe_id_join"
             ],
             "referencedColumns": [
-              "bundle_id"
+              "recipe_id"
             ]
           },
           {
@@ -251,13 +261,18 @@
       },
       {
         "tableName": "shopping_list_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `item_name` TEXT NOT NULL, `store_id` INTEGER NOT NULL, `index_weight` INTEGER NOT NULL, `checked_off` INTEGER NOT NULL, FOREIGN KEY(`store_id`) REFERENCES `stores`(`store_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`item_name`) REFERENCES `single_items`(`item_name`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloud_id` TEXT, `item_name` TEXT NOT NULL, `store_id` INTEGER NOT NULL, `index_weight` INTEGER NOT NULL, `checked_off` INTEGER NOT NULL, FOREIGN KEY(`store_id`) REFERENCES `stores`(`store_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`item_name`) REFERENCES `single_items`(`item_name`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "cloudId",
+            "columnName": "cloud_id",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "itemName",
@@ -338,7 +353,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f81ee8d2904075a7da6165615b3a8ce5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a8c43d1d229bf8e0c0a106fa2cfb9a08')"
     ]
   }
 }

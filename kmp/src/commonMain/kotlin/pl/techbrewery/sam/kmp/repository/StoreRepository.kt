@@ -1,6 +1,5 @@
 package pl.techbrewery.sam.kmp.repository
 
-import androidx.sqlite.throwSQLiteException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull // Added import
 import kotlinx.coroutines.flow.map
@@ -15,7 +14,6 @@ import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.error_message_last_store_delete_forbidden
 import pl.techbrewery.sam.resources.store_default_name
 import java.sql.SQLIntegrityConstraintViolationException
-import kotlin.io.path.Path
 
 class StoreRepository(
     private val db: KmpDatabase
@@ -28,7 +26,7 @@ class StoreRepository(
     private suspend fun validateStore(
         store: Store
     ): Store {
-        return if (store.name.isBlank()) store.copy(name = getString(Res.string.store_default_name))
+        return if (store.storeName.isBlank()) store.copy(storeName = getString(Res.string.store_default_name))
         else store
     }
 
@@ -54,19 +52,19 @@ class StoreRepository(
         if (store != null) {
             storeDao.update(
                 store.copy(
-                    name = storeName,
+                    storeName = storeName,
                     address = storeAddress,
                     updatedAt = getCurrentTime()
                 )
             )
         } else {
             store = Store(
-                name = storeName,
+                storeName = storeName,
                 address = storeAddress
             )
             val newlyCreatedStoreId = storeDao.insert(
                 Store(
-                    name = storeName,
+                    storeName = storeName,
                     address = storeAddress
                 )
             )

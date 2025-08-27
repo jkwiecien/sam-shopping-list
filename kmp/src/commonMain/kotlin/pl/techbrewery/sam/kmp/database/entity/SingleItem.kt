@@ -12,5 +12,6 @@ import kotlin.time.ExperimentalTime
 )
 data class SingleItem(
     @PrimaryKey @ColumnInfo(name = "item_name") val itemName: String,
+    @ColumnInfo(name = "cloud_id") val cloudId: String? = null,
     @ColumnInfo(name = "created_at") val createdAt: String = Clock.System.now().toString()
 )

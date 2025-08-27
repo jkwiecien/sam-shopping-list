@@ -3,13 +3,13 @@ package pl.techbrewery.sam.kmp.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
-import pl.techbrewery.sam.kmp.database.dao.ItemBundleDao
+import pl.techbrewery.sam.kmp.database.dao.RecipeDao // Changed from ItemBundleDao
 import pl.techbrewery.sam.kmp.database.dao.ShoppingListItemDao
 import pl.techbrewery.sam.kmp.database.dao.SingleItemDao
 import pl.techbrewery.sam.kmp.database.dao.StoreDao
 import pl.techbrewery.sam.kmp.database.dao.StoreDepartmentDao
-import pl.techbrewery.sam.kmp.database.entity.ItemBundle
-import pl.techbrewery.sam.kmp.database.entity.ItemBundleJoin
+import pl.techbrewery.sam.kmp.database.entity.Recipe
+import pl.techbrewery.sam.kmp.database.entity.RecipeJoin
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
@@ -19,8 +19,8 @@ import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
     entities = [
         Store::class,
         SingleItem::class,
-        ItemBundle::class,
-        ItemBundleJoin::class,
+        Recipe::class,
+        RecipeJoin::class,
         StoreDepartment::class,
         ShoppingListItem::class
     ],
@@ -28,7 +28,7 @@ import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
 )
 abstract class KmpDatabase : RoomDatabase() {
     abstract fun singleItemDao(): SingleItemDao
-    abstract fun itemBundleDao(): ItemBundleDao
+    abstract fun recipeDao(): RecipeDao
     abstract fun storeDao(): StoreDao
     abstract fun storeDepartmentDao(): StoreDepartmentDao
     abstract fun shoppingListItemDao(): ShoppingListItemDao

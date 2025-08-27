@@ -237,14 +237,14 @@ private fun ShoppingListScreenPreview() {
     SAMTheme {
         // 1. Create some dummy Store objects
         val dummyStores = listOf(
-            Store(storeId = 1, name = "Main Store", selected = true),
-            Store(storeId = 2, name = "Second Store"),
-            Store(storeId = 3, name = "Another Grocer")
+            Store(storeId = 1, storeName = "Main Store", selected = true),
+            Store(storeId = 2, storeName = "Second Store"),
+            Store(storeId = 3, storeName = "Another Grocer")
         )
 
         // 2. Create DropdownItem<Store> objects for the dropdown
         val storeDropdownItems = dummyStores.map { store ->
-            DropdownItem(item = store, text = store.name)
+            DropdownItem(item = store, text = store.storeName)
         }.toImmutableList()
 
         // 3. Select one as the default selected item

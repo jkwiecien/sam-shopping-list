@@ -10,14 +10,15 @@ import kotlin.time.ExperimentalTime
 @Entity(tableName = "stores")
 data class Store(
     @ColumnInfo(name = "store_id") @PrimaryKey(autoGenerate = true) val storeId: Long = 0,
-    @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "cloud_id") val cloudId: String? = null,
+    @ColumnInfo(name = "name") val storeName: String,
     @ColumnInfo(name = "address") val address: String = "",
     @ColumnInfo(name = "created_at") val createdAt: String = Clock.System.now().toString(),
     @ColumnInfo(name = "updated_at") val updatedAt: String = createdAt,
     @ColumnInfo(name = "selected") val selected: Boolean = false,
 ) {
     companion object {
-        fun createInitialStore(): Store = Store(0, name = "",selected = true)
+        fun createInitialStore(): Store = Store(0, storeName = "",selected = true)
     }
 }
 

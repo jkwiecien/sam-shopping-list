@@ -1,66 +1,44 @@
 package pl.techbrewery.sam.features.stores
 
 import android.widget.Toast
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.launch
 import pl.techbrewery.sam.R
-import pl.techbrewery.sam.features.shoppinglist.ShoppingListItemDismissed
 import pl.techbrewery.sam.kmp.database.entity.Store
-import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.ToastRequested
 import pl.techbrewery.sam.ui.shared.LargeSpacingBox
-import pl.techbrewery.sam.ui.shared.PrimaryOutlinedButton
 import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.shared.SwipeToDismissBackground
 import pl.techbrewery.sam.ui.shared.rememberSwipeToDeleteBoxState
-import pl.techbrewery.sam.ui.theme.Red
 import pl.techbrewery.sam.ui.theme.SAMTheme
 
 @Composable
@@ -154,7 +132,7 @@ fun StoreItem(
         val iconShape = RoundedCornerShape(Spacing.Small)
         Icon(
             painter = painterResource(R.drawable.ic_store_24dp),
-            contentDescription = store.name,
+            contentDescription = store.storeName,
             modifier = Modifier
                 .size(48.dp)
                 .background(
@@ -179,7 +157,7 @@ fun StoreItem(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = store.name,
+                text = store.storeName,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -200,8 +178,8 @@ fun StoresScreenPreview() {
     SAMTheme {
         StoresScreenContent(
             stores = listOf(
-                Store(storeId = 0, name = "Biedronka", selected = true),
-                Store(storeId = 1, name = "Auchan", address = "ul. Puławska 123")
+                Store(storeId = 0, storeName = "Biedronka", selected = true),
+                Store(storeId = 1, storeName = "Auchan", address = "ul. Puławska 123")
             ).toImmutableList(),
             modifier = Modifier.fillMaxSize()
         )

@@ -3,6 +3,8 @@ package pl.techbrewery.sam.di
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import pl.techbrewery.sam.features.auth.AuthRepository
+import pl.techbrewery.sam.features.auth.AuthViewModel
 import pl.techbrewery.sam.features.navigation.NavigationViewModel
 import pl.techbrewery.sam.features.recipes.RecipesViewModel
 import pl.techbrewery.sam.features.recipes.editor.RecipeEditorViewModel
@@ -20,10 +22,12 @@ val appModules: List<Module>
 
 private val repositoryModule = module {
     single { ShoppingListRepository(get()) }
+    single { AuthRepository() }
 }
 
 private val viewModelModule = module {
     viewModel { NavigationViewModel(get()) }
+    viewModel { AuthViewModel(get()) }
     viewModel { ShoppingListViewModel(get(), get()) }
     viewModel { StoresViewModel(get()) }
     viewModel { StoreEditorViewModel(get()) }

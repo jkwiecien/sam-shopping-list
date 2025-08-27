@@ -34,8 +34,10 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import pl.techbrewery.sam.R
 import pl.techbrewery.sam.extensions.capitalize
-import pl.techbrewery.sam.kmp.database.entity.ItemBundle
-import pl.techbrewery.sam.kmp.database.bundles.ItemBundleWithItems
+// Assuming ItemBundleWithItems was in this package, RecipeWithItems should be too
+// If not, this import might need adjustment based on where RecipeWithItems.kt actually is
+import pl.techbrewery.sam.kmp.database.bundles.RecipeWithItems
+import pl.techbrewery.sam.kmp.database.entity.Recipe
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.button_title_create_recipe
 import pl.techbrewery.sam.resources.label_no_recipes_message
@@ -76,7 +78,7 @@ fun RecipesScreen(
 
 @Composable
 private fun RecipesScreenContent(
-    recipes: ImmutableList<ItemBundleWithItems>,
+    recipes: ImmutableList<RecipeWithItems>, // Changed from ItemBundleWithItems
     onAction: (Any) -> Unit = {}
 ) {
     Surface {
@@ -86,9 +88,9 @@ private fun RecipesScreenContent(
                 .padding(Spacing.Large),
             verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
         ) {
-            items(recipes, key = { it.bundle.bundleId }) { recipe ->
+            items(recipes, key = { it.recipe.recipeId }) { recipeWithItems -> // Changed from it.bundle.bundleId, param recipe to recipeWithItems
                 val dismissState =
-                    rememberSwipeToDeleteBoxState { onAction(RecipeDismissed(recipe)) }
+                    rememberSwipeToDeleteBoxState { onAction(RecipeDismissed(recipeWithItems)) } // param recipe to recipeWithItems
                 SwipeToDismissBox(
                     state = dismissState,
                     enableDismissFromStartToEnd = false,
@@ -97,11 +99,11 @@ private fun RecipesScreenContent(
                     }
                 ) {
                     RecipeItem(
-                        name = recipe.bundle.name,
+                        name = recipeWithItems.recipe.name, // Changed from recipe.bundle.name
                         modifier = Modifier
                             .animateItem()
                             .clickable {
-                                onAction(RecipePressed(recipe))
+                                onAction(RecipePressed(recipeWithItems)) // param recipe to recipeWithItems
                             }
 
                     )
@@ -115,17 +117,17 @@ private fun RecipesScreenContent(
 @Composable
 private fun RecipesScreenContentPreview() {
     SAMTheme {
-        val recipes = listOf(
-            ItemBundle(name = "Recipe 1", bundleId = 1),
-            ItemBundle(name = "Recipe 2", bundleId = 2)
+        val recipesData = listOf(
+            Recipe(name = "Recipe 1", recipeId = 1), // Changed bundleId to recipeId
+            Recipe(name = "Recipe 2", recipeId = 2)  // Changed bundleId to recipeId
         ).map {
-            ItemBundleWithItems(
-                bundle = it,
+            RecipeWithItems( // Changed from ItemBundleWithItems
+                recipe = it, // Changed from bundle = it
                 items = emptyList()
             )
         }
         RecipesScreenContent(
-            recipes = recipes.toImmutableList(),
+            recipes = recipesData.toImmutableList(),
             onAction = {}
         )
     }

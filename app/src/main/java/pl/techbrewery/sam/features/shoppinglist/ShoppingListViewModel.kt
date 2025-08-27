@@ -56,7 +56,7 @@ class ShoppingListViewModel(
             .map {
                 DropdownItem(
                     item = it,
-                    text = it.name,
+                    text = it.storeName,
                     extraText = it.address
                 )
             }
@@ -64,7 +64,7 @@ class ShoppingListViewModel(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(),
                 initialValue = Store.createInitialStore()
-                    .let { DropdownItem(it, it.name, extraText = it.address) }
+                    .let { DropdownItem(it, it.storeName, extraText = it.address) }
             )
     internal val storeDropdownItems: StateFlow<ImmutableList<DropdownItem<Store>>> =
         storesRepository.getAllStoresFlow()
@@ -73,7 +73,7 @@ class ShoppingListViewModel(
                 allStores.map { store ->
                     DropdownItem(
                         item = store,
-                        text = store.name,
+                        text = store.storeName,
                         extraText = store.address
                     )
                 }.toImmutableList()

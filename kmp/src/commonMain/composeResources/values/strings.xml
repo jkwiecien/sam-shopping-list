@@ -26,4 +26,5 @@
     <string name="error_recipe_already_exists">Recipe with this name already exists</string>
     <string name="button_title_new_store">New store</string>
     <string name="button_title_new_recipe">New recipe</string>
+    <string name="label_auth_rationale">To make sure you never lose your data we require you to sign in</string>
 </resources>
