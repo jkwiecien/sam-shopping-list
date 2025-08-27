@@ -21,7 +21,7 @@ android {
     compileSdk = 36
 
     signingConfigs {
-        create("release") {
+        create("internal") {
             storeFile = file("../secret/techbrewery-keystore.jks")
             storePassword = secrets.getProperty("keystore.password", System.getenv("KEYSTORE_PASSWORD"))
             keyAlias = secrets.getProperty("keystore.key.alias", System.getenv("KEYSTORE_KEY_ALIAS"))
@@ -46,7 +46,15 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("internal")
+        }
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("internal")
         }
     }
     compileOptions {
@@ -86,6 +94,7 @@ dependencies {
     implementation(libs.napier)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
     implementation(libs.googleid)
 
     testImplementation(libs.junit)

@@ -17,10 +17,12 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,12 +37,13 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
+import pl.techbrewery.sam.features.auth.AuthModalContent
+import pl.techbrewery.sam.features.auth.ToggleAuthModal
 import pl.techbrewery.sam.features.shoppinglist.ui.ItemTextField
 import pl.techbrewery.sam.features.shoppinglist.ui.StoresDropdown
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.model.SuggestedItem
-import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.OnItemTextFieldFocusChanged
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.shared.SuggestedItemDeletePressed
@@ -58,10 +61,12 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 fun ShoppingListScreen(
     viewModel: ShoppingListViewModel,
     modifier: Modifier = Modifier,
-    onStoreDropdownVisibilityChanged: (visible: Boolean) -> Unit = {}
+    onStoreDropdownVisibilityChanged: (visible: Boolean) -> Unit = {},
+    onExternalAction: (Any) -> Unit = {}
 ) {
     val items by viewModel.itemsFlow.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQueryFlow.collectAsStateWithLifecycle()
+
     val onAction: (Any) -> Unit = { action ->
         when (action) {
             is StoresDropdownVisibilityChanged -> onStoreDropdownVisibilityChanged(action.visible)
@@ -70,8 +75,13 @@ fun ShoppingListScreen(
     }
 
     LaunchedEffect(Unit) {
+        viewModel.actionsFlow.collect { action ->
+            onExternalAction(action)
+        }
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.showStoresDropdownFlow.collect { visible ->
-            tempLog("Changing visible: $visible")
             onStoreDropdownVisibilityChanged(visible)
         }
     }

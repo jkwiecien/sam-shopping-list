@@ -32,7 +32,7 @@ fun GoogleSignInButton(
             .clip(RoundedCornerShape(100.dp))
             .background(Color(0xFFF2F2F2))
             .padding(Spacing.Small)
-            .padding(horizontal = Spacing.Large)
+            .padding(horizontal = Spacing.Small)
             .clickable(onClick = onPressed)
     ) {
         Image(

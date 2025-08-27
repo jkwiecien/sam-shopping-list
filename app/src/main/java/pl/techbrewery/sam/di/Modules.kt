@@ -1,5 +1,6 @@
 package pl.techbrewery.sam.di
 
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -22,13 +23,13 @@ val appModules: List<Module>
 
 private val repositoryModule = module {
     single { ShoppingListRepository(get()) }
-    single { AuthRepository() }
+    single { AuthRepository(androidContext()) }
 }
 
 private val viewModelModule = module {
     viewModel { NavigationViewModel(get()) }
     viewModel { AuthViewModel(get()) }
-    viewModel { ShoppingListViewModel(get(), get()) }
+    viewModel { ShoppingListViewModel(get(), get(), get()) }
     viewModel { StoresViewModel(get()) }
     viewModel { StoreEditorViewModel(get()) }
     viewModel { RecipesViewModel(get()) }

@@ -13,3 +13,4 @@ class StoresDropdownVisibilityChanged(val visible: Boolean)
 class SuggestedItemSelected(val item: SuggestedItem)
 object ItemFieldKeyboardDonePressed
 class ShoppingListItemDismissed(val item: ShoppingListItem)
+object ShareShoppingListPressed

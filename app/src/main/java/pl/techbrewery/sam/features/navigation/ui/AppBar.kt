@@ -1,6 +1,9 @@
-package pl.techbrewery.sam.ui.shared
+package pl.techbrewery.sam.features.navigation.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.action_up
+import pl.techbrewery.sam.ui.shared.Spacing
 
 @Stable
 val AppBarHeight = 56.dp
@@ -29,7 +33,8 @@ fun AppBar(
     title: String,
     modifier: Modifier = Modifier,
     canNavigateBack: Boolean = false,
-    navigateUp: () -> Unit = {}
+    navigateUp: () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
         title = {
@@ -61,11 +66,7 @@ fun AppBar(
                     )
                 }
             }
-        }
-//        actions = {
-//            IconButton(onClick = { /* Handle add item to top bar action */ }) {
-//                Icon(Icons.Filled.Add, contentDescription = "Add Item")
-//            }
-//        }
+        },
+        actions = actions
     )
 }

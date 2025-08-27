@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
+import io.github.aakira.napier.Napier
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -14,6 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -24,6 +26,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pl.techbrewery.sam.features.auth.AUTH_LOG_TAG
+import pl.techbrewery.sam.features.auth.AuthRepository
+import pl.techbrewery.sam.features.auth.GoogleSignInPressed
+import pl.techbrewery.sam.features.auth.ToggleAuthModal
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.model.SuggestedItem
@@ -38,10 +44,10 @@ import pl.techbrewery.sam.ui.shared.DropdownItem
 import pl.techbrewery.sam.ui.shared.LastScrollDirection
 import java.sql.SQLIntegrityConstraintViolationException
 
-
 class ShoppingListViewModel(
     private val shoppingList: ShoppingListRepository,
-    private val storesRepository: StoreRepository
+    private val storesRepository: StoreRepository,
+    private val auth: AuthRepository
 ) : BaseViewModel() {
 
     private val mutableSearchFlow: MutableStateFlow<String> = MutableStateFlow("")
@@ -198,7 +204,17 @@ class ShoppingListViewModel(
             is SuggestedItemSelected -> addSuggestedItem(action.item)
             is ShoppingListItemDismissed -> deleteItem(action.item)
             is SuggestedItemDeletePressed -> deleteSuggestedItem(action.item)
-            is OnItemTextFieldFocusChanged ->      itemTextFieldFocusedMutableFlow.value = action.focused
+            is OnItemTextFieldFocusChanged -> itemTextFieldFocusedMutableFlow.value = action.focused
+            is ShareShoppingListPressed -> shareShoppingList()
+        }
+    }
+
+
+    private fun shareShoppingList() {
+        if (auth.isSignedIn()) {
+            //todo
+        } else {
+            emitSingleAction(ToggleAuthModal(true))
         }
     }
 
