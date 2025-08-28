@@ -50,6 +50,7 @@ import pl.techbrewery.sam.features.stores.editor.StoreEditorScreen
 import pl.techbrewery.sam.features.stores.editor.StoreEditorViewModel
 import pl.techbrewery.sam.features.stores.editor.StoreUpdated
 import pl.techbrewery.sam.kmp.routes.ScreenRoute
+import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.button_title_new_recipe
 import pl.techbrewery.sam.resources.button_title_new_store
@@ -96,7 +97,8 @@ class NavigationActivity : ComponentActivity() {
                                 viewModel = shoppingListViewModel,
                                 modifier = Modifier.padding(vertical = Spacing.Small),
                                 onStoreDropdownVisibilityChanged = { visible ->
-                                    hideAppBar = !visible
+                                    tempLog("onStoreDropdownVisibilityChanged: $visible")
+//                                    hideAppBar = !visible //fixme this hides app bar when there is just one store
                                 })
                         }
                         composable(route = ScreenRoute.Stores) {
