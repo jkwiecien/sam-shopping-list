@@ -12,39 +12,39 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 @Entity(
-    tableName = "shopping_list_items",
+    tableName = "index_weights",
     foreignKeys = [
-        ForeignKey(
-            entity = ShoppingList::class,
-            parentColumns = ["id"],
-            childColumns = ["list_id"],
-            onDelete = ForeignKey.CASCADE
-        ),
         ForeignKey(
             entity = SingleItem::class,
             parentColumns = ["item_name"],
             childColumns = ["item_name"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Store::class,
+            parentColumns = ["store_id"],
+            childColumns = ["store_id"],
+            onDelete = ForeignKey.CASCADE
         )
     ]
 )
-data class ShoppingListItem(
+data class IndexWeight(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id: Long = 0,
     @ColumnInfo(name = "cloud_id") val cloudId: String? = null,
     @ColumnInfo(name = "item_name", index = true) val itemName: String,
-    @ColumnInfo(name = "list_id", index = true) val listId: Long,
-    @ColumnInfo(name = "checked_off") val checkedOff: Boolean = false,
+    @ColumnInfo(name = "store_id", index = true) val storeId: Long,
+    @ColumnInfo(name = "weight") val weight: Long = 0,
     @ColumnInfo(name = "created_at") val createdAt: String = Clock.System.now().toString(),
     @ColumnInfo(name = "updated_at") val updatedAt: String = createdAt
 )
 
 @Serializable
-data class ShoppingListItemSnapshot(
+data class IndexWeightSnapshot(
     @SerialName("owner_id") val ownerId: String,
     @SerialName("local_id") val localId: Long,
-    @SerialName("list_cloud_id") val listCloudId: String,
     @SerialName("item_name") val itemName: String,
-    @SerialName("checked_off") val checkedOff: Boolean,
+    @SerialName("store_cloud_id") val storeCloudId: String,
+    @SerialName("weight") val weight: Long,
     @SerialName("created_at") val createdAt: Timestamp,
     @SerialName("updated_at") val updatedAt: Timestamp
 )

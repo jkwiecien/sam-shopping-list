@@ -14,7 +14,6 @@ interface SingleItemDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSingleItem(singleItem: SingleItem)
 
-
     @Query("SELECT * FROM single_items ORDER BY item_name ASC")
     fun getAllSingleItemsFlow(): Flow<List<SingleItem>>
 

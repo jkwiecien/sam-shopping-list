@@ -18,17 +18,20 @@ interface ShoppingListItemDao {
     @Update
     suspend fun update(shoppingListItem: ShoppingListItem)
 
-    @Query("SELECT * FROM shopping_list_items WHERE store_id = :storeId AND checked_off = false ORDER BY index_weight DESC")
-    fun getShoppingListItemsForStoreFlow(storeId: Long): Flow<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_items")
+    suspend fun getAll(): List<ShoppingListItem> // Added this method
 
-    @Query("SELECT * FROM shopping_list_items WHERE store_id = :storeId AND checked_off = false ORDER BY index_weight DESC")
-    fun getShoppingListItemsForStore(storeId: Long): List<ShoppingListItem>
+    @Query("SELECT * FROM shopping_list_items WHERE list_id = :listId AND checked_off = false")
+    fun getShoppingListItemsFlow(listId: Long): Flow<List<ShoppingListItem>>
 
-    @Query("SELECT si.* FROM single_items si JOIN shopping_list_items sli ON si.item_name = sli.item_name WHERE sli.store_id = :storeId AND sli.checked_off = false ORDER BY sli.index_weight DESC")
-    fun getShoppingListForStore(storeId: Long): Flow<List<SingleItem>>
+    @Query("SELECT * FROM shopping_list_items WHERE list_id = :listId AND checked_off = false")
+    fun getShoppingListItemsForList(listId: Long): List<ShoppingListItem>
 
-    @Query("SELECT * FROM shopping_list_items WHERE store_id = :storeId AND item_name = :itemName")
-    suspend fun getShoppingListItem(storeId: Long, itemName: String): ShoppingListItem?
+    @Query("SELECT si.* FROM single_items si JOIN shopping_list_items sli ON si.item_name = sli.item_name WHERE sli.list_id = :listId AND sli.checked_off = false")
+    fun getShoppingListForList(listId: Long): Flow<List<SingleItem>>
+
+    @Query("SELECT * FROM shopping_list_items WHERE list_id = :listId AND item_name = :itemName")
+    suspend fun getShoppingListItem(listId: Long, itemName: String): ShoppingListItem?
 
     @Query("SELECT * FROM shopping_list_items WHERE id = :itemId")
     suspend fun getShoppingListItem(itemId: Long): ShoppingListItem?
@@ -41,4 +44,7 @@ interface ShoppingListItemDao {
 
     @Query("DELETE FROM shopping_list_items WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM shopping_list_items WHERE list_id = :listId")
+    suspend fun deleteForList(listId: Long)
 }

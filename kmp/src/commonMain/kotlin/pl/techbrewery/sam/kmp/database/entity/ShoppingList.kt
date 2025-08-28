@@ -10,20 +10,19 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
-@Entity(
-    tableName = "single_items"
-)
-data class SingleItem(
-    @PrimaryKey @ColumnInfo(name = "item_name") val itemName: String,
+@Entity(tableName = "shopping_lists")
+data class ShoppingList(
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id: Long = 0,
     @ColumnInfo(name = "cloud_id") val cloudId: String? = null,
+    @ColumnInfo(name = "selected") val selected: Boolean = true,
     @ColumnInfo(name = "created_at") val createdAt: String = Clock.System.now().toString(),
     @ColumnInfo(name = "updated_at") val updatedAt: String = createdAt
 )
 
 @Serializable
-data class SingleItemSnapshot(
-    @SerialName("owner_id")  val ownerId: String,
-    @SerialName("item_name") val itemName: String,
+data class ShoppingListSnapshot(
+    @SerialName("owner_id") val ownerId: String,
+    @SerialName("local_id") val localId: Long,
     @SerialName("created_at") val createdAt: Timestamp,
     @SerialName("updated_at") val updatedAt: Timestamp
 )

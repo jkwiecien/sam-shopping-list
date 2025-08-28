@@ -9,10 +9,15 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import io.github.aakira.napier.Napier
 import pl.techbrewery.sam.R
+import pl.techbrewery.sam.kmp.utils.debugLog
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 const val AUTH_LOG_TAG = "SAM-auth"
 
@@ -44,7 +49,7 @@ class AuthRepository(
         handleSignIn(result)
     }
 
-    private fun handleSignIn(result: GetCredentialResponse) {
+    private suspend fun handleSignIn(result: GetCredentialResponse) {
         // Handle the successfully returned credential.
         val credential = result.credential
 
@@ -64,21 +69,24 @@ class AuthRepository(
         }
     }
 
-    private fun firebaseAuthWithGoogle(idToken: String) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        firebaseAuth.signInWithCredential(credential)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
-                    Napier.d(tag = AUTH_LOG_TAG) { "signInWithCredential:success" }
-                    val user = firebaseAuth.currentUser
-                } else {
-                    // If sign in fails, display a message to the user
-                    throw FirebaseAuthException(
-                        "firebaseAuthWithGoogle",
-                        "Failed to sign in to Firebase"
-                    )
+    private suspend fun firebaseAuthWithGoogle(idToken: String): FirebaseUser =
+        suspendCoroutine { continuation ->
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            firebaseAuth.signInWithCredential(credential)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        // Sign in success, update UI with the signed-in user's information
+                        debugLog("signInWithCredential:success", AUTH_LOG_TAG)
+                        continuation.resume(firebaseAuth.currentUser!!)
+                    } else {
+                        // If sign in fails, display a message to the user
+                        continuation.resumeWithException(
+                            FirebaseAuthException(
+                                "firebaseAuthWithGoogle",
+                                "Failed to sign in to Firebase"
+                            )
+                        )
+                    }
                 }
-            }
-    }
+        }
 }

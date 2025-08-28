@@ -43,7 +43,7 @@ class StoresViewModel(
     }
 
     private fun deleteStore(store: Store) {
-        viewModelScope.launch(Dispatchers.Default + CoroutineExceptionHandler { _, error ->
+        viewModelScope.launch(Dispatchers.Default + defaultExceptionHandler { error ->
             emitSingleAction(ToastRequested(error.message ?: ""))
         }) {
             storeRepository.deleteStore(store)

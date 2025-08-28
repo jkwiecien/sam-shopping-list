@@ -29,6 +29,9 @@ firebaseBom = "34.1.0"
 credentials = "1.3.0"
 credentialsPlayServicesAuth = "1.3.0"
 googleid = "1.1.1"
+kmpFirebaseFirestore = "2.1.0"
+kmpFirebaseAuth = "2.1.0"
+firebaseAuthKtx = "23.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,8 +70,10 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 #firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
+firebase-kmp-firestore = { group = "dev.gitlive", name = "firebase-firestore", version.ref = "kmpFirebaseFirestore" }
+firebase-kmp-auth = { group = "dev.gitlive", name = "firebase-auth", version.ref = "kmpFirebaseAuth" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 
 
 [plugins]

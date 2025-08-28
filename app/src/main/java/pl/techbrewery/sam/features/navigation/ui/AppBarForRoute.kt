@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.GroupAdd
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import pl.techbrewery.sam.features.shoppinglist.AddCollaboratorPressed
 import pl.techbrewery.sam.features.shoppinglist.ShareShoppingListPressed
 import pl.techbrewery.sam.kmp.routes.ScreenRoute
 import pl.techbrewery.sam.kmp.utils.tempLog
@@ -74,13 +76,16 @@ private fun ActionsForRoute(
     route: String,
     onAction: (Any) -> Unit = {}
 ) {
-    tempLog("Drawing actions")
     Row(
         horizontalArrangement = Arrangement.spacedBy(Spacing.Tiny),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (route == ScreenRoute.ShoppingList) {
-            tempLog("Share action drawn")
+            IconButton(
+                onClick = { onAction(AddCollaboratorPressed) }
+            ) {
+                Icon(Icons.Outlined.GroupAdd, contentDescription = "Add collaborator")
+            }
             IconButton(
                 onClick = { onAction(ShareShoppingListPressed) }
             ) {

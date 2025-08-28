@@ -92,9 +92,7 @@ dependencies {
     implementation(libs.compose.resources)
     implementation(libs.reorderable)
     implementation(libs.napier)
-    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore)
     implementation(libs.googleid)
 
     testImplementation(libs.junit)

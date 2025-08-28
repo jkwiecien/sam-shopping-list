@@ -3,6 +3,7 @@ package pl.techbrewery.sam.features.shoppinglist
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
+import pl.techbrewery.sam.kmp.model.ShoppingItemWithWeight
 import pl.techbrewery.sam.kmp.model.SuggestedItem
 import pl.techbrewery.sam.ui.shared.DropdownItem
 
@@ -12,5 +13,6 @@ class StoreDropdownItemSelected(val dropdownItem: DropdownItem<Store>)
 class StoresDropdownVisibilityChanged(val visible: Boolean)
 class SuggestedItemSelected(val item: SuggestedItem)
 object ItemFieldKeyboardDonePressed
-class ShoppingListItemDismissed(val item: ShoppingListItem)
+class ShoppingListItemDismissed(val item: ShoppingItemWithWeight)
+object AddCollaboratorPressed
 object ShareShoppingListPressed

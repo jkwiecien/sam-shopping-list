@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -72,6 +73,10 @@ kotlin {
                 implementation(libs.koin.core)
                 implementation(libs.compose.resources)
                 implementation(libs.napier)
+//                implementation(project.dependencies.platform(libs.firebase.bom))
+                implementation(libs.firebase.kmp.firestore)
+                implementation(libs.firebase.kmp.auth)
+                implementation(libs.firebase.auth.ktx)
                 // Add KMP dependencies here
             }
         }
@@ -84,6 +89,7 @@ kotlin {
 
         androidMain {
             dependencies {
+                implementation(project.dependencies.platform(libs.firebase.bom))
                 // Add Android-specific dependencies here. Note that this source set depends on
                 // commonMain by default and will correctly pull the Android artifacts of any KMP
                 // dependencies declared in commonMain.

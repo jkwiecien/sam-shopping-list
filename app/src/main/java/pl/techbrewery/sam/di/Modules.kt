@@ -12,6 +12,8 @@ import pl.techbrewery.sam.features.recipes.editor.RecipeEditorViewModel
 import pl.techbrewery.sam.features.shoppinglist.ShoppingListViewModel
 import pl.techbrewery.sam.features.stores.StoresViewModel
 import pl.techbrewery.sam.features.stores.editor.StoreEditorViewModel
+import pl.techbrewery.sam.kmp.cloud.CloudRepository
+import pl.techbrewery.sam.kmp.cloud.CloudSyncService
 import pl.techbrewery.sam.kmp.repository.RecipeRepository
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 
@@ -22,14 +24,16 @@ val appModules: List<Module>
     )
 
 private val repositoryModule = module {
-    single { ShoppingListRepository(get()) }
+    single { CloudSyncService(get(), get()) }
+    single { CloudRepository(get()) }
+    single { ShoppingListRepository(get(), get()) }
     single { AuthRepository(androidContext()) }
 }
 
 private val viewModelModule = module {
-    viewModel { NavigationViewModel(get()) }
+    viewModel { NavigationViewModel(get(), get()) }
     viewModel { AuthViewModel(get()) }
-    viewModel { ShoppingListViewModel(get(), get(), get()) }
+    viewModel { ShoppingListViewModel(get(), get(), get(), get()) }
     viewModel { StoresViewModel(get()) }
     viewModel { StoreEditorViewModel(get()) }
     viewModel { RecipesViewModel(get()) }

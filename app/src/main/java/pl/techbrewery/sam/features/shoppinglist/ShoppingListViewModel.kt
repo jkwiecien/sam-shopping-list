@@ -4,10 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
-import io.github.aakira.napier.Napier
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -15,7 +13,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -26,12 +23,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import pl.techbrewery.sam.features.auth.AUTH_LOG_TAG
 import pl.techbrewery.sam.features.auth.AuthRepository
-import pl.techbrewery.sam.features.auth.GoogleSignInPressed
 import pl.techbrewery.sam.features.auth.ToggleAuthModal
-import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
+import pl.techbrewery.sam.kmp.cloud.CloudSyncService
 import pl.techbrewery.sam.kmp.database.entity.Store
+import pl.techbrewery.sam.kmp.model.ShoppingItemWithWeight
 import pl.techbrewery.sam.kmp.model.SuggestedItem
 import pl.techbrewery.sam.kmp.repository.ShoppingListRepository
 import pl.techbrewery.sam.kmp.repository.StoreRepository
@@ -47,7 +43,8 @@ import java.sql.SQLIntegrityConstraintViolationException
 class ShoppingListViewModel(
     private val shoppingList: ShoppingListRepository,
     private val storesRepository: StoreRepository,
-    private val auth: AuthRepository
+    private val auth: AuthRepository,
+    private val cloudSync: CloudSyncService
 ) : BaseViewModel() {
 
     private val mutableSearchFlow: MutableStateFlow<String> = MutableStateFlow("")
@@ -69,8 +66,7 @@ class ShoppingListViewModel(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(),
-                initialValue = Store.createInitialStore()
-                    .let { DropdownItem(it, it.storeName, extraText = it.address) }
+                initialValue = DropdownItem(Store.makeDummyStore(), "", "")
             )
     internal val storeDropdownItems: StateFlow<ImmutableList<DropdownItem<Store>>> =
         storesRepository.getAllStoresFlow()
@@ -128,9 +124,9 @@ class ShoppingListViewModel(
         }
     }
 
-    private val itemsMutableFlow: MutableStateFlow<List<ShoppingListItem>> =
+    private val itemsMutableFlow: MutableStateFlow<List<ShoppingItemWithWeight>> =
         MutableStateFlow(emptyList())
-    internal val itemsFlow: StateFlow<ImmutableList<ShoppingListItem>> =
+    internal val itemsFlow: StateFlow<ImmutableList<ShoppingItemWithWeight>> =
         itemsMutableFlow
             .debounce { 50L }
             .map { items ->
@@ -139,7 +135,7 @@ class ShoppingListViewModel(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
-                initialValue = emptyList<ShoppingListItem>().toImmutableList()
+                initialValue = emptyList<ShoppingItemWithWeight>().toImmutableList()
             )
 
 
@@ -187,8 +183,8 @@ class ShoppingListViewModel(
             }
 
             launch {
-                shoppingList.getShoppingListItemsForSelectedStoreFlow().collect {
-                    itemsMutableFlow.value = it
+                shoppingList.getShoppingListItemsForSelectedStoreFlow().collect { itemsAndWeights ->
+                    itemsMutableFlow.value = itemsAndWeights
                 }
             }
         }
@@ -205,14 +201,17 @@ class ShoppingListViewModel(
             is ShoppingListItemDismissed -> deleteItem(action.item)
             is SuggestedItemDeletePressed -> deleteSuggestedItem(action.item)
             is OnItemTextFieldFocusChanged -> itemTextFieldFocusedMutableFlow.value = action.focused
-            is ShareShoppingListPressed -> shareShoppingList()
+            is AddCollaboratorPressed -> addCollaborator()
         }
     }
 
 
-    private fun shareShoppingList() {
+    private fun addCollaborator() {
         if (auth.isSignedIn()) {
-            //todo
+            //fixme
+            viewModelScope.launch(Dispatchers.Main + defaultExceptionHandler {  }) {
+                cloudSync.syncDatabases()
+            }
         } else {
             emitSingleAction(ToggleAuthModal(true))
         }
@@ -258,7 +257,7 @@ class ShoppingListViewModel(
     }
 
     private fun addItem() {
-        viewModelScope.launch(Dispatchers.Main + CoroutineExceptionHandler { _, error ->
+        viewModelScope.launch(Dispatchers.Main + defaultExceptionHandler { error ->
             when (error) {
                 is SQLIntegrityConstraintViolationException -> itemTextFieldError = error.message
             }
@@ -273,7 +272,7 @@ class ShoppingListViewModel(
         }
     }
 
-    fun deleteItem(item: ShoppingListItem) {
+    fun deleteItem(item: ShoppingItemWithWeight) {
         viewModelScope.launch(Dispatchers.Main) {
             withContext(Dispatchers.Default) { shoppingList.deleteItem(item) }
         }

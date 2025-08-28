@@ -170,7 +170,7 @@ class RecipeEditorViewModel(
     }
 
     private fun addItem() {
-        viewModelScope.launch(Dispatchers.Main + CoroutineExceptionHandler { _, error ->
+        viewModelScope.launch(Dispatchers.Main + defaultExceptionHandler { error ->
             when (error) {
                 is ItemAlreadyOnListException -> itemNameTextFieldError = error.message
             }
@@ -190,7 +190,7 @@ class RecipeEditorViewModel(
     }
 
     private fun saveRecipe() {
-        viewModelScope.launch(Dispatchers.Main + CoroutineExceptionHandler { _, error ->
+        viewModelScope.launch(Dispatchers.Main + defaultExceptionHandler { error ->
             when (error) {
                 is SQLIntegrityConstraintViolationException -> recipeNameTextFieldError =
                     error.message

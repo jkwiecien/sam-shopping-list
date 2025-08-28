@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -24,28 +21,21 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
-import pl.techbrewery.sam.kmp.database.entity.StoreDepartment
-import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.action_save
-import pl.techbrewery.sam.ui.shared.ItemDragHandle
+import pl.techbrewery.sam.ui.shared.LargeSpacingBox
 import pl.techbrewery.sam.ui.shared.PrimaryFilledButton
 import pl.techbrewery.sam.ui.shared.PrimaryTextField
 import pl.techbrewery.sam.ui.shared.Spacing
 import pl.techbrewery.sam.ui.shared.stringResourceCompat
 import pl.techbrewery.sam.ui.theme.SAMTheme
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun StoreEditorScreen(
     viewModel: StoreEditorViewModel,
     onExternalAction: (Any) -> Unit = {}
 ) {
-    val departments by viewModel.departments.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         viewModel.actionsFlow.collect { action ->
             onExternalAction(action)
@@ -55,8 +45,6 @@ fun StoreEditorScreen(
     StoreEditorScreenContent(
         storeName = viewModel.storeName,
         storeAddress = viewModel.storeAddress,
-        newDepartmentName = viewModel.newDepartmentName,
-        departments = departments,
         onAction = { viewModel.onAction(it) }
     )
 }
@@ -67,8 +55,6 @@ fun StoreEditorScreenContent(
     storeName: String,
     modifier: Modifier = Modifier,
     storeAddress: String? = null,
-    newDepartmentName: String = "",
-    departments: ImmutableList<StoreDepartment> = emptyList<StoreDepartment>().toImmutableList(),
     onAction: (Any) -> Unit = {}
 ) {
     Surface(
@@ -99,61 +85,6 @@ fun StoreEditorScreenContent(
                 onDonePressed = { focusManager.clearFocus() },
                 modifier = Modifier.fillMaxWidth()
             )
-
-            Text(
-                text = "Customize the order of categories to match your shopping path in the store. Drag and drop categories to reflect your route.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = "Departments",
-                style = MaterialTheme.typography.titleMedium
-            )
-            PrimaryTextField(
-                value = newDepartmentName,
-                label = "Add department",
-                onValueChange = { onAction(DepartmentNameChanged(it)) },
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                onDonePressed = { onAction(KeyboardDonePressedOnDepartmentName) },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            val lazyListState = rememberLazyListState()
-            val reorderableLazyListState =
-                rememberReorderableLazyListState(lazyListState) { from, to ->
-                    onAction(StoreDepartmentMoved(from.index, to.index))
-                }
-
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                itemsIndexed(
-                    departments,
-                    key = { index, department -> department.departmentId }) { index, department ->
-                    tempLog("Department: ${department.departmentName}: ${department.position}")
-
-                    ReorderableItem(
-                        reorderableLazyListState,
-                        key = department.departmentId
-                    ) { isDragging ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            ItemDragHandle(
-                                modifier = Modifier
-                                    .padding(end = Spacing.Small)
-                                    .draggableHandle(),
-                            )
-                            CategoryItem(
-                                categoryName = department.departmentName,
-                            )
-                        }
-                    }
-
-                }
-            }
             PrimaryFilledButton(
                 modifier = Modifier.fillMaxWidth(),
                 title = stringResourceCompat(Res.string.action_save, "Save"),

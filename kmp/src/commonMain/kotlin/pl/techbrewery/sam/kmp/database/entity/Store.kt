@@ -3,6 +3,9 @@ package pl.techbrewery.sam.kmp.database.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import dev.gitlive.firebase.firestore.Timestamp
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -18,7 +21,17 @@ data class Store(
     @ColumnInfo(name = "selected") val selected: Boolean = false,
 ) {
     companion object {
-        fun createInitialStore(): Store = Store(0, storeName = "",selected = true)
+        fun makeDummyStore() = Store(0, storeName = "")
     }
 }
+
+@Serializable
+data class StoreSnapshot(
+    @SerialName("owner_id") val ownerId: String,
+    @SerialName("local_id") val localId: Long,
+    @SerialName("store_name") val storeName: String,
+    @SerialName("address") val address: String,
+    @SerialName("created_at") val createdAt: Timestamp,
+    @SerialName("updated_at") val updatedAt: Timestamp
+)
 

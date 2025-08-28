@@ -41,8 +41,10 @@ import pl.techbrewery.sam.features.auth.AuthModalContent
 import pl.techbrewery.sam.features.auth.ToggleAuthModal
 import pl.techbrewery.sam.features.shoppinglist.ui.ItemTextField
 import pl.techbrewery.sam.features.shoppinglist.ui.StoresDropdown
+import pl.techbrewery.sam.kmp.database.entity.IndexWeight
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.Store
+import pl.techbrewery.sam.kmp.model.ShoppingItemWithWeight
 import pl.techbrewery.sam.kmp.model.SuggestedItem
 import pl.techbrewery.sam.shared.OnItemTextFieldFocusChanged
 import pl.techbrewery.sam.shared.SearchQueryChanged
@@ -118,7 +120,7 @@ fun ShoppingListScreen(
 private fun ShoppingListScreenContent(
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
-    items: ImmutableList<ShoppingListItem>,
+    items: ImmutableList<ShoppingItemWithWeight>,
     suggestedItems: ImmutableList<DropdownItem<SuggestedItem>>,
     selectedStoreDropdownItem: DropdownItem<Store>,
     storeDropdownItems: ImmutableList<DropdownItem<Store>>,
@@ -170,7 +172,7 @@ private fun ShoppingListScreenContent(
             LazyColumn(
                 state = lazyListState
             ) {
-                items(items, key = { it.id }) { item ->
+                items(items, key = { it.itemId }) { item ->
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = {
                             if (it == SwipeToDismissBoxValue.EndToStart) onAction(
@@ -183,7 +185,7 @@ private fun ShoppingListScreenContent(
 
                     ReorderableItem(
                         reorderableLazyListState,
-                        key = item.id
+                        key = item.itemId
                     ) { isDragging ->
                         SwipeToDismissBox(
                             state = dismissState,
@@ -201,7 +203,7 @@ private fun ShoppingListScreenContent(
 
                                 ShoppingListItem(
                                     itemName = item.itemName,
-                                    onCheckboxChecked = { onAction(ItemChecked(item.id)) },
+                                    onCheckboxChecked = { onAction(ItemChecked(item.itemId)) },
                                     modifier = Modifier.animateItem()
                                 )
                             }
@@ -258,11 +260,7 @@ private fun ShoppingListScreenPreview() {
         }.toImmutableList()
 
         // 3. Select one as the default selected item
-        val selectedStoreDropdownItem = storeDropdownItems.firstOrNull()
-            ?: DropdownItem(
-                item = Store.createInitialStore(),
-                text = "No Store"
-            ) // Fallback if list is empty
+        val selectedStoreDropdownItem = storeDropdownItems.first()
 
         SAMTheme {
             ShoppingListScreenContent(
@@ -270,7 +268,9 @@ private fun ShoppingListScreenPreview() {
                     "apple", "Banana", "Milk", "Eggs", "Cheese", "Chicken", "Beef",
                     "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
                     "Coffee", "Tea", "Juice", "Soda", "Water"
-                ).map { ShoppingListItem(itemName = it, storeId = 0) }.toImmutableList(),
+                ).map { ShoppingListItem(itemName = it, listId = 0) }
+                    .map { ShoppingItemWithWeight(it, IndexWeight(0, null, it.itemName, 0)) }
+                    .toImmutableList(),
                 suggestedItems = emptyList<DropdownItem<SuggestedItem>>().toImmutableList(),
                 searchQuery = "Preview Search", // Optional: Provide a preview search query
                 selectedStoreDropdownItem = selectedStoreDropdownItem,

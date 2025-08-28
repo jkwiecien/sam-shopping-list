@@ -27,7 +27,7 @@ private val databaseModule = module {
 }
 
 private val repositoryModule = module {
-    single { ShoppingListRepository(get<KmpDatabase>()) }
-    single { StoreRepository(get<KmpDatabase>()) }
-    single { RecipeRepository(get<KmpDatabase>()) }
+    single { ShoppingListRepository(get(), get()) }
+    single { StoreRepository(get(), get()) }
+    single { RecipeRepository(get(), get()) }
 }

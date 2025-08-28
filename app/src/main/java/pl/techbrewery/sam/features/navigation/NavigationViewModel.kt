@@ -12,10 +12,13 @@ import pl.techbrewery.sam.features.auth.AUTH_LOG_TAG
 import pl.techbrewery.sam.features.auth.AuthRepository
 import pl.techbrewery.sam.features.auth.GoogleSignInPressed
 import pl.techbrewery.sam.features.auth.ToggleAuthModal
+import pl.techbrewery.sam.kmp.cloud.CloudRepository
+import pl.techbrewery.sam.kmp.cloud.CloudSyncService
 import pl.techbrewery.sam.shared.BaseViewModel
 
 class NavigationViewModel(
-    private val auth: AuthRepository
+    private val auth: AuthRepository,
+    private val cloudSyncService: CloudSyncService,
 ) : BaseViewModel() {
 
     var showAuthModal: Boolean by mutableStateOf(false)
@@ -23,10 +26,11 @@ class NavigationViewModel(
 
     private fun signIn() {
         showAuthModal = false
-        viewModelScope.launch(Dispatchers.Main + CoroutineExceptionHandler { _, error ->
+        viewModelScope.launch(Dispatchers.Main + defaultExceptionHandler { error ->
             Napier.e(error, AUTH_LOG_TAG) {error.message ?: "Error while signing in"}
         }) {
             auth.signIn()
+            cloudSyncService.syncDatabases()
         }
     }
 

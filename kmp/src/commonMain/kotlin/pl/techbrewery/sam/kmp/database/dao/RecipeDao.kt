@@ -10,7 +10,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
-import pl.techbrewery.sam.kmp.database.entity.RecipeJoin
+import pl.techbrewery.sam.kmp.database.entity.RecipeItem
 import pl.techbrewery.sam.kmp.database.bundles.RecipeWithItems
 
 @Dao
@@ -27,16 +27,19 @@ interface RecipeDao {
     suspend fun insertSingleItem(singleItem: SingleItem): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertRecipeIngredient(ingredient: RecipeJoin)
+    suspend fun insertRecipeIngredient(ingredient: RecipeItem)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertRecipeIngredients(ingredients: List<RecipeJoin>)
+    suspend fun insertRecipeIngredients(ingredients: List<RecipeItem>)
 
     // --- Query Operations (Flows) ---
 
     @Transaction
     @Query("SELECT * FROM recipes")
     fun getRecipesWithItems(): Flow<List<RecipeWithItems>>
+
+    @Query("SELECT * FROM recipes")
+    suspend fun getAllRecipes(): List<Recipe>
 
     @Transaction
     @Query("SELECT * FROM recipes WHERE name LIKE :query || '%'")
@@ -70,12 +73,12 @@ interface RecipeDao {
     fun getSingleItemsForRecipe(recipeId: Long): Flow<List<SingleItem>>
 
     @Query("SELECT * FROM recipe_item_join WHERE recipe_id_join = :recipeId") // Changed bundle_id_join to recipe_id_join
-    suspend fun getIngredients(recipeId: Long): List<RecipeJoin>
+    suspend fun getIngredients(recipeId: Long): List<RecipeItem>
 
     // --- Delete Operations ---
     @Delete
     suspend fun deleteRecipe(recipe: Recipe)
 
     @Delete
-    suspend fun deleteRecipeIngredients(ingredients: List<RecipeJoin>)
+    suspend fun deleteRecipeIngredients(ingredients: List<RecipeItem>)
 }
