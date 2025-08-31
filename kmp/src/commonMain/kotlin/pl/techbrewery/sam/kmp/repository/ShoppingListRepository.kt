@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import pl.techbrewery.sam.kmp.cloud.CloudRepository
@@ -20,6 +21,8 @@ import pl.techbrewery.sam.kmp.model.SuggestedItemType
 import pl.techbrewery.sam.kmp.utils.SamConfig.DEFAULT_INDEX_GAP
 import pl.techbrewery.sam.kmp.utils.SamConfig.INDEX_INCREMENT
 import pl.techbrewery.sam.kmp.utils.getCurrentTime
+import pl.techbrewery.sam.kmp.utils.tempLog
+import pl.techbrewery.sam.kmp.utils.warningLog
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.error_item_already_in_shopping_list
 import java.sql.SQLIntegrityConstraintViolationException
@@ -77,8 +80,7 @@ class ShoppingListRepository(
         var singleItem = singleItemDao.getSingleItemByName(itemName)
         if (singleItem == null) singleItem = saveSearchResult(itemName)
 
-        var shoppingListItem =
-            shoppingListItemDao.getShoppingListItem(selectedList.id, singleItem.itemName)
+        var shoppingListItem =            shoppingListItemDao.getShoppingListItem(selectedList.id, singleItem.itemName)
 
         if (shoppingListItem != null) {
             shoppingListItemDao.update(shoppingListItem.copy(checkedOff = false, updatedAt = getCurrentTime()))
@@ -88,16 +90,16 @@ class ShoppingListRepository(
                 listId = selectedList.id,
                 checkedOff = false
             )
-            shoppingListItemDao.insert(
-                shoppingListItem
+            // Persist ShoppingListItem first to get its ID if needed, though not directly used for IndexWeight here
+            val shoppingListItemId = shoppingListItemDao.insert(shoppingListItem)
+
+            // Create and persist IndexWeight
+            val newIndexWeight = IndexWeight(
+                itemName = shoppingListItem.itemName,
+                storeId = selectedStore.storeId,
+                weight = newWeight
             )
-            indexWeightDao.insert(
-                IndexWeight(
-                    itemName = shoppingListItem.itemName,
-                    storeId = selectedStore.storeId,
-                    weight = newWeight
-                )
-            )
+            indexWeightDao.insert(newIndexWeight) // This ensures IndexWeight gets a proper ID
         }
     }
 
@@ -116,37 +118,92 @@ class ShoppingListRepository(
         return shoppingListDao.getSelectedListFlow()
             .filterNotNull()
             .flatMapLatest { list ->
-                shoppingListItemDao.getShoppingListItemsFlow(list.id)
-                    .map { items ->
-                        val storeId = storeDao.getSelectedStore()!!.storeId
-                        items.map { item ->
-                            val indexWeight = indexWeightDao.getIndexWeight(item.itemName, storeId)
-                                ?: IndexWeight(itemName = item.itemName, storeId = storeId)
-                            ShoppingItemWithWeight(item, indexWeight)
-                        }.sortedByDescending { it.indexWeight.weight }
-                    }
+                // Ensure store is fetched first to avoid multiple calls or null issues
+                storeDao.getSelectedStoreFlow().filterNotNull().flatMapLatest { selectedStore ->
+                    shoppingListItemDao.getShoppingListItemsFlow(list.id)
+                        .map { items ->
+                            items.map { item ->
+                                var indexWeight = indexWeightDao.getIndexWeight(item.itemName, selectedStore.storeId)
+                                if (indexWeight == null) {
+                                    // IndexWeight not found, create and persist it
+                                    tempLog("IndexWeight not found for ${item.itemName} in store ${selectedStore.storeId}. Creating new one.")
+                                    val newPersistedIndexWeight = IndexWeight(
+                                        itemName = item.itemName,
+                                        storeId = selectedStore.storeId,
+                                        // A sensible default weight, e.g., 0 or based on insertion time/order if needed
+                                        // For simplicity, using 0, but this might need adjustment based on desired default ordering.
+                                        // Or, fetch max weight and add DEFAULT_INDEX_GAP.
+                                        // Let's keep it simple with 0 for now as reIndexWeights will fix it on move.
+                                        weight = 0 
+                                    )
+                                    val newId = indexWeightDao.insert(newPersistedIndexWeight) // This insert should be synchronous within this map if DAO is suspend or blocks
+                                    indexWeight = newPersistedIndexWeight.copy(id = newId) // Use the object with the new ID
+                                    tempLog("Created and persisted IndexWeight for ${item.itemName} with new id $newId")
+                                }
+                                ShoppingItemWithWeight(item, indexWeight)
+                            }.sortedByDescending { it.indexWeight.weight }
+                        }
+                }
+            }.onEach {
+                // This logging remains useful
+                it.forEach { item ->
+                    tempLog("Item from Flow: ${item.shoppingListItem.itemName}, IW.id: ${item.indexWeight.id}, IW.weight: ${item.indexWeight.weight}")
+                }
             }
     }
 
+    // You might need a similar adjustment for the non-Flow version if it's still used
+    // in a way that affects the ReorderableItem state before the Flow updates.
     suspend fun getShoppingListItemsForSelectedStore(): List<ShoppingItemWithWeight> {
-        val storeId = storeDao.getSelectedStore()?.storeId ?: return emptyList()
+        val selectedStore = storeDao.getSelectedStore() ?: return emptyList()
+        val storeId = selectedStore.storeId
         return shoppingListDao.getShoppingList()?.let { selectedList ->
             shoppingListItemDao.getShoppingListItemsForList(selectedList.id).map { item ->
-                val indexWeight = indexWeightDao.getIndexWeight(item.itemName, storeId)
-                    ?: IndexWeight(itemName = item.itemName, storeId = storeId)
+                var indexWeight = indexWeightDao.getIndexWeight(item.itemName, storeId)
+                if (indexWeight == null) {
+                    tempLog("IndexWeight not found for ${item.itemName} in store ${storeId} (getShoppingListItemsForSelectedStore). Creating new one.")
+                     val newPersistedIndexWeight = IndexWeight(
+                        itemName = item.itemName,
+                        storeId = storeId,
+                        weight = 0 // Or other default
+                    )
+                    // Assuming insert returns the ID or you can query it back.
+                    // For DAOs returning Long id:
+                    val newId = indexWeightDao.insert(newPersistedIndexWeight)
+                    indexWeight = newPersistedIndexWeight.copy(id = newId)
+                     tempLog("Created and persisted IndexWeight for ${item.itemName} with new id $newId (getShoppingListItemsForSelectedStore)")
+                }
                 ShoppingItemWithWeight(item, indexWeight)
             }.sortedByDescending { it.indexWeight.weight }
         } ?: emptyList()
     }
+
 
     fun getAllItemsFlow(): Flow<List<SingleItem>> {
         return singleItemDao.getAllSingleItemsFlow()
     }
 
     suspend fun updateItems(items: List<ShoppingItemWithWeight>) {
-        items.forEach { (item, weight) ->
-            shoppingListItemDao.update(item.copy(updatedAt = getCurrentTime()))
-            indexWeightDao.update(weight.copy(updatedAt = getCurrentTime()))
+        // Ensure all index weights are persisted before attempting to update
+        val itemsWithPersistedWeights = items.map {
+            if (it.indexWeight.id == 0L) {
+                tempLog("Attempting to update an item with transient IndexWeight: ${it.shoppingListItem.itemName}")
+                // This case should ideally be prevented by the getShoppingListItems...Flow modifications
+                // However, as a safeguard, one might try to re-fetch/re-create here,
+                // but it's better to fix it at the source (the Flow).
+                // For now, let's assume the Flow provides persisted IndexWeights.
+            }
+            it
+        }
+
+        itemsWithPersistedWeights.forEach { (item, weight) ->
+            // Defensive check: only update if id is not 0.
+            if (weight.id != 0L) {
+                shoppingListItemDao.update(item.copy(updatedAt = getCurrentTime()))
+                indexWeightDao.update(weight.copy(updatedAt = getCurrentTime()))
+            } else {
+                 warningLog("Skipping update for IndexWeight with id 0 for item ${item.itemName}. This indicates an issue in data preparation.", "ShoppingListRepo")
+            }
         }
     }
 
@@ -154,14 +211,24 @@ class ShoppingListRepository(
         from: Int,
         to: Int,
         currentItems: List<ShoppingItemWithWeight>
-    ): List<ShoppingItemWithWeight> =
-        coroutineScope {
-            if (from == to) return@coroutineScope currentItems
+    ): List<ShoppingItemWithWeight> =        coroutineScope {
+            if (from == to || from < 0 || to < 0 || from >= currentItems.size || to >= currentItems.size) {
+                 return@coroutineScope currentItems // Bounds check
+            }
 
             val itemMoved = currentItems[from]
             val itemReplaced = currentItems[to]
+
+            // Ensure weights are valid before proceeding
+            if (itemMoved.indexWeight.id == 0L || itemReplaced.indexWeight.id == 0L) {
+                warningLog("Attempted to move item with unpersisted IndexWeight. itemMoved: ${itemMoved.shoppingListItem.itemName}, itemReplaced: ${itemReplaced.shoppingListItem.itemName}", "ShoppingListRepo")
+                // Potentially re-fetch the list from DB to get fresh, persisted items, or throw an error.
+                // For now, return currentItems to avoid crash, but this signals a deeper issue if it occurs.
+                return@coroutineScope currentItems
+            }
+
             val goingUp = itemMoved.indexWeight.weight < itemReplaced.indexWeight.weight
-            val newIndexWeight = if (goingUp) {
+            val newIndexWeightValue = if (goingUp) {
                 itemReplaced.indexWeight.weight + INDEX_INCREMENT
             } else {
                 itemReplaced.indexWeight.weight - INDEX_INCREMENT
@@ -170,7 +237,7 @@ class ShoppingListRepository(
             val updatedItems = currentItems
                 .map { item ->
                     if (item.shoppingListItem.id == itemMoved.shoppingListItem.id) {
-                        item.copy(indexWeight = item.indexWeight.copy(weight = newIndexWeight, updatedAt = getCurrentTime()))
+                        item.copy(indexWeight = item.indexWeight.copy(weight = newIndexWeightValue, updatedAt = getCurrentTime()))
                     } else {
                         item
                     }
@@ -187,9 +254,9 @@ class ShoppingListRepository(
         items: List<ShoppingItemWithWeight>
     ): List<ShoppingItemWithWeight> {
         return items
-            .sortedByDescending { it.indexWeight.weight }
+            .sortedByDescending { it.indexWeight.weight } // Ensure sorted before re-indexing
             .mapIndexed { index, item ->
-                val newWeight = (items.size - index + 1) * DEFAULT_INDEX_GAP
+                val newWeight = (items.size - index) * DEFAULT_INDEX_GAP // Adjusted to be 1-based effectively
                 item.copy(indexWeight = item.indexWeight.copy(weight = newWeight, updatedAt = getCurrentTime()))
             }
     }
@@ -203,6 +270,10 @@ class ShoppingListRepository(
     }
 
     suspend fun deleteItem(item: ShoppingItemWithWeight) {
+        // Also delete the associated IndexWeight
+        if (item.indexWeight.id != 0L) { // Only delete if it's a persisted weight
+            indexWeightDao.delete(item.indexWeight)
+        }
         shoppingListItemDao.deleteById(item.itemId)
     }
 
@@ -223,8 +294,8 @@ class ShoppingListRepository(
     fun getSuggestedRecipeIngredients(query: String): Flow<List<SuggestedItem>> {
         return combine(
             shoppingListItemDao.getSearchResults(query),
-            recipesDao.getRecipesWithItemsFlow(query)
-        ) { searchResults, recipes ->
+            recipesDao.getRecipesWithItemsFlow(query) // This seems to be getting full recipes, maybe just items?
+        ) { searchResults, _ -> // recipes might not be needed if only suggesting single items
             val searchResultsSuggestedItems =
                 searchResults.map { SuggestedItem(it.itemName, SuggestedItemType.ITEM) }
             searchResultsSuggestedItems.sortedBy { it.itemName }

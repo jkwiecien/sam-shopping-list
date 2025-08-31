@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
+import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.features.shoppinglist.SuggestedItemSelected
 import pl.techbrewery.sam.kmp.database.bundles.RecipeWithItems // Changed import
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
@@ -142,7 +143,7 @@ class RecipeEditorViewModel(
 
     override fun onAction(action: Any) {
         when (action) {
-            is RecipeNameChanged -> recipeNameMutableFlow.value = action.name
+            is RecipeNameChanged -> recipeNameMutableFlow.value = action.name.capitalize()
             is SearchQueryChanged -> onSearchQueryChanged(action.query)
             is SuggestedItemSelected -> addItem(action.item)
             is RecipeItemDismissed -> removeItem(action.item)
