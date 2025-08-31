@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
-import pl.techbrewery.sam.kmp.cloud.CloudRepository
 import pl.techbrewery.sam.kmp.cloud.CloudSyncService
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.IndexWeight
@@ -26,7 +25,6 @@ import pl.techbrewery.sam.kmp.utils.SamConfig.INDEX_INCREMENT
 import pl.techbrewery.sam.kmp.utils.debugLog
 import pl.techbrewery.sam.kmp.utils.errorLog
 import pl.techbrewery.sam.kmp.utils.getCurrentTime
-import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.kmp.utils.warningLog
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.error_item_already_in_shopping_list
@@ -359,12 +357,26 @@ class ShoppingListRepository(
         return shoppingListItemDao.getSearchResultsExcept(query, exceptItems)
     }
 
-    suspend fun deleteItem(item: ShoppingItemWithWeight) {
-        // Also delete the associated IndexWeight
-        if (item.indexWeight.id != 0L) { // Only delete if it's a persisted weight
-            indexWeightDao.delete(item.indexWeight)
+    suspend fun deleteItem(itemWithIndex: ShoppingItemWithWeight) = coroutineScope {
+        // make sure it is latest version of SHoppingListItem to get the cloudId
+        val shoppingListItem =
+            withContext(Dispatchers.Default) { shoppingListItemDao.getShoppingListItem(itemWithIndex.itemId) }
+        launch(Dispatchers.Default) {
+            if (itemWithIndex.indexWeight.id != 0L) {
+                // Only delete if it's a persisted weight
+                // Also delete the associated IndexWeight
+                indexWeightDao.delete(itemWithIndex.indexWeight)
+            }
+            shoppingListItemDao.deleteById(itemWithIndex.itemId)
         }
-        shoppingListItemDao.deleteById(item.itemId)
+        launch(Dispatchers.IO) {
+            val updater = syncService.cloudUpdater
+            val shoppingListItemCloudId = shoppingListItem?.cloudId
+            val indexWeightCloudId = itemWithIndex.indexWeight
+            if (updater != null && shoppingListItemCloudId != null) {
+                updater.deleteShoppingListItem(shoppingListItem)
+            }
+        }
     }
 
     fun getSuggestedShoppingListItems(query: String): Flow<List<SuggestedItem>> {
