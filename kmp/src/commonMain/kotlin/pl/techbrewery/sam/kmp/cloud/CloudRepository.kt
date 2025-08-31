@@ -13,6 +13,7 @@ import pl.techbrewery.sam.kmp.database.entity.ShoppingList
 import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.database.entity.Store
+import pl.techbrewery.sam.kmp.utils.tempLog
 
 const val CLOUD_LOG_TAG = "Cloud"
 
@@ -20,7 +21,7 @@ class CloudRepository(
     private val localDb: KmpDatabase,
 ) {
     private val firestore = Firebase.firestore
-    private val user get() = Firebase.auth.currentUser
+    val user get() = Firebase.auth.currentUser
 
     private val storeDao get() = localDb.storeDao()
     private val shoppingListDao get() = localDb.shoppingListDao()
@@ -32,8 +33,6 @@ class CloudRepository(
     private fun getUserId(): String? {
         return user?.uid
     }
-
-    val cloudUpdater: CloudUpdater? get() = user?.let { CloudUpdater(this, it) }
 
     suspend fun getStores(): List<Store> {
         val userId = getUserId() ?: return emptyList()
@@ -84,11 +83,13 @@ class CloudRepository(
     suspend fun deleteAllItemsForList(shoppingListId: String) {
         val items = getShoppingListItems(shoppingListId)
         for (item in items) {
-            firestore.collection(FirestoreCollections.SHOPPING_LISTS)
-                .document(shoppingListId)
-                .collection(FirestoreCollections.SHOPPING_LIST_ITEMS_SUBCOLLECTION)
-                .document(item.cloudId!!)
-                .delete()
+            item.cloudId?.let { // Ensure cloudId is not null before attempting to delete
+                firestore.collection(FirestoreCollections.SHOPPING_LISTS)
+                    .document(shoppingListId)
+                    .collection(FirestoreCollections.SHOPPING_LIST_ITEMS_SUBCOLLECTION)
+                    .document(it)
+                    .delete()
+            }
         }
     }
 
@@ -145,7 +146,9 @@ class CloudRepository(
                 .set(CloudConverter.toSnapshot(store, userId))
             existingStoreDoc.id
         }
-        storeDao.update(store.copy(cloudId = newCloudId))
+        if (store.cloudId != newCloudId) {
+            storeDao.update(store.copy(cloudId = newCloudId))
+        }
         return newCloudId
     }
 
@@ -163,30 +166,36 @@ class CloudRepository(
                 .set(CloudConverter.toSnapshot(shoppingList, userId))
             existingShoppingListSnapshot.id
         }
-        shoppingListDao.update(shoppingList.copy(cloudId = newCloudId))
+        if (shoppingList.cloudId != newCloudId) {
+            shoppingListDao.update(shoppingList.copy(cloudId = newCloudId))
+        }
         return newCloudId
     }
 
     suspend fun saveSingleItem(singleItem: SingleItem): String {
         val userId = getUserId()!!
         val existingItemSnapshot = singleItem.cloudId?.let { getSingleItemSnapshot(it) }
-        val resolvedCloudId: String = if (existingItemSnapshot == null || !existingItemSnapshot.exists) {
-            firestore.collection(FirestoreCollections.SINGLE_ITEMS)
-                .add(CloudConverter.toSnapshot(singleItem, userId))
-                .id
-        } else {
-            firestore.collection(FirestoreCollections.SINGLE_ITEMS)
-                .document(existingItemSnapshot.id)
-                .set(CloudConverter.toSnapshot(singleItem, userId))
-            existingItemSnapshot.id
+        val resolvedCloudId: String =
+            if (existingItemSnapshot == null || !existingItemSnapshot.exists) {
+                firestore.collection(FirestoreCollections.SINGLE_ITEMS)
+                    .add(CloudConverter.toSnapshot(singleItem, userId))
+                    .id
+            } else {
+                firestore.collection(FirestoreCollections.SINGLE_ITEMS)
+                    .document(existingItemSnapshot.id)
+                    .set(CloudConverter.toSnapshot(singleItem, userId))
+                existingItemSnapshot.id
+            }
+        if (singleItem.cloudId != resolvedCloudId) {
+            singleItemDao.updateSingleItem(singleItem.copy(cloudId = resolvedCloudId))
         }
-        singleItemDao.updateSingleItem(singleItem.copy(cloudId = resolvedCloudId))
         return resolvedCloudId
     }
 
     suspend fun saveShoppingListItem(item: ShoppingListItem, listCloudId: String): String {
         val userId = getUserId()!!
-        val existingItemSnapshot = item.cloudId?.let { getShoppingListItemSnapshot(listCloudId, it) }
+        val existingItemSnapshot =
+            item.cloudId?.let { getShoppingListItemSnapshot(listCloudId, it) }
         val resolvedCloudId: String
         if (existingItemSnapshot == null || !existingItemSnapshot.exists) {
             resolvedCloudId = firestore.collection(FirestoreCollections.SHOPPING_LISTS)
@@ -202,7 +211,9 @@ class CloudRepository(
                 .set(CloudConverter.toSnapshot(item, userId, listCloudId))
             resolvedCloudId = existingItemSnapshot.id
         }
-        shoppingListItemDao.update(item.copy(cloudId = resolvedCloudId))
+        if (item.cloudId != resolvedCloudId) {
+            shoppingListItemDao.update(item.copy(cloudId = resolvedCloudId))
+        }
         return resolvedCloudId
     }
 
@@ -220,7 +231,10 @@ class CloudRepository(
                 .set(CloudConverter.toSnapshot(item, userId, storeCloudId))
             resolvedCloudId = existingItemSnapshot.id
         }
-        indexWeightDao.update(item.copy(cloudId = resolvedCloudId))
+        if (item.cloudId != resolvedCloudId) {
+            //skipping unnecessary update
+            indexWeightDao.update(item.copy(cloudId = resolvedCloudId))
+        }
         return resolvedCloudId
     }
 
@@ -237,7 +251,9 @@ class CloudRepository(
                 .set(CloudConverter.toSnapshot(recipe, userId))
             existingRecipeDoc.id
         }
-        recipeDao.updateRecipe(recipe.copy(cloudId = newCloudId))
+        if (recipe.cloudId != newCloudId) {
+            recipeDao.updateRecipe(recipe.copy(cloudId = newCloudId))
+        }
         return newCloudId
     }
 
@@ -259,8 +275,9 @@ class CloudRepository(
                 .set(CloudConverter.toSnapshot(item, userId, recipeCloudId))
             resolvedCloudId = existingItemSnapshot.id
         }
-        // RecipeItem does not have a cloudId field
-        // recipeItemDao.update(item.copy(cloudId = resolvedCloudId))
+        if (item.cloudId != resolvedCloudId) {
+            recipeDao.updateRecipeItem(item.copy(cloudId = resolvedCloudId))
+        }
         return resolvedCloudId
     }
 
@@ -300,17 +317,31 @@ class CloudRepository(
     }
 
     // --- Snapshot Getters ---
-    suspend fun getStoreSnapshot(cloudId: String): DocumentSnapshot = firestore.collection(FirestoreCollections.STORES).document(cloudId).get()
-    suspend fun getShoppingListSnapshot(cloudId: String): DocumentSnapshot = firestore.collection(FirestoreCollections.SHOPPING_LISTS).document(cloudId).get()
-    suspend fun getSingleItemSnapshot(cloudId: String): DocumentSnapshot = firestore.collection(FirestoreCollections.SINGLE_ITEMS).document(cloudId).get()
-    suspend fun getShoppingListItemSnapshot(listCloudId: String, cloudId: String): DocumentSnapshot =
+    suspend fun getStoreSnapshot(cloudId: String): DocumentSnapshot =
+        firestore.collection(FirestoreCollections.STORES).document(cloudId).get()
+
+    suspend fun getShoppingListSnapshot(cloudId: String): DocumentSnapshot =
+        firestore.collection(FirestoreCollections.SHOPPING_LISTS).document(cloudId).get()
+
+    suspend fun getSingleItemSnapshot(cloudId: String): DocumentSnapshot =
+        firestore.collection(FirestoreCollections.SINGLE_ITEMS).document(cloudId).get()
+
+    suspend fun getShoppingListItemSnapshot(
+        listCloudId: String,
+        cloudId: String
+    ): DocumentSnapshot =
         firestore.collection(FirestoreCollections.SHOPPING_LISTS)
             .document(listCloudId)
             .collection(FirestoreCollections.SHOPPING_LIST_ITEMS_SUBCOLLECTION)
             .document(cloudId)
             .get()
-    suspend fun getIndexWeightSnapshot(cloudId: String): DocumentSnapshot = firestore.collection(FirestoreCollections.INDEX_WEIGHTS).document(cloudId).get()
-    suspend fun getRecipeSnapshot(cloudId: String): DocumentSnapshot = firestore.collection(FirestoreCollections.RECIPES).document(cloudId).get()
+
+    suspend fun getIndexWeightSnapshot(cloudId: String): DocumentSnapshot =
+        firestore.collection(FirestoreCollections.INDEX_WEIGHTS).document(cloudId).get()
+
+    suspend fun getRecipeSnapshot(cloudId: String): DocumentSnapshot =
+        firestore.collection(FirestoreCollections.RECIPES).document(cloudId).get()
+
     suspend fun getRecipeItemSnapshot(recipeCloudId: String, cloudId: String): DocumentSnapshot =
         firestore.collection(FirestoreCollections.RECIPES)
             .document(recipeCloudId)

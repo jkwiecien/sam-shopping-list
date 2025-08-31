@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import pl.techbrewery.sam.kmp.cloud.CloudRepository
+import pl.techbrewery.sam.kmp.cloud.CloudSyncService
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.Recipe
 import pl.techbrewery.sam.kmp.database.entity.RecipeItem
@@ -18,7 +19,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 class RecipeRepository(
     private val db: KmpDatabase,
-    private val cloud: CloudRepository
+    private val syncService: CloudSyncService
 ) {
     private val recipeDao = db.recipeDao()
 
@@ -48,7 +49,7 @@ class RecipeRepository(
         )
         val createdRecipeId = recipeDao.insertRecipe(recipe)
         val recipeToSave = recipe.copy(recipeId = createdRecipeId)
-        cloud.cloudUpdater?.let { launch { it.saveRecipe(recipeToSave) } }
+        syncService.cloudUpdater?.let { launch { it.saveRecipe(recipeToSave) } }
         items.forEach { item ->
             val join = RecipeItem(
                 recipeId = createdRecipeId,
@@ -56,7 +57,7 @@ class RecipeRepository(
             )
             recipeDao.insertRecipeIngredient(join)
             recipeToSave.cloudId?.let { recipeCloudId ->
-                cloud.cloudUpdater?.let { launch { it.saveRecipeItem(join, recipeCloudId) } }
+                syncService.cloudUpdater?.let { launch { it.saveRecipeItem(join, recipeCloudId) } }
             }
         }
     }
@@ -84,12 +85,12 @@ class RecipeRepository(
 
             recipeDao.deleteRecipeIngredients(ingredientsToRemove)
             ingredientsToRemove.forEach { item ->
-                cloud.cloudUpdater?.let { launch { it.deleteRecipeItem(item) } }
+                syncService.cloudUpdater?.let { launch { it.deleteRecipeItem(item) } }
             }
             recipeDao.insertRecipeIngredients(ingredientsToAdd)
             recipe.cloudId?.let { recipeCloudId ->
                 ingredientsToAdd.forEach { item ->
-                    cloud.cloudUpdater?.let { launch { it.saveRecipeItem(item, recipeCloudId) } }
+                    syncService.cloudUpdater?.let { launch { it.saveRecipeItem(item, recipeCloudId) } }
                 }
             }
             val updatedRecipe = recipeWithItems.recipe.copy(
@@ -97,7 +98,7 @@ class RecipeRepository(
                 updatedAt = getCurrentTime()
             )
             recipeDao.updateRecipe(updatedRecipe)
-            cloud.cloudUpdater?.let { launch { it.saveRecipe(updatedRecipe) } }
+            syncService.cloudUpdater?.let { launch { it.saveRecipe(updatedRecipe) } }
         }
     }
 
@@ -105,6 +106,6 @@ class RecipeRepository(
         val ingredients = recipeWithItems.items.map { RecipeItem(recipeId = recipeWithItems.recipe.recipeId, itemName = it.itemName) }
         recipeDao.deleteRecipeIngredients(ingredients)
         recipeDao.deleteRecipe(recipeWithItems.recipe)
-        cloud.cloudUpdater?.let { launch { it.deleteRecipe(recipeWithItems.recipe) } }
+        syncService.cloudUpdater?.let { launch { it.deleteRecipe(recipeWithItems.recipe) } }
     }
 }

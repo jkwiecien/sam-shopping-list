@@ -35,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.filter
 import pl.techbrewery.sam.extensions.capitalize
 import pl.techbrewery.sam.extensions.closeKeyboardOnPress
 import pl.techbrewery.sam.features.auth.AuthModalContent
@@ -46,6 +47,7 @@ import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.model.ShoppingItemWithWeight
 import pl.techbrewery.sam.kmp.model.SuggestedItem
+import pl.techbrewery.sam.kmp.utils.tempLog
 import pl.techbrewery.sam.shared.OnItemTextFieldFocusChanged
 import pl.techbrewery.sam.shared.SearchQueryChanged
 import pl.techbrewery.sam.shared.SuggestedItemDeletePressed

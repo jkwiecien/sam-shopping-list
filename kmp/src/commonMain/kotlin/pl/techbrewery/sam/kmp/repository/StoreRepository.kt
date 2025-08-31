@@ -3,23 +3,21 @@ package pl.techbrewery.sam.kmp.repository
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import pl.techbrewery.sam.kmp.cloud.CloudRepository
+import pl.techbrewery.sam.kmp.cloud.CloudSyncService
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.dao.StoreDao
 import pl.techbrewery.sam.kmp.database.entity.Store
 import pl.techbrewery.sam.kmp.utils.getCurrentTime
 import pl.techbrewery.sam.resources.Res
 import pl.techbrewery.sam.resources.error_message_last_store_delete_forbidden
-import pl.techbrewery.sam.resources.store_default_name
 import java.sql.SQLIntegrityConstraintViolationException
 
 class StoreRepository(
     private val db: KmpDatabase,
-    private val cloud: CloudRepository
+    private val syncService: CloudSyncService
 ) {
     val storeDao: StoreDao get() = db.storeDao()
     suspend fun hasAnyStores(): Boolean {
@@ -61,7 +59,7 @@ class StoreRepository(
             store = store.copy(storeId = newlyCreatedStoreId)
             storeDao.insert(store)
         }
-        cloud.cloudUpdater?.let { launch { it.saveStore(store) } }
+        syncService.cloudUpdater?.let { launch { it.saveStore(store) } }
     }
 
     fun getAllStoresFlow(): Flow<List<Store>> {

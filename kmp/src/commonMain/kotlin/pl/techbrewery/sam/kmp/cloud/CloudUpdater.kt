@@ -13,6 +13,7 @@ import pl.techbrewery.sam.kmp.database.entity.Store
 
 class CloudUpdater(
     private val cloud: CloudRepository,
+    private val cloudSync: CloudSyncService,
     private val user: FirebaseUser
 ) {
     private val userId: String get() = user.uid

@@ -32,6 +32,10 @@ interface RecipeDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertRecipeIngredients(ingredients: List<RecipeItem>)
 
+    // --- Update Operations ---
+    @Update
+    suspend fun updateRecipeItem(recipeItem: RecipeItem)
+
     // --- Query Operations (Flows) ---
 
     @Transaction

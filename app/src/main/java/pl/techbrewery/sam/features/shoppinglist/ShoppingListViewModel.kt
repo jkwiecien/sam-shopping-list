@@ -283,7 +283,7 @@ class ShoppingListViewModel(
         viewModelScope.launch(Dispatchers.Default) {
             val updatedItems = shoppingList.moveItem(from, to, itemsFlow.value)
             itemsMutableFlow.value = updatedItems
-            launch { withContext(Dispatchers.Default) { shoppingList.updateItems(updatedItems) } }
+            launch {  shoppingList.updateItems(updatedItems) }
         }
     }
 

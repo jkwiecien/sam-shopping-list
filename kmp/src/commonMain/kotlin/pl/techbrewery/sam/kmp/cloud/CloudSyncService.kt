@@ -22,6 +22,8 @@ class CloudSyncService(
     private val shoppingListDao get() = localDb.shoppingListDao()
     private val indexWeightDao get() = localDb.indexWeightDao()
 
+    val cloudUpdater: CloudUpdater? get() = cloud.user?.let { CloudUpdater(cloud, this, it) }
+
     suspend fun syncDatabases() {
         debugLog("Starting database sync", LOG_TAG)
         syncStores()
