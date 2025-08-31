@@ -41,7 +41,6 @@ data class ShoppingListItem(
 @Serializable
 data class ShoppingListItemSnapshot(
     @SerialName("owner_id") val ownerId: String,
-    @SerialName("local_id") val localId: Long,
     @SerialName("list_cloud_id") val listCloudId: String,
     @SerialName("item_name") val itemName: String,
     @SerialName("checked_off") val checkedOff: Boolean,

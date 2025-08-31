@@ -28,7 +28,6 @@ data class Store(
 @Serializable
 data class StoreSnapshot(
     @SerialName("owner_id") val ownerId: String,
-    @SerialName("local_id") val localId: Long,
     @SerialName("store_name") val storeName: String,
     @SerialName("address") val address: String,
     @SerialName("created_at") val createdAt: Timestamp,

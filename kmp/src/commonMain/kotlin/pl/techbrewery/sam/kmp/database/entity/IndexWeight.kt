@@ -41,7 +41,6 @@ data class IndexWeight(
 @Serializable
 data class IndexWeightSnapshot(
     @SerialName("owner_id") val ownerId: String,
-    @SerialName("local_id") val localId: Long,
     @SerialName("item_name") val itemName: String,
     @SerialName("store_cloud_id") val storeCloudId: String,
     @SerialName("weight") val weight: Long,

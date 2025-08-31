@@ -22,7 +22,6 @@ data class ShoppingList(
 @Serializable
 data class ShoppingListSnapshot(
     @SerialName("owner_id") val ownerId: String,
-    @SerialName("local_id") val localId: Long,
     @SerialName("created_at") val createdAt: Timestamp,
     @SerialName("updated_at") val updatedAt: Timestamp
 )

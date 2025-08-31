@@ -44,7 +44,6 @@ internal object CloudConverter {
         val createdAtTimestamp = documentSnapshot.get<Timestamp?>("created_at")
         val updatedAtTimestamp = documentSnapshot.get<Timestamp?>("updated_at")
         return Store(
-            storeId = documentSnapshot.get<Long>("local_id"),
             cloudId = documentSnapshot.id,
             storeName = documentSnapshot.get<String>("store_name"),
             address = documentSnapshot.get<String>("address"),
@@ -55,7 +54,6 @@ internal object CloudConverter {
 
     fun toSnapshot(store: Store, userId: String): StoreSnapshot {
         return StoreSnapshot(
-            localId = store.storeId,
             ownerId = userId,
             storeName = store.storeName,
             address = store.address,
@@ -68,7 +66,6 @@ internal object CloudConverter {
         val createdAtTimestamp = documentSnapshot.get<Timestamp?>("created_at")
         val updatedAtTimestamp = documentSnapshot.get<Timestamp?>("updated_at")
         return ShoppingList(
-            id = documentSnapshot.get<Long>("local_id"),
             cloudId = documentSnapshot.id,
             createdAt = TimeUtils.timestampToString(createdAtTimestamp),
             updatedAt = TimeUtils.timestampToString(updatedAtTimestamp)
@@ -78,7 +75,6 @@ internal object CloudConverter {
     fun toSnapshot(shoppingList: ShoppingList, userId: String): ShoppingListSnapshot {
         return ShoppingListSnapshot(
             ownerId = userId,
-            localId = shoppingList.id,
             createdAt = TimeUtils.timestampFromString(shoppingList.createdAt),
             updatedAt = TimeUtils.timestampFromString(shoppingList.updatedAt)
         )
@@ -88,7 +84,6 @@ internal object CloudConverter {
         val createdAtTimestamp = documentSnapshot.get<Timestamp?>("created_at")
         val updatedAtTimestamp = documentSnapshot.get<Timestamp?>("updated_at")
         return ShoppingListItem(
-            id = documentSnapshot.get<Long>("local_id"),
             cloudId = documentSnapshot.id,
             itemName = documentSnapshot.get<String>("item_name"),
             listId = 0L, // Placeholder: CloudSyncService will resolve list_cloud_id to local listId
@@ -101,7 +96,6 @@ internal object CloudConverter {
     fun toSnapshot(item: ShoppingListItem, userId: String, listCloudId: String): ShoppingListItemSnapshot {
         return ShoppingListItemSnapshot(
             ownerId = userId,
-            localId = item.id,
             listCloudId = listCloudId,
             itemName = item.itemName,
             checkedOff = item.checkedOff,
@@ -114,7 +108,6 @@ internal object CloudConverter {
         val createdAtTimestamp = documentSnapshot.get<Timestamp?>("created_at")
         val updatedAtTimestamp = documentSnapshot.get<Timestamp?>("updated_at")
         return IndexWeight(
-            id = documentSnapshot.get<Long>("local_id"),
             cloudId = documentSnapshot.id,
             itemName = documentSnapshot.get<String>("item_name"),
             storeId = 0L, // Placeholder: CloudSyncService will resolve store_cloud_id to local storeId
@@ -127,7 +120,6 @@ internal object CloudConverter {
     fun toSnapshot(item: IndexWeight, userId: String, storeCloudId: String): IndexWeightSnapshot {
         return IndexWeightSnapshot(
             ownerId = userId,
-            localId = item.id,
             itemName = item.itemName,
             storeCloudId = storeCloudId,
             weight = item.weight,
@@ -138,7 +130,6 @@ internal object CloudConverter {
 
     fun recipeFromSnapshot(documentSnapshot: DocumentSnapshot): Recipe {
         return Recipe(
-            recipeId = documentSnapshot.get<Long>("local_id"),
             cloudId = documentSnapshot.id,
             name = documentSnapshot.get<String>("name"),
             createdAt = TimeUtils.timestampToString(documentSnapshot.get<Timestamp?>("created_at")),
@@ -149,7 +140,6 @@ internal object CloudConverter {
     fun toSnapshot(recipe: Recipe, userId: String): RecipeSnapshot {
         return RecipeSnapshot(
             ownerId = userId,
-            localId = recipe.recipeId,
             name = recipe.name,
             createdAt = TimeUtils.timestampFromString(recipe.createdAt),
             updatedAt = TimeUtils.timestampFromString(recipe.updatedAt)
