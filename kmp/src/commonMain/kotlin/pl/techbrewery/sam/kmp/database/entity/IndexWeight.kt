@@ -15,9 +15,9 @@ import kotlin.time.ExperimentalTime
     tableName = "index_weights",
     foreignKeys = [
         ForeignKey(
-            entity = SingleItem::class,
-            parentColumns = ["item_name"],
-            childColumns = ["item_name"],
+            entity = ShoppingListItem::class,
+            parentColumns = ["id"],
+            childColumns = ["shopping_list_item_id"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
@@ -31,7 +31,7 @@ import kotlin.time.ExperimentalTime
 data class IndexWeight(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id: Long = 0,
     @ColumnInfo(name = "cloud_id") val cloudId: String? = null,
-    @ColumnInfo(name = "item_name", index = true) val itemName: String,
+    @ColumnInfo(name = "shopping_list_item_id", index = true) val shoppingListItemId: Long,
     @ColumnInfo(name = "store_id", index = true) val storeId: Long,
     @ColumnInfo(name = "weight") val weight: Long = 0,
     @ColumnInfo(name = "created_at") val createdAt: String = Clock.System.now().toString(),
@@ -41,7 +41,7 @@ data class IndexWeight(
 @Serializable
 data class IndexWeightSnapshot(
     @SerialName("owner_id") val ownerId: String,
-    @SerialName("item_name") val itemName: String,
+    @SerialName("shopping_list_item_cloud_id") val shoppingListItemCloudId: String,
     @SerialName("store_cloud_id") val storeCloudId: String,
     @SerialName("weight") val weight: Long,
     @SerialName("created_at") val createdAt: Timestamp,
