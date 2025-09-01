@@ -38,9 +38,9 @@ class CloudUpdater(
             cloud.saveShoppingListItem(item, listCloudId)
         }
 
-    suspend fun saveIndexWeight(item: IndexWeight, storeCloudId: String): String =
+    suspend fun saveIndexWeight(item: IndexWeight, storeCloudId: String, shoppingListItemCloudId: String): String =
         withContext(Dispatchers.IO) {
-            cloud.saveIndexWeight(item, storeCloudId)
+            cloud.saveIndexWeight(item, storeCloudId, shoppingListItemCloudId)
         }
 
     suspend fun saveRecipe(recipe: Recipe): String =

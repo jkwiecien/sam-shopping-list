@@ -106,7 +106,7 @@ class ShoppingListRepository(
 
             // Create and persist IndexWeight
             val newIndexWeight = IndexWeight(
-                itemName = shoppingListItem.itemName,
+                shoppingListItemId = shoppingListItem.id,
                 storeId = selectedStore.storeId,
                 weight = newWeight
             )
@@ -135,7 +135,7 @@ class ShoppingListRepository(
                         .map { items ->
                             items.map { item ->
                                 var indexWeight = indexWeightDao.getIndexWeight(
-                                    item.itemName,
+                                    item.id,
                                     selectedStore.storeId
                                 )
                                 if (indexWeight == null) {
@@ -145,8 +145,8 @@ class ShoppingListRepository(
                                         LOG_TAG
                                     )
                                     val newPersistedIndexWeight = IndexWeight(
-                                        itemName = item.itemName,
                                         storeId = selectedStore.storeId,
+                                        shoppingListItemId = item.id,
                                         // A sensible default weight, e.g., 0 or based on insertion time/order if needed
                                         // For simplicity, using 0, but this might need adjustment based on desired default ordering.
                                         // Or, fetch max weight and add DEFAULT_INDEX_GAP.
@@ -184,14 +184,14 @@ class ShoppingListRepository(
         val storeId = selectedStore.storeId
         return shoppingListDao.getShoppingList()?.let { selectedList ->
             shoppingListItemDao.getShoppingListItemsForList(selectedList.id).map { item ->
-                var indexWeight = indexWeightDao.getIndexWeight(item.itemName, storeId)
+                var indexWeight = indexWeightDao.getIndexWeight(item.id, storeId)
                 if (indexWeight == null) {
                     debugLog(
-                        "IndexWeight not found for ${item.itemName} in store ${storeId} (getShoppingListItemsForSelectedStore). Creating new one.",
+                        "IndexWeight not found for ${item.itemName} in store $storeId (getShoppingListItemsForSelectedStore). Creating new one.",
                         LOG_TAG
                     )
                     val newPersistedIndexWeight = IndexWeight(
-                        itemName = item.itemName,
+                        shoppingListItemId = item.id,
                         storeId = storeId,
                         weight = 0 // Or other default
                     )
@@ -244,30 +244,40 @@ class ShoppingListRepository(
                         val selectedStore = storeDao.getSelectedStore()
                         val shoppingList = shoppingListDao.getShoppingList()
                         val selectedStoreCloudId = selectedStore?.cloudId
+                        val shoppingListItemCloudId = item.cloudId
                         val shoppingListCloudId = shoppingList?.cloudId
-                        if (selectedStoreCloudId != null) {
-                            debugLog(
-                                "Updating IndexWeight in cloud: ${updatedIndexWeight.itemName} for store ${selectedStore.storeName}",
-                                LOG_TAG
-                            )
-                            updater.saveIndexWeight(updatedIndexWeight, selectedStoreCloudId)
-                        } else {
+
+                        if (selectedStoreCloudId == null) {
                             errorLog(
-                                "No cloudId found for selected store ${selectedStore?.storeName}. Skipping update of ${item.itemName}.",
+                                "selectedStoreCloudId is null for store ${selectedStore?.storeName}. Skipping IndexWeight update for ${item.itemName}.",
                                 LOG_TAG
                             )
                         }
-                        if (shoppingListCloudId != null) {
+                        if (shoppingListItemCloudId == null) {
+                            errorLog(
+                                "shoppingListItemCloudId is null for item ${item.itemName}. Skipping IndexWeight update.",
+                                LOG_TAG
+                            )
+                        }
+                        if (selectedStoreCloudId != null && shoppingListItemCloudId != null) {
+                            debugLog(
+                                "Updating IndexWeight in cloud: ${updatedItem.itemName} for store ${selectedStore.storeName}",
+                                LOG_TAG
+                            )
+                            updater.saveIndexWeight(updatedIndexWeight, selectedStoreCloudId, shoppingListItemCloudId)
+                        }
+
+                        if (shoppingListCloudId == null) {
+                            errorLog(
+                                "shoppingListCloudId is null. Skipping ShoppingListItem update for ${item.itemName}.",
+                                LOG_TAG
+                            )
+                        } else {
                             debugLog(
                                 "Updating ShoppingListItem in cloud: ${updatedItem.itemName}",
                                 LOG_TAG
                             )
                             updater.saveShoppingListItem(updatedItem, shoppingListCloudId)
-                        } else {
-                            errorLog(
-                                "No cloudId found for shopping list. Skipping update of ${item.itemName}.",
-                                LOG_TAG
-                            )
                         }
                     }
                 }

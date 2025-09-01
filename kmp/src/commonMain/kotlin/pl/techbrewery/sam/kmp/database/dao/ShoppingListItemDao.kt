@@ -36,6 +36,9 @@ interface ShoppingListItemDao {
     @Query("SELECT * FROM shopping_list_items WHERE id = :itemId")
     suspend fun getShoppingListItem(itemId: Long): ShoppingListItem?
 
+    @Query("SELECT * FROM shopping_list_items WHERE cloud_id = :cloudId")
+    suspend fun getShoppingListItemByCloudId(cloudId: String): ShoppingListItem?
+
     @Query("SELECT * FROM single_items WHERE  item_name LIKE '%' || :query || '%' ORDER BY item_name ASC")
     fun getSearchResults(query: String): Flow<List<SingleItem>>
 

@@ -109,7 +109,7 @@ internal object CloudConverter {
         val updatedAtTimestamp = documentSnapshot.get<Timestamp?>("updated_at")
         return IndexWeight(
             cloudId = documentSnapshot.id,
-            itemName = documentSnapshot.get<String>("item_name"),
+            shoppingListItemId = 0L, // Placeholder: CloudSyncService will resolve shopping_list_item_cloud_id to local shoppingListItemId
             storeId = 0L, // Placeholder: CloudSyncService will resolve store_cloud_id to local storeId
             weight = documentSnapshot.get<Long>("weight"),
             createdAt = TimeUtils.timestampToString(createdAtTimestamp),
@@ -117,10 +117,10 @@ internal object CloudConverter {
         )
     }
 
-    fun toSnapshot(item: IndexWeight, userId: String, storeCloudId: String): IndexWeightSnapshot {
+    fun toSnapshot(item: IndexWeight, userId: String, storeCloudId: String, shoppingListItemCloudId: String): IndexWeightSnapshot {
         return IndexWeightSnapshot(
             ownerId = userId,
-            itemName = item.itemName,
+            shoppingListItemCloudId = shoppingListItemCloudId,
             storeCloudId = storeCloudId,
             weight = item.weight,
             createdAt = TimeUtils.timestampFromString(item.createdAt),

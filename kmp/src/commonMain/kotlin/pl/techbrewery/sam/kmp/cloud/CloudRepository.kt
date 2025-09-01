@@ -232,24 +232,26 @@ class CloudRepository(
         return resolvedCloudId
     }
 
-    suspend fun saveIndexWeight(item: IndexWeight, storeCloudId: String): String {
+    suspend fun saveIndexWeight(item: IndexWeight, storeCloudId: String, shoppingListItemCloudId: String): String {
         val userId = getUserId()!!
+        val shoppingListItem = shoppingListItemDao.getShoppingListItem(item.shoppingListItemId)
         val existingItemSnapshot = item.cloudId?.let { getIndexWeightSnapshot(it) }
+        if (shoppingListItem == null) throw Exception("ShoppingListItem not found for IndexWeight (shoppingListItemId: ${item.shoppingListItemId})")
         val resolvedCloudId: String
         if (existingItemSnapshot == null || !existingItemSnapshot.exists) {
-            debugLog("Adding new IndexWeight to Firestore for item: ${item.itemName}, localId: ${item.id}, storeCloudId: $storeCloudId", LOG_TAG)
+            debugLog("Adding new IndexWeight to Firestore for item: ${shoppingListItem.itemName}, localId: ${item.id}, storeCloudId: $storeCloudId", LOG_TAG)
             resolvedCloudId = firestore.collection(FirestoreCollections.INDEX_WEIGHTS)
-                .add(CloudConverter.toSnapshot(item, userId, storeCloudId))
+                .add(CloudConverter.toSnapshot(item, userId, storeCloudId, shoppingListItemCloudId))
                 .id
         } else {
-            debugLog("Updating IndexWeight in Firestore for item: ${item.itemName}, cloudId: ${existingItemSnapshot.id}, storeCloudId: $storeCloudId", LOG_TAG)
+            debugLog("Updating IndexWeight in Firestore for item: ${shoppingListItem.itemName}, cloudId: ${existingItemSnapshot.id}, storeCloudId: $storeCloudId", LOG_TAG)
             firestore.collection(FirestoreCollections.INDEX_WEIGHTS)
                 .document(existingItemSnapshot.id)
-                .set(CloudConverter.toSnapshot(item, userId, storeCloudId))
+                .set(CloudConverter.toSnapshot(item, userId, storeCloudId, shoppingListItemCloudId))
             resolvedCloudId = existingItemSnapshot.id
         }
         if (item.cloudId != resolvedCloudId) {
-            debugLog("Updating local IndexWeight for item ${item.itemName} with resolvedCloudId: $resolvedCloudId", LOG_TAG)
+            debugLog("Updating local IndexWeight for item ${shoppingListItem.itemName} with resolvedCloudId: $resolvedCloudId", LOG_TAG)
             indexWeightDao.update(item.copy(cloudId = resolvedCloudId))
         }
         return resolvedCloudId

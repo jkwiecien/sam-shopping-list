@@ -20,8 +20,8 @@ interface IndexWeightDao {
     @Delete
     suspend fun delete(indexWeight: IndexWeight)
 
-    @Query("SELECT * FROM index_weights WHERE item_name = :itemName AND store_id = :storeId")
-    suspend fun getIndexWeight(itemName: String, storeId: Long): IndexWeight?
+    @Query("SELECT * FROM index_weights WHERE shopping_list_item_id = :shoppingListItemId AND store_id = :storeId")
+    suspend fun getIndexWeight(shoppingListItemId: Long, storeId: Long): IndexWeight?
 
     @Query("SELECT * FROM index_weights")
     suspend fun getAll(): List<IndexWeight> // Added this method

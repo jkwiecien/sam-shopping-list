@@ -5,6 +5,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import pl.techbrewery.sam.kmp.database.KmpDatabase
 import pl.techbrewery.sam.kmp.database.entity.RecipeItem
+import pl.techbrewery.sam.kmp.database.entity.ShoppingListItem // Added for type usage
 import pl.techbrewery.sam.kmp.database.entity.SingleItem
 import pl.techbrewery.sam.kmp.utils.debugLog
 import pl.techbrewery.sam.kmp.utils.warningLog
@@ -29,7 +30,7 @@ class CloudSyncService(
         syncStores()
         syncShoppingLists()
         syncSingleItems()
-        syncIndexWeights()
+        syncIndexWeights() // Will call the updated method
         syncRecipes()
         debugLog("Database sync finished", LOG_TAG)
     }
@@ -182,10 +183,16 @@ class CloudSyncService(
         val localIndexWeights = withContext(Dispatchers.Default) { indexWeightDao.getAll() }
         for (localWeight in localIndexWeights) {
             val parentStore = withContext(Dispatchers.Default) { storeDao.getStoreById(localWeight.storeId) }
-            if (parentStore?.cloudId != null) {
-                withContext(Dispatchers.IO) { cloud.saveIndexWeight(localWeight, parentStore.cloudId) }
+            val parentShoppingListItem = withContext(Dispatchers.Default) { shoppingListItemDao.getShoppingListItem(localWeight.shoppingListItemId) }
+
+            if (parentStore?.cloudId != null && parentShoppingListItem?.cloudId != null) {
+                withContext(Dispatchers.IO) { cloud.saveIndexWeight(localWeight, parentStore.cloudId, parentShoppingListItem.cloudId!!) }
+                debugLog("Pushed local IndexWeight (id: ${localWeight.id}) to cloud.", LOG_TAG)
             } else {
-                warningLog("Skipping push for local IndexWeight (id: ${localWeight.id}) because its parent store (id: ${localWeight.storeId}) is not synced or not found.", LOG_TAG)
+                var reason = ""
+                if (parentStore?.cloudId == null) reason += "parent store (id: ${localWeight.storeId}) is not synced or not found. "
+                if (parentShoppingListItem?.cloudId == null) reason += "parent shopping list item (id: ${localWeight.shoppingListItemId}) is not synced or not found."
+                warningLog("Skipping push for local IndexWeight (id: ${localWeight.id}) because $reason", LOG_TAG)
             }
         }
 
@@ -195,16 +202,37 @@ class CloudSyncService(
         val localWeightCloudIds = finalLocalIndexWeights.mapNotNull { it.cloudId }.toSet()
 
         for (cloudSnapshot in cloudIndexWeightSnapshots) {
-            if (cloudSnapshot.id !in localWeightCloudIds) {
-                val storeCloudId = cloudSnapshot.get<String>("store_cloud_id")
-                val localParentStore = withContext(Dispatchers.Default) { storeDao.getStoreByCloudId(storeCloudId) }
+            if (cloudSnapshot.id !in localWeightCloudIds) { // cloudSnapshot.id is the cloudId of the IndexWeight
+                val storeCloudId = cloudSnapshot.get<String?>("store_cloud_id")
+                val shoppingListItemCloudId = cloudSnapshot.get<String?>("shopping_list_item_cloud_id")
 
-                if (localParentStore != null) {
-                    debugLog("Cloud index weight ${cloudSnapshot.id} not found locally. Inserting into local DB.", LOG_TAG)
-                    val newIndexWeight = CloudConverter.indexWeightFromSnapshot(cloudSnapshot)
-                    withContext(Dispatchers.Default) { indexWeightDao.insert(newIndexWeight.copy(id = 0, storeId = localParentStore.storeId)) }
+                if (storeCloudId == null || shoppingListItemCloudId == null) {
+                    warningLog("Skipping pull for cloud IndexWeight (cloudId: ${cloudSnapshot.id}) due to missing store_cloud_id or shopping_list_item_cloud_id in snapshot.", LOG_TAG)
+                    continue
+                }
+
+                val localParentStore = withContext(Dispatchers.Default) { storeDao.getStoreByCloudId(storeCloudId) }
+                val localParentShoppingListItem = withContext(Dispatchers.Default) { shoppingListItemDao.getShoppingListItemByCloudId(shoppingListItemCloudId) }
+
+                if (localParentStore != null && localParentShoppingListItem != null) {
+                    debugLog("Cloud index weight ${cloudSnapshot.id} not found locally. Attempting to insert into local DB.", LOG_TAG)
+                    // CloudConverter.indexWeightFromSnapshot is assumed to be updated to handle the new IndexWeightSnapshot structure
+                    // and return a basic IndexWeight object (id=0, cloudId=cloudSnapshot.id, weight, timestamps etc.)
+                    // It should NOT try to set storeId or shoppingListItemId from the snapshot.
+                    val baseNewIndexWeight = CloudConverter.indexWeightFromSnapshot(cloudSnapshot)
+                    withContext(Dispatchers.Default) {
+                        indexWeightDao.insert(baseNewIndexWeight.copy(
+                            id = 0, // Ensure new local ID
+                            storeId = localParentStore.storeId,
+                            shoppingListItemId = localParentShoppingListItem.id // Link to local ShoppingListItem
+                        ))
+                    }
+                    debugLog("Inserted new IndexWeight from cloud (cloudId: ${cloudSnapshot.id}) linked to local storeId ${localParentStore.storeId} and sliId ${localParentShoppingListItem.id}", LOG_TAG)
                 } else {
-                    warningLog("Skipping pull for cloud IndexWeight (cloudId: ${cloudSnapshot.id}) because its parent store (cloudId: ${storeCloudId}) was not found locally.", LOG_TAG)
+                    var reason = ""
+                    if (localParentStore == null) reason += "parent store (cloudId: $storeCloudId) was not found locally. "
+                    if (localParentShoppingListItem == null) reason += "parent shopping list item (cloudId: $shoppingListItemCloudId) was not found locally."
+                    warningLog("Skipping pull for cloud IndexWeight (cloudId: ${cloudSnapshot.id}) because $reason", LOG_TAG)
                 }
             }
         }

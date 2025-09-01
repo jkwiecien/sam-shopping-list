@@ -271,7 +271,7 @@ private fun ShoppingListScreenPreview() {
                     "Pork", "Salmon", "Tuna", "Pasta", "Rice", "Bread", "Cereal",
                     "Coffee", "Tea", "Juice", "Soda", "Water"
                 ).map { ShoppingListItem(itemName = it, listId = 0) }
-                    .map { ShoppingItemWithWeight(it, IndexWeight(0, null, it.itemName, 0)) }
+                    .map { ShoppingItemWithWeight(it, IndexWeight(0, null, 0, 0)) }
                     .toImmutableList(),
                 suggestedItems = emptyList<DropdownItem<SuggestedItem>>().toImmutableList(),
                 searchQuery = "Preview Search", // Optional: Provide a preview search query

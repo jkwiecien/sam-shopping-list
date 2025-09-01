@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e5bce35225e2cd7c6c35a386056bb04d",
+    "identityHash": "4637da827fd09e547aa7b79a740d1ab8",
     "entities": [
       {
         "tableName": "stores",
@@ -361,7 +361,7 @@
       },
       {
         "tableName": "index_weights",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloud_id` TEXT, `item_name` TEXT NOT NULL, `store_id` INTEGER NOT NULL, `weight` INTEGER NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, FOREIGN KEY(`item_name`) REFERENCES `single_items`(`item_name`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`store_id`) REFERENCES `stores`(`store_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloud_id` TEXT, `shopping_list_item_id` INTEGER NOT NULL, `store_id` INTEGER NOT NULL, `weight` INTEGER NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, FOREIGN KEY(`shopping_list_item_id`) REFERENCES `shopping_list_items`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`store_id`) REFERENCES `stores`(`store_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -375,9 +375,9 @@
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "itemName",
-            "columnName": "item_name",
-            "affinity": "TEXT",
+            "fieldPath": "shoppingListItemId",
+            "columnName": "shopping_list_item_id",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -413,13 +413,13 @@
         },
         "indices": [
           {
-            "name": "index_index_weights_item_name",
+            "name": "index_index_weights_shopping_list_item_id",
             "unique": false,
             "columnNames": [
-              "item_name"
+              "shopping_list_item_id"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_index_weights_item_name` ON `${TABLE_NAME}` (`item_name`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_index_weights_shopping_list_item_id` ON `${TABLE_NAME}` (`shopping_list_item_id`)"
           },
           {
             "name": "index_index_weights_store_id",
@@ -433,14 +433,14 @@
         ],
         "foreignKeys": [
           {
-            "table": "single_items",
+            "table": "shopping_list_items",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "item_name"
+              "shopping_list_item_id"
             ],
             "referencedColumns": [
-              "item_name"
+              "id"
             ]
           },
           {
@@ -459,7 +459,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e5bce35225e2cd7c6c35a386056bb04d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4637da827fd09e547aa7b79a740d1ab8')"
     ]
   }
 }
